@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "commonjs",
+        "outDir": "./build",
+        "rootDir": "./src",
+        "strict": true,
+        "declaration": false,
+        "noImplicitAny": true,
+        "typeRoots": ["./node_modules/@types"],
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true
+    },
+    "exclude": ["./build/*", "./node_modules/*"],
+    "include": [ "src/**/*.ts", "src/**/*.json" ]
+}
