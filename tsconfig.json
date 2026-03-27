@@ -3,7 +3,6 @@
         "target": "es2020",
         "module": "commonjs",
         "outDir": "./build",
-        "rootDir": "./src",
         "strict": true,
         "declaration": false,
         "noImplicitAny": true,
@@ -13,5 +12,5 @@
         "skipLibCheck": true
     },
     "exclude": ["./build/*", "./node_modules/*"],
-    "include": [ "src/**/*.ts", "src/**/*.json" ]
+    "include": [ "./src/**/*.ts", "./src/**/*.json", "./playground/**/*.ts" ]
 }

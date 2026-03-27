@@ -7,20 +7,24 @@
   "scripts": {
     "clean": "rimraf build/* --glob",
     "build": "tsc --build",
-    "start": "yarn clean && yarn build && node .",
+    "start": "npm run clean && npm run build && node .",
     "start:nobuild": "node .",
     "test": "jest",
-    "db:generate": "yarn drizzle-kit generate",
+    "db:generate": "npx drizzle-kit generate",
     "db:migrate": "tsx src/database/migrate.ts",
-    "db:drop": "yarn drizzle-kit drop"
+    "db:drop": "npx drizzle-kit drop"
   },
   "dependencies": {
+    "@doist/todoist-api-typescript": "^7.7.0",
     "discord.js": "^14.25.1",
+    "dotenv": "^17.3.1",
     "drizzle-orm": "^0.31.2",
+    "express": "^5.2.1",
     "mysql2": "^3.10.1",
     "tsx": "^4.15.7"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.14.6",
     "drizzle-kit": "^0.22.7",
