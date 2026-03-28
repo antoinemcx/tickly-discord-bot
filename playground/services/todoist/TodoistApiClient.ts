@@ -7,7 +7,8 @@ import {
 	TodoistApi,
 	type Task,
 } from "@doist/todoist-api-typescript";
-import { AccessTokenStore } from "./access-token-store/AccessTokenStore";
+import { UserSession, UserSessionStatus } from "./sessions/UserSession";
+import { UserSessionManager } from "./sessions/UserSessionManager";
 
 /**
  * OAuth2 configuration required by the application.
@@ -17,7 +18,7 @@ export type TodoistOAuthConfig = {
 	clientSecret: string;
 	permissions?: readonly Permission[];
 	stateTtlMs?: number;
-	tokenStore: AccessTokenStore;
+	sessionManager: UserSessionManager;
 };
 
 /**
@@ -28,17 +29,12 @@ export type OAuthAuthorizationRequest = {
 	authorizationUrl: string;
 };
 
-type OAuthStateRecord = {
-	userId?: string;
-	expiresAtEpochMs: number;
-};
-
 /**
  * Business-oriented facade around the Todoist SDK.
  *
  * This class encapsulates:
  * - OAuth2 flow (authorization URL + code to token exchange),
- * - multi-user token usage through a pluggable token store,
+ * - multi-user session usage through a pluggable session manager,
  * - reusable typed business methods (for example, addTask).
  *
  * Composition is intentionally preferred over inheriting TodoistApi because
@@ -49,8 +45,7 @@ export class TodoistApiClient {
 	private readonly clientSecret: string;
 	private readonly permissions: readonly Permission[];
 	private readonly stateTtlMs: number;
-	private readonly tokenStore: AccessTokenStore;
-	private readonly stateStore = new Map<string, OAuthStateRecord>();
+	private readonly sessionManager: UserSessionManager;
 
 	/**
 	 * Creates a reusable application-level Todoist client.
@@ -60,23 +55,34 @@ export class TodoistApiClient {
 		this.clientSecret = config.clientSecret;
 		this.permissions = config.permissions ?? ["data:read_write"];
 		this.stateTtlMs = config.stateTtlMs ?? 10 * 60 * 1000;
-		this.tokenStore = config.tokenStore;
+		this.sessionManager = config.sessionManager;
 	}
 
 	/**
 	 * Generates an OAuth2 authorization URL and stores a one-time state value.
-	 *
-	 * The state is kept in memory with a TTL and can be associated with an
-	 * internal user id to simplify callback correlation.
 	 */
-	public createAuthorizationRequest(userId?: string): OAuthAuthorizationRequest {
-		this.pruneExpiredStates();
-
+	public async createAuthorizationRequest(userId: string): Promise<OAuthAuthorizationRequest> {
 		const state = getAuthStateParameter();
-		this.stateStore.set(state, {
-			userId,
-			expiresAtEpochMs: Date.now() + this.stateTtlMs,
-		});
+		const existingSession = await this.sessionManager.getSession(userId);
+		const expiresAt = new Date(Date.now() + this.stateTtlMs);
+
+		if (!existingSession) {
+			await this.sessionManager.createSession(
+				new UserSession(
+					userId,
+					UserSessionStatus.Pending,
+					state,
+					null,
+					expiresAt,
+				),
+			);
+		} else {
+			existingSession.status = UserSessionStatus.Pending;
+			existingSession.oauthState = state;
+			existingSession.accessToken = null;
+			existingSession.expiresAt = expiresAt;
+			await this.sessionManager.updateSession(existingSession);
+		}
 
 		return {
 			state,
@@ -90,31 +96,32 @@ export class TodoistApiClient {
 
 	/**
 	 * Validates and consumes an OAuth2 state value (CSRF protection).
-	 *
-	 * Returns the internal user id associated with this state, if any.
-	 * The state is deleted after successful validation.
 	 */
-	public consumeState(state: string): string | undefined {
-		const record = this.stateStore.get(state);
-		if (!record) {
+	public async consumeState(userId: string, state: string): Promise<void> {
+		const session = await this.sessionManager.getSession(userId);
+		if (!session) {
+			throw new Error("No OAuth session found for this user.");
+		}
+
+		if (session.oauthState !== state) {
 			throw new Error("Invalid OAuth state parameter.");
 		}
 
-		if (record.expiresAtEpochMs <= Date.now()) {
-			this.stateStore.delete(state);
+		if (session.expiresAt && session.expiresAt.getTime() <= Date.now()) {
+			await this.sessionManager.deleteSession(userId);
 			throw new Error("Expired OAuth state parameter.");
 		}
 
-		this.stateStore.delete(state);
-		return record.userId;
+		// Force one-time state usage by expiring it right after successful validation.
+		session.expiresAt = new Date(0);
+		await this.sessionManager.updateSession(session);
 	}
 
 	/**
-	 * Clears all currently stored OAuth states.
-	 * Useful for explicit cleanup in tests or shutdown hooks.
+	 * Clears the stored session for a specific user.
 	 */
-	public clearPendingStates(): void {
-		this.stateStore.clear();
+	public async clearUserSession(userId: string): Promise<void> {
+		await this.sessionManager.deleteSession(userId);
 	}
 
 	/**
@@ -132,17 +139,35 @@ export class TodoistApiClient {
 	}
 
 	/**
-	 * Saves or replaces a user's Todoist access token in the configured token store.
+	 * Saves or replaces a user's Todoist access token in the configured session manager.
 	 */
 	public async registerUserAccessToken(userId: string, accessToken: string): Promise<void> {
-		await this.tokenStore.setAccessToken(userId, accessToken);
+		const session = await this.sessionManager.getSession(userId);
+
+		if (!session) {
+			await this.sessionManager.createSession(
+				new UserSession(
+					userId,
+					UserSessionStatus.Completed,
+					"",
+					accessToken,
+					null,
+				),
+			);
+			return;
+		}
+
+		session.status = UserSessionStatus.Completed;
+		session.accessToken = accessToken;
+		session.expiresAt = null;
+		await this.sessionManager.updateSession(session);
 	}
 
 	/**
 	 * Returns true when a token exists for the given user.
 	 */
 	public async hasUserToken(userId: string): Promise<boolean> {
-		const token = await this.tokenStore.getAccessToken(userId);
+		const token = (await this.sessionManager.getSession(userId))?.accessToken;
 		return typeof token === "string" && token.length > 0;
 	}
 
@@ -153,7 +178,7 @@ export class TodoistApiClient {
 	 * memory growth for low-frequency users.
 	 */
 	public async getUserApi(userId: string): Promise<TodoistApi> {
-		const accessToken = await this.tokenStore.getAccessToken(userId);
+		const accessToken = (await this.sessionManager.getSession(userId))?.accessToken;
 		if (!accessToken) {
 			throw new Error(`No Todoist access token found for user '${userId}'.`);
 		}
@@ -169,15 +194,4 @@ export class TodoistApiClient {
 		return api.addTask(args);
 	}
 
-	/**
-	 * Removes expired OAuth states from memory.
-	 */
-	private pruneExpiredStates(): void {
-		const now = Date.now();
-		for (const [state, record] of this.stateStore) {
-			if (record.expiresAtEpochMs <= now) {
-				this.stateStore.delete(state);
-			}
-		}
-	}
 }
