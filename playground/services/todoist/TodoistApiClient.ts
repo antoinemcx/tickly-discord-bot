@@ -125,6 +125,20 @@ export class TodoistApiClient {
 	}
 
 	/**
+	 * Returns a user's session matching the given OAuth state.
+	 */
+	public async getSessionByOAuthState(state: string): Promise<UserSession | undefined> {
+		return this.sessionManager.getSessionByOAuthState(state);
+	}
+
+	/**
+	 * Removes expired sessions via the configured session manager.
+	 */
+	public async pruneExpiredStates(): Promise<void> {
+		await this.sessionManager.pruneExpiredStates();
+	}
+
+	/**
 	 * Exchanges an OAuth2 authorization code for a Todoist access token.
 	 * @throws TodoistRequestError if the token exchange fails
 	 */

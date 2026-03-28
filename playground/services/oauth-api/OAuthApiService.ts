@@ -1,9 +1,11 @@
 import express, { type Express, type NextFunction, type Request, type Response } from "express";
+import type { Server } from "http";
 import type { OAuthApiRoute } from "./OAuthApiRoute";
 import type { OAuthApiRoutesFactory } from "./OAuthApiRoutesFactory";
 
 export interface OAuthApiServiceConfig {
     app?: Express;
+    port?: number;
     enableJsonBodyParser?: boolean;
     enableUrlEncodedBodyParser?: boolean;
 }
@@ -13,12 +15,15 @@ export interface OAuthApiServiceConfig {
  */
 export class OAuthApiService {
     private readonly app: Express;
+    private readonly port: number;
+    private server?: Server;
 
     constructor(
         config: OAuthApiServiceConfig,
         private readonly routesFactory: OAuthApiRoutesFactory,
     ) {
         this.app = config.app ?? express();
+        this.port = config.port ?? 3000;
 
         if (config.enableJsonBodyParser ?? true) {
             this.app.use(express.json());
@@ -33,6 +38,41 @@ export class OAuthApiService {
 
     public getApp(): Express {
         return this.app;
+    }
+
+    public async start(): Promise<void> {
+        if (this.server) {
+            return;
+        }
+
+        await new Promise<void>((resolve, reject) => {
+            const server = this.app.listen(this.port, () => {
+                this.server = server;
+                resolve();
+            });
+
+            server.on("error", reject);
+        });
+    }
+
+    public async stop(): Promise<void> {
+        if (!this.server) {
+            return;
+        }
+
+        const server = this.server;
+        this.server = undefined;
+
+        await new Promise<void>((resolve, reject) => {
+            server.close((error) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve();
+            });
+        });
     }
 
     private registerRoutes(): void {

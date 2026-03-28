@@ -1,21 +1,25 @@
 import type { OAuthApiRoute } from "../../oauth-api/OAuthApiRoute";
 import type { OAuthApiRoutesFactory } from "../../oauth-api/OAuthApiRoutesFactory";
-import { TodoistOAuthCallbackRoute } from "./TodoistOAuthCallbackRoute";
-import { TodoistOAuthErrorRoute } from "./TodoistOAuthErrorRoute";
-import { TodoistOAuthSuccessRoute } from "./TodoistOAuthSuccessRoute";
+import { OAuthCallbackRoute, OAuthErrorRoute, OAuthSuccessRoute } from "../../oauth-api/OAuthApiRoutesFactory";
+import { CallbackRoute } from "./routes/CallbackRoute";
+import { ErrorRoute } from "./routes/ErrorRoute";
+import { SuccessRoute } from "./routes/SuccessRoute";
+import { TodoistApiClient } from "../TodoistApiClient";
 
 /** Factory method implementation for Todoist OAuth routes. */
 export class TodoistOAuthRoutesFactory implements OAuthApiRoutesFactory {
-    public createCallbackRoute(): TodoistOAuthCallbackRoute {
-        return new TodoistOAuthCallbackRoute();
+    public constructor(private readonly todoistApiClient: TodoistApiClient) {}
+
+    public createCallbackRoute(): OAuthCallbackRoute {
+        return new CallbackRoute(this.todoistApiClient);
     }
 
-    public createSuccessRoute(): TodoistOAuthSuccessRoute {
-        return new TodoistOAuthSuccessRoute();
+    public createSuccessRoute(): OAuthSuccessRoute {
+        return new SuccessRoute(this.todoistApiClient);
     }
 
-    public createErrorRoute(): TodoistOAuthErrorRoute {
-        return new TodoistOAuthErrorRoute();
+    public createErrorRoute(): OAuthErrorRoute {
+        return new ErrorRoute(this.todoistApiClient);
     }
 
     public createAdditionalRoutes(): OAuthApiRoute[] {
