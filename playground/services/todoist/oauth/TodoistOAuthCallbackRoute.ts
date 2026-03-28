@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { OAuthCallbackRoute } from "../../oauth-api/OAuthApiRoutesFactory";
+import { AuthenticationErrors } from "./AuthenticationErrors";
 
 /** OAuth Callback endpoint implementation for Todoist. */
 export class TodoistOAuthCallbackRoute extends OAuthCallbackRoute {
@@ -7,25 +8,27 @@ export class TodoistOAuthCallbackRoute extends OAuthCallbackRoute {
         const { code, state, error } = req.query;
 
         if (typeof error === "string") {
-            res.redirect(`/oauth/error?reason=${encodeURIComponent(error)}`);
-            return;
-        }
-
-        if (typeof code !== "string" || typeof state !== "string") {
-            res.redirect("/oauth/error?reason=invalid_callback_query");
+            this.redirectToError(error, res);
             return;
         }
 
         /* Request validation */
-        // TODO check response format includes code and state
+        if (!code || !state || typeof code !== "string" || typeof state !== "string") {
+            this.redirectToError(AuthenticationErrors.INVALID_CALLBACK_QUERY, res);
+            return;
+        }
         // TODO validate state against stored value to prevent CSRF attacks
 
         /* Token exchange and persistence */
         // TODO token exchange logic (and handle errors)
         // TODO persist access token in memory store or database, associated with the user
         
-        // TODO publish an event or whatever to notify the app (how ?? device flow ??)
+        // TODO in the future : publish an event or whatever to notify the discord app
 
         res.redirect("/oauth/success");
+    }
+
+    private redirectToError(reason: AuthenticationErrors | string, res: Response): void {
+        res.redirect(`/oauth/error?reason=${encodeURIComponent(reason)}`);
     }
 }
