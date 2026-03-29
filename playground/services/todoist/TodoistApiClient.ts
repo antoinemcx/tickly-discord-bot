@@ -140,7 +140,7 @@ export class TodoistApiClient {
 
 	/**
 	 * Exchanges an OAuth2 authorization code for a Todoist access token.
-	 * @throws TodoistRequestError if the token exchange fails
+	 * @throws {TodoistRequestError} if the token exchange fails
 	 */
 	public async exchangeCodeForAccessToken(code: string): Promise<string> {
 		const response = await getAuthToken({

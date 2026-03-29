@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { OAuthApiService } from "./services/oauth-api/OAuthApiService";
-import { TodoistOAuthRoutesFactory } from "./services/todoist/oauth/TodoistOAuthRoutesFactory";
+import { OAuthApiService } from "../src/services/oauth/OAuthApiService";
+import { TodoistOAuthRoutesFactory } from "../src/services/todoist/oauth/TodoistOAuthRoutesFactory";
 import { InMemoryUserSessionManager } from "./services/todoist/sessions/InMemoryUserSessionManager";
 import { TodoistApiClient } from "./services/todoist/TodoistApiClient";
 import { UserSessionStatus } from "./services/todoist/sessions/UserSession";
@@ -21,9 +21,7 @@ const todoistClient = new TodoistApiClient({
 });
 
 const oauthApiService = new OAuthApiService(
-    { port: 3999 },
-    new TodoistOAuthRoutesFactory(todoistClient),
-);
+    new TodoistOAuthRoutesFactory(todoistClient));
 
 const demoUserId = "playground-user";
 
@@ -32,7 +30,7 @@ const sleep = async (ms: number): Promise<void> => {
 };
 
 (async () => {
-    await oauthApiService.start();
+    await oauthApiService.start(3999);
 
     const authRequest = await todoistClient.createAuthorizationRequest(demoUserId);
 

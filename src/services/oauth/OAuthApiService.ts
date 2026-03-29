@@ -3,78 +3,81 @@ import type { Server } from "http";
 import type { OAuthApiRoute } from "./OAuthApiRoute";
 import type { OAuthApiRoutesFactory } from "./OAuthApiRoutesFactory";
 
-export interface OAuthApiServiceConfig {
-    app?: Express;
-    port?: number;
-    enableJsonBodyParser?: boolean;
-    enableUrlEncodedBodyParser?: boolean;
-}
-
 /**
  * Generic OAuth API that wires provider-specific handlers to standard routes.
+ * 
+ * It uses a factory to create the minimal routes required for the OAuth flow,
+ * while allowing providers to add custom routes as needed.
  */
 export class OAuthApiService {
     private readonly app: Express;
-    private readonly port: number;
     private server?: Server;
+    private readonly routesFactory: OAuthApiRoutesFactory;
 
-    constructor(
-        config: OAuthApiServiceConfig,
-        private readonly routesFactory: OAuthApiRoutesFactory,
-    ) {
-        this.app = config.app ?? express();
-        this.port = config.port ?? 3000;
+    /**
+     * Creates a new OAuth API web service.
+     * @param routesFactory factory that creates all the routes
+     * @param app optional Express app instance if it already exists
+     */
+    constructor(routesFactory: OAuthApiRoutesFactory, app?: Express) {
+        this.app = app ?? express();
+        this.routesFactory = routesFactory;
 
-        if (config.enableJsonBodyParser ?? true) {
-            this.app.use(express.json());
-        }
-
-        if (config.enableUrlEncodedBodyParser ?? true) {
-            this.app.use(express.urlencoded({ extended: true }));
-        }
+        this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
 
         this.registerRoutes();
     }
 
+    /** @returns the Express app */
     public getApp(): Express {
         return this.app;
     }
 
-    public async start(): Promise<void> {
+    /**
+     * Starts the OAuth web service on the specified port.
+     * 
+     * @param port the web service port, defaults to 3000
+     * @throws {Error} if the service is already running
+     */
+    public async start(port: number = 3000): Promise<void> {
         if (this.server) {
-            return;
+            throw new Error("OAuth API service is already running");
         }
 
         await new Promise<void>((resolve, reject) => {
-            const server = this.app.listen(this.port, () => {
-                this.server = server;
+            const oauthServer = this.app.listen(port);
+
+            oauthServer.on("listening", () => {
+                this.server = oauthServer;
                 resolve();
             });
-
-            server.on("error", reject);
+            oauthServer.on("error", reject);
         });
     }
 
+    /** Stops the OAuth web service. */
     public async stop(): Promise<void> {
-        if (!this.server) {
-            return;
-        }
+        if (this.server) {
+            const oauthServer = this.server;
+            this.server = undefined;
 
-        const server = this.server;
-        this.server = undefined;
-
-        await new Promise<void>((resolve, reject) => {
-            server.close((error) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-
-                resolve();
+            await new Promise<void>((resolve, reject) => {
+                oauthServer.close((error) => {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    resolve();
+                });
             });
-        });
+        }
     }
 
+    /**
+     * Registers all routes created by the factory, including additional
+     * provider-specific routes.
+     */
     private registerRoutes(): void {
         const mandatoryRoutes: OAuthApiRoute[] = [
             this.routesFactory.createCallbackRoute(),
@@ -87,9 +90,11 @@ export class OAuthApiService {
             this.registerRoute(route);
         }
 
+        /* Custom express error handler */
         this.app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-            const message = err instanceof Error ? err.message : "Unexpected OAuth API error";
-            res.status(500).send(message);
+            res.status(500).send(err instanceof Error
+                ? err.message
+                : "Something broke! An unexpected error occured in the OAuth2 service.");
         });
     }
 
@@ -117,6 +122,7 @@ export class OAuthApiService {
         }
     }
 
+    /** Wraps a route handler to ensure errors are properly handled. */
     private wrap(
         handler: (req: Request, res: Response) => Promise<void>,
     ): (req: Request, res: Response, next: NextFunction) => void {
