@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { AuthenticationErrors } from "../AuthenticationErrors";
-import type { TodoistApiClient } from "../../../../../playground/services/todoist/TodoistApiClient";
+import type { TodoistApiClient } from "../../../../services/todoist/TodoistApiClient";
 import { OAuthCallbackRoute } from "../../../oauth/OAuthApiRoutesFactory";
 
 /** OAuth Callback endpoint implementation for Todoist. */
@@ -26,29 +26,28 @@ export class CallbackRoute extends OAuthCallbackRoute {
             return;
         }
         
+        /* State validation */
         const session = await this.todoistApiClient.getSessionByOAuthState(state);
         if (!session) {
             this.redirectToError(AuthenticationErrors.INVALID_OAUTH_STATE, res);
             return;
-        }
-
-        try {
-            await this.todoistApiClient.consumeState(session.userId, state);
-        } catch {
-            this.redirectToError(AuthenticationErrors.INVALID_OAUTH_STATE, res);
-            return;
+        } else if (session.expiresAt && session.expiresAt.getTime() <= Date.now()) {
+            this.todoistApiClient.clearUserSession(session.userId).catch(() => {});
+            this.redirectToError(AuthenticationErrors.EXPIRED_OAUTH_STATE, res);
         }
 
         /* Token exchange and persistence */
         try {
-            const accessToken = await this.todoistApiClient.exchangeCodeForAccessToken(code);
-            await this.todoistApiClient.registerUserAccessToken(session.userId, accessToken);
+            await this.todoistApiClient.registerUserAccessToken(
+                session.userId,
+                await this.todoistApiClient.exchangeOAuthCodeForAccessToken(code),
+            );
         } catch {
             this.redirectToError(AuthenticationErrors.TOKEN_EXCHANGE_FAILED, res);
             return;
         }
         
-        // TODO in the future : publish an event or whatever to notify the discord app
+        // TODO in the future : notify the discord app to DM the user (for both success and failure cases)
 
         res.redirect("/oauth/success");
     }

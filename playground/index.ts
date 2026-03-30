@@ -1,10 +1,10 @@
 import 'dotenv/config';
 import { OAuthApiService } from "../src/services/oauth/OAuthApiService";
 import { TodoistOAuthRoutesFactory } from "../src/services/todoist/oauth/TodoistOAuthRoutesFactory";
-import { InMemoryUserSessionManager } from "./services/todoist/sessions/InMemoryUserSessionManager";
-import { TodoistApiClient } from "./services/todoist/TodoistApiClient";
-import { UserSessionStatus } from "./services/todoist/sessions/UserSession";
-import { UserSessionManager } from "./services/todoist/sessions/UserSessionManager";
+import { InMemoryUserSessionManager } from "../src/services/todoist/sessions/InMemoryUserSessionManager";
+import { TodoistApiClient } from "../src/services/todoist/TodoistApiClient";
+import { UserSessionStatus } from "../src/services/todoist/sessions/UserSession";
+import { UserSessionManager } from "../src/services/todoist/sessions/UserSessionManager";
 
 if (!process.env.TODOIST_CLIENT_ID || !process.env.TODOIST_CLIENT_SECRET) {
     console.error("TODOIST_CLIENT_ID and TODOIST_CLIENT_SECRET environment variables must be set.");
@@ -13,12 +13,12 @@ if (!process.env.TODOIST_CLIENT_ID || !process.env.TODOIST_CLIENT_SECRET) {
 
 const sessionManager: UserSessionManager = new InMemoryUserSessionManager();
 
-const todoistClient = new TodoistApiClient({
-    clientId: process.env.TODOIST_CLIENT_ID,
-    clientSecret: process.env.TODOIST_CLIENT_SECRET,
-    permissions: ["data:read_write"],
+const todoistClient = new TodoistApiClient(
+    process.env.TODOIST_CLIENT_ID,
+    process.env.TODOIST_CLIENT_SECRET,
     sessionManager,
-});
+    { permissions: ["data:read_write"] },
+);
 
 const oauthApiService = new OAuthApiService(
     new TodoistOAuthRoutesFactory(todoistClient));
@@ -32,13 +32,12 @@ const sleep = async (ms: number): Promise<void> => {
 (async () => {
     await oauthApiService.start(3999);
 
-    const authRequest = await todoistClient.createAuthorizationRequest(demoUserId);
+    const authorizationUrl = await todoistClient.createOAuthAuthorizationUrl(demoUserId);
 
     console.log("OAuth callback service started on port 3999.");
     console.log("Callback endpoint: http://localhost:3999/oauth/callback");
     console.log("Open this URL in your browser to authorize the app:");
-    console.log(authRequest.authorizationUrl);
-    console.log("OAuth state:", authRequest.state);
+    console.log(authorizationUrl);
 
     // const codeFromCallback = process.env.TODOIST_PLAYGROUND_ACCESS_TOKEN;
     // if (!codeFromCallback) {
@@ -47,7 +46,7 @@ const sleep = async (ms: number): Promise<void> => {
     // }
     let accessToken: string | null = null;
     do {
-        await todoistClient.pruneExpiredStates();
+        await todoistClient.pruneExpiredSessions();
         const session = await sessionManager.getSession(demoUserId);
 
         if (session?.status === UserSessionStatus.Completed && typeof session.accessToken === "string") {

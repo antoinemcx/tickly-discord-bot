@@ -4,7 +4,7 @@ import { OAuthCallbackRoute, OAuthErrorRoute, OAuthSuccessRoute } from "../../oa
 import { CallbackRoute } from "./routes/CallbackRoute";
 import { ErrorRoute } from "./routes/ErrorRoute";
 import { SuccessRoute } from "./routes/SuccessRoute";
-import { TodoistApiClient } from "../../../../playground/services/todoist/TodoistApiClient";
+import { TodoistApiClient } from "../../../services/todoist/TodoistApiClient";
 
 /** Factory method implementation for Todoist OAuth routes. */
 export class TodoistOAuthRoutesFactory implements OAuthApiRoutesFactory {

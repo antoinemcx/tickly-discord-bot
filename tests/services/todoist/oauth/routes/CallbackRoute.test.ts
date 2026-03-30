@@ -92,8 +92,12 @@ describe("CallbackRoute", () => {
             } as any;
             const res = { redirect: jest.fn() } as any;
             mockTodoistApiClient.getSessionByOAuthState
-                = jest.fn().mockResolvedValue(undefined);
-            const expectedError = AuthenticationErrors.INVALID_OAUTH_STATE;
+                = jest.fn().mockResolvedValue({
+                    userId: "user123",
+                    expiresAt: new Date(Date.now() - 5000),
+                });
+            mockTodoistApiClient.clearUserSession = jest.fn();
+            const expectedError = AuthenticationErrors.EXPIRED_OAUTH_STATE;
 
             // Act
             await route.handle(req, res);
@@ -101,6 +105,7 @@ describe("CallbackRoute", () => {
             // Assert
             expect(res.redirect)
                 .toHaveBeenCalledWith(`/oauth/error?reason=${expectedError}`);
+            expect(mockTodoistApiClient.clearUserSession).toHaveBeenCalled();
         });
 
         test("should redirect to error if token exchange fails", async () => {
@@ -109,7 +114,7 @@ describe("CallbackRoute", () => {
             mockTodoistApiClient.getSessionByOAuthState
                 = jest.fn().mockResolvedValue({ userId: "user123" });
             mockTodoistApiClient.consumeState = jest.fn().mockResolvedValue(undefined);
-            mockTodoistApiClient.exchangeCodeForAccessToken
+            mockTodoistApiClient.exchangeOAuthCodeForAccessToken
                 = jest.fn().mockRejectedValue(new Error("Token exchange failed"));
             const expectedError = AuthenticationErrors.TOKEN_EXCHANGE_FAILED;
 
@@ -128,7 +133,7 @@ describe("CallbackRoute", () => {
             mockTodoistApiClient.getSessionByOAuthState
                 = jest.fn().mockResolvedValue({ userId: "user123" });
             mockTodoistApiClient.consumeState = jest.fn().mockResolvedValue(undefined);
-            mockTodoistApiClient.exchangeCodeForAccessToken
+            mockTodoistApiClient.exchangeOAuthCodeForAccessToken
                 = jest.fn().mockResolvedValue("access_token_abc");
             mockTodoistApiClient.registerUserAccessToken
                 = jest.fn().mockResolvedValue(undefined);

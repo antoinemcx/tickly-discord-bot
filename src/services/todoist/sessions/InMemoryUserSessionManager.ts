@@ -1,9 +1,7 @@
 import { UserSession } from "./UserSession";
 import { UserSessionManager } from "./UserSessionManager";
 
-/**
- * In-memory session manager adapter for local tests and playground usage.
- */
+/** In-memory session manager adapter for local tests and playground usage. */
 export class InMemoryUserSessionManager implements UserSessionManager {
     private readonly sessionsByUserId = new Map<string, UserSession>();
 
@@ -12,13 +10,8 @@ export class InMemoryUserSessionManager implements UserSessionManager {
     }
 
     public async getSessionByOAuthState(oauthState: string): Promise<UserSession | undefined> {
-        for (const session of this.sessionsByUserId.values()) {
-            if (session.oauthState === oauthState) {
-                return session;
-            }
-        }
-
-        return undefined;
+        return Array.from(this.sessionsByUserId.values())
+            .find(session => session.oauthState === oauthState);
     }
 
     public async createSession(session: UserSession): Promise<void> {
@@ -33,7 +26,7 @@ export class InMemoryUserSessionManager implements UserSessionManager {
         this.sessionsByUserId.delete(userId);
     }
 
-    public async pruneExpiredStates(): Promise<void> {
+    public async pruneExpiredSessions(): Promise<void> {
         const now = Date.now();
 
         for (const [userId, session] of this.sessionsByUserId.entries()) {
