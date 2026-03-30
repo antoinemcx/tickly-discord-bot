@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { TodoistApiClient } from "../../TodoistApiClient";
-import { OAuthSuccessRoute } from "../../../oauth-api/OAuthApiRoutesFactory";
+import type { TodoistApiClient } from "../../../../../playground/services/todoist/TodoistApiClient";
+import { OAuthSuccessRoute } from "../../../oauth/OAuthApiRoutesFactory";
 
 /** OAuth Success endpoint implementation for Todoist. */
 export class SuccessRoute extends OAuthSuccessRoute {

@@ -1,10 +1,10 @@
-import type { OAuthApiRoute } from "../../oauth-api/OAuthApiRoute";
-import type { OAuthApiRoutesFactory } from "../../oauth-api/OAuthApiRoutesFactory";
-import { OAuthCallbackRoute, OAuthErrorRoute, OAuthSuccessRoute } from "../../oauth-api/OAuthApiRoutesFactory";
+import type { OAuthApiRoute } from "../../oauth/OAuthApiRoute";
+import type { OAuthApiRoutesFactory } from "../../oauth/OAuthApiRoutesFactory";
+import { OAuthCallbackRoute, OAuthErrorRoute, OAuthSuccessRoute } from "../../oauth/OAuthApiRoutesFactory";
 import { CallbackRoute } from "./routes/CallbackRoute";
 import { ErrorRoute } from "./routes/ErrorRoute";
 import { SuccessRoute } from "./routes/SuccessRoute";
-import { TodoistApiClient } from "../TodoistApiClient";
+import { TodoistApiClient } from "../../../../playground/services/todoist/TodoistApiClient";
 
 /** Factory method implementation for Todoist OAuth routes. */
 export class TodoistOAuthRoutesFactory implements OAuthApiRoutesFactory {

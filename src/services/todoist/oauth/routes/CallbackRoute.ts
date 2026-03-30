@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { AuthenticationErrors } from "../AuthenticationErrors";
-import type { TodoistApiClient } from "../../TodoistApiClient";
-import { OAuthCallbackRoute } from "../../../oauth-api/OAuthApiRoutesFactory";
+import type { TodoistApiClient } from "../../../../../playground/services/todoist/TodoistApiClient";
+import { OAuthCallbackRoute } from "../../../oauth/OAuthApiRoutesFactory";
 
 /** OAuth Callback endpoint implementation for Todoist. */
 export class CallbackRoute extends OAuthCallbackRoute {

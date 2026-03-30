@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { TodoistApiClient } from "../../TodoistApiClient";
-import { OAuthErrorRoute } from "../../../oauth-api/OAuthApiRoutesFactory";
+import type { TodoistApiClient } from "../../../../../playground/services/todoist/TodoistApiClient";
+import { OAuthErrorRoute } from "../../../oauth/OAuthApiRoutesFactory";
 
 /** OAuth error endpoint implementation for Todoist. */
 export class ErrorRoute extends OAuthErrorRoute {
