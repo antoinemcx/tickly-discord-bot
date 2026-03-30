@@ -1,4 +1,4 @@
-# <code>🤖</code> Tickly : a Todoist app to sync with Discord
+<h1 align="center"><code>🤖</code> Tickly : a Todoist app to sync with Discord</h1>
 
 📝 Unofficial Todoist integration for Discord – connect your Todoist account and manage your tasks directly from the Tickly Discord bot !
 <br>
@@ -45,4 +45,5 @@ If you like the project, feel free to put a ⭐ !
 You can also join my [discord server](https://antoinemcx.fr/discord) if you want to have a word or two or if you have any question about the project.
 
 ## License
-TODO
+Tickly is licensed under the GPL-3.0 License. See the [LICENSE](./LICENSE) file for more details.  
+This means that you are free to use and modify the software, but any derivative work must also be licensed under the same GPL-3.0 License.
