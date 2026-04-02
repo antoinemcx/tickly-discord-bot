@@ -1,7 +1,14 @@
 {
   "compilerOptions": {
     "target": "es2020",
+    "baseUrl": ".",
     "module": "commonjs",
+    "paths": {
+      "@bot/*": ["src/bot/*"],
+      "@services/*": ["src/services/*"],
+      "@database/*": ["src/database/*"],
+      "@src/*": ["src/*"]
+    },
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types"],
     "strict": true,
@@ -11,6 +18,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["./src/**/*.ts", "./src/**/*.json", "./playground/**/*.ts"],
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.json",
+    "./tests/**/*.ts",
+    "./playground/**/*.ts"
+  ],
   "exclude": ["./build/*", "./node_modules/*"]
 }

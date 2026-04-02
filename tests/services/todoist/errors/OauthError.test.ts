@@ -1,4 +1,4 @@
-import { OAuthError } from "../../../../src/services/todoist/errors/OAuthError";
+import { OAuthError } from "@services/todoist/errors/OAuthError";
 
 describe("OAuthError", () => {
   it("should create with correct name and message", () => {

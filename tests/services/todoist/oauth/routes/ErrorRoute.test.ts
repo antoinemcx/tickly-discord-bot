@@ -1,4 +1,4 @@
-import { ErrorRoute } from "../../../../../src/services/todoist/oauth/routes/ErrorRoute";
+import { ErrorRoute } from "@services/todoist/oauth/routes/ErrorRoute";
 
 const mockTodoistApiClient = {} as any;
 let route: ErrorRoute;

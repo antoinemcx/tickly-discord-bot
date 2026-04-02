@@ -1,13 +1,13 @@
-import type { Server } from "node:http";
-import type { OAuthApiRoute } from "../../../src/services/oauth/OAuthApiRoute";
+import type { OAuthApiRoute } from "@services/oauth/OAuthApiRoute";
 import type {
   OAuthApiRoutesFactory,
   OAuthCallbackRoute,
   OAuthErrorRoute,
   OAuthSuccessRoute,
-} from "../../../src/services/oauth/OAuthApiRoutesFactory";
+} from "@services/oauth/OAuthApiRoutesFactory";
+import type { Server } from "node:http";
+import { OAuthApiService } from "@services/oauth/OAuthApiService";
 import express from "express";
-import { OAuthApiService } from "../../../src/services/oauth/OAuthApiService";
 
 let service: OAuthApiService;
 let routesFactoryMock: OAuthApiRoutesFactory;

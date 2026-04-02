@@ -1,15 +1,15 @@
 import type {
   AuthTokenResponse,
 } from "@doist/todoist-api-typescript";
-import type { UserSessionManager } from "../../../src/services/todoist/sessions/UserSessionManager";
+import type { UserSessionManager } from "@services/todoist/sessions/UserSessionManager";
 import {
   getAuthToken,
   TodoistApi,
   TodoistRequestError,
 } from "@doist/todoist-api-typescript";
-import { PersistenceError } from "../../../src/services/todoist/errors/PersistenceError";
-import { UserSessionStatus } from "../../../src/services/todoist/sessions/UserSession";
-import { TodoistApiClient } from "../../../src/services/todoist/TodoistApiClient";
+import { PersistenceError } from "@services/todoist/errors/PersistenceError";
+import { UserSessionStatus } from "@services/todoist/sessions/UserSession";
+import { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 
 jest.mock("@doist/todoist-api-typescript", () => {
   const actual = jest.requireActual("@doist/todoist-api-typescript");

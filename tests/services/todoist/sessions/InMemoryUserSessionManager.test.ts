@@ -1,6 +1,6 @@
-import type { UserSession } from "../../../../src/services/todoist/sessions/UserSession";
-import { InMemoryUserSessionManager } from "../../../../src/services/todoist/sessions/InMemoryUserSessionManager";
-import { UserSessionStatus } from "../../../../src/services/todoist/sessions/UserSession";
+import type { UserSession } from "@services/todoist/sessions/UserSession";
+import { InMemoryUserSessionManager } from "@services/todoist/sessions/InMemoryUserSessionManager";
+import { UserSessionStatus } from "@services/todoist/sessions/UserSession";
 
 let sessionManager: InMemoryUserSessionManager;
 let sessionMock: UserSession;

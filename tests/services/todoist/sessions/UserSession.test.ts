@@ -1,4 +1,4 @@
-import { UserSession, UserSessionStatus } from "../../../../src/services/todoist/sessions/UserSession";
+import { UserSession, UserSessionStatus } from "@services/todoist/sessions/UserSession";
 
 describe("UserSession", () => {
   it("should create", () => {

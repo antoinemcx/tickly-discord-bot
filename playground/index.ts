@@ -1,9 +1,9 @@
-import type { UserSessionManager } from "../src/services/todoist/sessions/UserSessionManager";
-import { OAuthApiService } from "../src/services/oauth/OAuthApiService";
-import { TodoistOAuthRoutesFactory } from "../src/services/todoist/oauth/TodoistOAuthRoutesFactory";
-import { InMemoryUserSessionManager } from "../src/services/todoist/sessions/InMemoryUserSessionManager";
-import { UserSessionStatus } from "../src/services/todoist/sessions/UserSession";
-import { TodoistApiClient } from "../src/services/todoist/TodoistApiClient";
+import type { UserSessionManager } from "@services/todoist/sessions/UserSessionManager";
+import { OAuthApiService } from "@services/oauth/OAuthApiService";
+import { TodoistOAuthRoutesFactory } from "@services/todoist/oauth/TodoistOAuthRoutesFactory";
+import { InMemoryUserSessionManager } from "@services/todoist/sessions/InMemoryUserSessionManager";
+import { UserSessionStatus } from "@services/todoist/sessions/UserSession";
+import { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import "dotenv/config";
 
 if (!process.env.TODOIST_CLIENT_ID || !process.env.TODOIST_CLIENT_SECRET) {

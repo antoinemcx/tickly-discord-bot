@@ -1,5 +1,5 @@
-import { AuthenticationErrors } from "../../../../../src/services/todoist/oauth/AuthenticationErrors";
-import { CallbackRoute } from "../../../../../src/services/todoist/oauth/routes/CallbackRoute";
+import { AuthenticationErrors } from "@services/todoist/oauth/AuthenticationErrors";
+import { CallbackRoute } from "@services/todoist/oauth/routes/CallbackRoute";
 
 const mockTodoistApiClient = {} as any;
 const validReq = {
@@ -96,7 +96,8 @@ describe("CallbackRoute", () => {
           userId: "user123",
           expiresAt: new Date(Date.now() - 5000),
         });
-      mockTodoistApiClient.clearUserSession = jest.fn();
+      mockTodoistApiClient.clearUserSession
+        = jest.fn().mockResolvedValue(undefined);
       const expectedError = AuthenticationErrors.EXPIRED_OAUTH_STATE;
 
       // Act

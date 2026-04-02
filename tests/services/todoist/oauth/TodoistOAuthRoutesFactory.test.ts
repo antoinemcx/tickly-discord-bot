@@ -1,4 +1,4 @@
-import { TodoistOAuthRoutesFactory } from "../../../../src/services/todoist/oauth/TodoistOAuthRoutesFactory";
+import { TodoistOAuthRoutesFactory } from "@services/todoist/oauth/TodoistOAuthRoutesFactory";
 
 let factory: TodoistOAuthRoutesFactory;
 beforeAll(() => {

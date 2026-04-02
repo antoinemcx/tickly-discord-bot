@@ -1,4 +1,4 @@
-import { SuccessRoute } from "../../../../../src/services/todoist/oauth/routes/SuccessRoute";
+import { SuccessRoute } from "@services/todoist/oauth/routes/SuccessRoute";
 
 const mockTodoistApiClient = {} as any;
 let route: SuccessRoute;

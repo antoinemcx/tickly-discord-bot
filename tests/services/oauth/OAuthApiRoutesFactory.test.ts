@@ -2,7 +2,7 @@ import {
   OAuthCallbackRoute,
   OAuthErrorRoute,
   OAuthSuccessRoute,
-} from "../../../src/services/oauth/OAuthApiRoutesFactory";
+} from "@services/oauth/OAuthApiRoutesFactory";
 
 describe("OAuthCallbackRoute", () => {
   it("should point to the correct path", () => {

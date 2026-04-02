@@ -1,4 +1,4 @@
-import { PersistenceError } from "../../../../src/services/todoist/errors/PersistenceError";
+import { PersistenceError } from "@services/todoist/errors/PersistenceError";
 
 describe("PersistenceError", () => {
   it("should create with correct name and message", () => {
