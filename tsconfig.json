@@ -11,6 +11,7 @@
     },
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types"],
+    "types": ["jest", "node"],
     "strict": true,
     "noImplicitAny": true,
     "declaration": false,

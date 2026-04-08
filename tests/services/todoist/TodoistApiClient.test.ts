@@ -38,12 +38,12 @@ let todoistApiClientMock: TodoistApiClient;
 
 beforeEach(() => {
   // Arrange
+  jest.clearAllMocks();
   todoistApiClientMock = new TodoistApiClient(
     TEST_CLIENT_ID,
     TEST_CLIENT_SECRET,
     mockSessionManager,
   );
-  jest.restoreAllMocks();
 });
 
 describe("TodoistApiClient", () => {

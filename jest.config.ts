@@ -6,10 +6,11 @@ const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
   clearMocks: true,
-  collectCoverage: false,
+  testPathIgnorePatterns: ["<rootDir>/build/tests/"],
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: "<rootDir>/",
   }),
+  collectCoverage: false,
   // coverageDirectory: "./coverage",
   // coverageProvider: "v8",
 };
