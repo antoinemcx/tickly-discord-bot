@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "baseUrl": ".",
     "module": "commonjs",
     "paths": {
-      "@bot/*": ["src/bot/*"],
-      "@services/*": ["src/services/*"],
-      "@database/*": ["src/database/*"],
-      "@src/*": ["src/*"]
+      "@bot/*": ["./src/bot/*"],
+      "@services/*": ["./src/services/*"],
+      "@database/*": ["./src/database/*"],
+      "@src/*": ["./src/*"]
     },
     "resolveJsonModule": true,
     "typeRoots": ["./node_modules/@types"],
