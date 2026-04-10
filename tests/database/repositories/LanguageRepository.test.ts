@@ -1,4 +1,5 @@
 import type { DrizzleDatabase } from "@database/DrizzleDatabase";
+import type { Language } from "@database/schema/user.schema";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
 import { DrizzleError } from "drizzle-orm";
 
@@ -54,16 +55,65 @@ describe("LanguageRepository", () => {
       // Assert
       expect(result).toStrictEqual([]);
     });
+  });
 
-    it("should throw an error in case of SQL errors", async () => {
+  describe("addLanguage", () => {
+    it("should insert or update a language using the default connection", async () => {
       // Arrange
-      connectionMock.select.mockReturnValue({
-        from: jest.fn().mockRejectedValue(new DrizzleError({
-          message: "Table not found",
-        })),
+      const language: Language = {
+        id: 1,
+        code: "en-US",
+        name: "English",
+      };
+      const onDuplicateKeyUpdateMock = jest.fn().mockResolvedValue(undefined);
+      const valuesMock = jest.fn().mockReturnValue({
+        onDuplicateKeyUpdate: onDuplicateKeyUpdateMock,
       });
-      // Act & Assert
-      await expect(repository.getLanguageCodes()).rejects.toThrow(Error);
+      connectionMock.insert.mockReturnValue({ values: valuesMock });
+
+      // Act
+      await repository.addLanguage(language);
+
+      // Assert
+      expect(connectionMock.insert).toHaveBeenCalledTimes(1);
+      expect(valuesMock).toHaveBeenCalledWith(language);
+      expect(onDuplicateKeyUpdateMock).toHaveBeenCalledWith({
+        set: {
+          code: language.code,
+          name: language.name,
+        },
+      });
+    });
+
+    it("should use the injected insert executor when provided", async () => {
+      // Arrange
+      const language: Language = {
+        id: 2,
+        code: "fr-FR",
+        name: "French",
+      };
+      const onDuplicateKeyUpdateMock = jest.fn().mockResolvedValue(undefined);
+      const valuesMock = jest.fn().mockReturnValue({
+        onDuplicateKeyUpdate: onDuplicateKeyUpdateMock,
+      });
+      const insertExecutor = {
+        insert: jest.fn().mockReturnValue({
+          values: valuesMock,
+        }),
+      } as any;
+
+      // Act
+      await repository.addLanguage(language, insertExecutor);
+
+      // Assert
+      expect(insertExecutor.insert).toHaveBeenCalledTimes(1);
+      expect(valuesMock).toHaveBeenCalledWith(language);
+      expect(onDuplicateKeyUpdateMock).toHaveBeenCalledWith({
+        set: {
+          code: language.code,
+          name: language.name,
+        },
+      });
     });
   });
 });

@@ -3,12 +3,17 @@ import type { MySql2Database } from "drizzle-orm/mysql2";
 import type { Pool as Pool2 } from "mysql2";
 import type { Pool } from "mysql2/promise";
 import { DrizzleDatabase } from "@database/DrizzleDatabase";
+import { LanguageRepository } from "@database/repositories/LanguageRepository";
+import * as schema from "@database/schema";
+import { getTableName } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { createPool } from "mysql2/promise";
 
 let dbMock: DrizzleDatabase;
 let poolMock: Pool;
 let connectionMock: MySql2Database<any>;
+let transactionMock: any;
+const requiredTables = Object.values(schema).map(table => getTableName(table));
 
 const configMock: DbOptions = {
   host: "localhost",
@@ -32,6 +37,7 @@ beforeEach(async () => {
   poolMock = {
     end: jest.fn().mockResolvedValue(undefined),
     getConnection: jest.fn(),
+    query: jest.fn(),
   } as any as Pool;
 
   connectionMock = {
@@ -39,10 +45,21 @@ beforeEach(async () => {
     from: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     innerJoin: jest.fn().mockReturnThis(),
+    transaction: jest.fn(),
     insert: jest.fn().mockReturnValue({
       values: jest.fn().mockResolvedValue(undefined),
     }),
   } as any as MySql2Database<any>;
+
+  transactionMock = {
+    insert: jest.fn().mockReturnValue({
+      values: jest.fn().mockReturnValue({
+        onDuplicateKeyUpdate: jest.fn().mockResolvedValue(undefined),
+      }),
+    }),
+  };
+
+  (connectionMock.transaction as jest.Mock).mockImplementation(async (callback: any) => callback(transactionMock));
 
   (createPool as jest.MockedFunction<typeof createPool>).mockReturnValue(poolMock);
   (drizzle as jest.MockedFunction<typeof drizzle>).mockReturnValue(
@@ -133,6 +150,121 @@ describe("DrizzleDatabase", () => {
       const connection = dbMock.getConnection();
       // Assert
       expect(connection).toBe(connectionMock);
+    });
+  });
+
+  describe("initializeBaseData", () => {
+    it("should verify tables before seeding", async () => {
+      // Arrange
+      const assertSpy = jest.spyOn(dbMock, "assertTablesExist").mockResolvedValueOnce();
+      const seedSpy = jest.spyOn(dbMock, "seedTables").mockResolvedValueOnce();
+
+      // Act
+      await dbMock.initializeBaseData();
+
+      // Assert
+      expect(assertSpy).toHaveBeenCalledTimes(1);
+      expect(seedSpy).toHaveBeenCalledTimes(1);
+      expect(assertSpy.mock.invocationCallOrder[0])
+        .toBeLessThan(seedSpy.mock.invocationCallOrder[0]);
+    });
+  });
+
+  describe("assertTablesExist", () => {
+    it("should resolve when all required tables exist", async () => {
+      // Arrange
+      (poolMock.query as jest.Mock).mockResolvedValueOnce([
+        requiredTables.map(tableName => ({ tableName })),
+      ]);
+
+      // Act
+      const result = dbMock.assertTablesExist();
+
+      // Assert
+      await expect(result).resolves.not.toThrow();
+      expect(poolMock.query).toHaveBeenCalledWith(
+        expect.stringContaining("table_name IN"),
+        requiredTables,
+      );
+    });
+
+    it("should reject when one required table is missing", async () => {
+      // Arrange
+      (poolMock.query as jest.Mock).mockResolvedValueOnce([
+        requiredTables.slice(0, -1).map(tableName => ({ tableName })),
+      ]);
+
+      // Act
+      const result = dbMock.assertTablesExist();
+
+      // Assert
+      await expect(result).rejects.toThrow();
+    });
+
+    it("should reject when more than one required table is missing", async () => {
+      // Arrange
+      (poolMock.query as jest.Mock).mockResolvedValueOnce([
+        requiredTables.slice(0, -2).map(tableName => ({ tableName })),
+      ]);
+
+      // Act
+      const result = dbMock.assertTablesExist();
+
+      // Assert
+      await expect(result).rejects.toThrow();
+    });
+
+    it("should reject when table verification query fails", async () => {
+      // Arrange
+      (poolMock.query as jest.Mock).mockRejectedValueOnce(
+        new Error("metadata failed"),
+      );
+      // Act
+      const result = dbMock.assertTablesExist();
+      // Assert
+      await expect(result).rejects.toThrow("Failed to verify database schema tables");
+    });
+  });
+
+  describe("seedTables", () => {
+    it("should upsert base languages", async () => {
+      // Act
+      const result = dbMock.seedTables();
+
+      // Assert
+      await expect(result).resolves.not.toThrow();
+      expect(connectionMock.transaction).toHaveBeenCalledTimes(1);
+      expect(transactionMock.insert).toHaveBeenCalledTimes(2);
+    });
+
+    it("should add at least one language within the transaction", async () => {
+      // Arrange
+      const addLanguageSpy = jest
+        .spyOn(LanguageRepository.prototype, "addLanguage")
+        .mockResolvedValue(undefined);
+
+      // Act
+      await dbMock.seedTables();
+
+      // Assert
+      expect(addLanguageSpy).toHaveBeenCalled();
+      expect(addLanguageSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ code: expect.any(String) }),
+        transactionMock,
+      );
+    });
+
+    it("should reject when seeding query fails", async () => {
+      // Arrange
+      (connectionMock.transaction as jest.Mock).mockRejectedValueOnce(
+        new Error("seed failed"),
+      );
+
+      // Act
+      const result = dbMock.seedTables();
+
+      // Assert
+      await expect(result).rejects.toThrow("Failed to seed base configuration data");
     });
   });
 });

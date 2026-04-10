@@ -12,9 +12,10 @@ import {
 /* Configuration tables */
 export const languagesTable = mysqlTable("languages", {
   id: int("id").primaryKey(),
-  name: varchar("name", { length: 20 }).notNull(),
   code: varchar("code", { length: 8 }).notNull(),
+  name: varchar("name", { length: 20 }).notNull(),
 });
+export type Language = typeof languagesTable.$inferSelect;
 
 /* User tables */
 export const usersTable = mysqlTable("users", {
@@ -25,7 +26,6 @@ export const usersTable = mysqlTable("users", {
     .default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
-
 export type User = typeof usersTable.$inferSelect;
 
 const userSessionStatusValues = Object.values(UserSessionStatus) as [
