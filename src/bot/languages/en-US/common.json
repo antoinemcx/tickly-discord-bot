@@ -1,0 +1,9 @@
+{
+  "interactionHandling": {
+    "privateCommand": "{{x}} This command is private and only for my developers.",
+    "missingPermission": {
+      "user": "{{x}} You are missing permissions (required : {{required}})",
+      "bot": "{{x}} I am missing permissions (required : {{required}})"
+    }
+  }
+}

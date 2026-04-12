@@ -19,6 +19,7 @@
     "skipLibCheck": true
   },
   "include": [
+    "./config.example.ts",
     "./src/**/*.ts",
     "./src/**/*.json",
     "./tests/**/*.ts",

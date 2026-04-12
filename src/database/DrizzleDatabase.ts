@@ -3,6 +3,7 @@ import type { MySql2Database } from "drizzle-orm/mysql2";
 import type { RowDataPacket } from "mysql2";
 import type { Pool } from "mysql2/promise";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
+import { Locale } from "discord.js";
 import { getTableName } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { createPool } from "mysql2/promise";
@@ -118,8 +119,8 @@ export class DrizzleDatabase {
   public async seedTables(): Promise<void> {
     const languageRepository = new LanguageRepository(this);
     const seedLanguages: readonly Language[] = [
-      { id: 1, code: "en-US", name: "English" },
-      { id: 2, code: "fr-FR", name: "French" },
+      { id: 1, code: Locale.EnglishUS, name: "English" },
+      { id: 2, code: Locale.French, name: "French" },
     ];
 
     try {

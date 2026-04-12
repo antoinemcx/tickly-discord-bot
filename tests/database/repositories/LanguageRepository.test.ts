@@ -1,7 +1,7 @@
 import type { DrizzleDatabase } from "@database/DrizzleDatabase";
 import type { Language } from "@database/schema/user.schema";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
-import { DrizzleError } from "drizzle-orm";
+import { Locale } from "discord.js";
 
 let repository: LanguageRepository;
 let databaseMock: jest.Mocked<DrizzleDatabase>;
@@ -62,7 +62,7 @@ describe("LanguageRepository", () => {
       // Arrange
       const language: Language = {
         id: 1,
-        code: "en-US",
+        code: Locale.EnglishUS,
         name: "English",
       };
       const onDuplicateKeyUpdateMock = jest.fn().mockResolvedValue(undefined);
@@ -89,7 +89,7 @@ describe("LanguageRepository", () => {
       // Arrange
       const language: Language = {
         id: 2,
-        code: "fr-FR",
+        code: Locale.French,
         name: "French",
       };
       const onDuplicateKeyUpdateMock = jest.fn().mockResolvedValue(undefined);

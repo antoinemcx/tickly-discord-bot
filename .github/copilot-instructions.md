@@ -51,4 +51,4 @@
 
 ## Existing Documentation
 - High-level project overview: `README.md`
-- Runtime/config examples: `.env.example`, `config.example.js`
+- Runtime/config examples: `.env.example`, `config.example.ts`

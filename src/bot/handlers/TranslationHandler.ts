@@ -1,0 +1,177 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { displayInfo, displayLoaded } from "@src/utils/logger";
+import { Locale } from "discord.js";
+import { Handler } from "./Handler";
+
+type TranslationFiles = Map<string, TranslationDictionary>;
+
+interface TranslationDictionary {
+  [key: string]: string | TranslationDictionary;
+}
+
+/**
+ * Handles loading language files and translations from those files.
+ */
+export class TranslationHandler extends Handler {
+  public static readonly languageFilesPath = join(__dirname, "..", "languages");
+  private static readonly MISSING_TRANSLATION_MESSAGE
+    = "Missing translation for ";
+
+  /**
+   * Stored translations with the translation types (common, commands, etc.)
+   * and the translation key of each translation locale folder.
+   */
+  private readonly translations: Map<Locale, TranslationFiles> = new Map();
+
+  public async setup(): Promise<void> {
+    displayInfo("Loading language directories...");
+    const languageDirs = readdirSync(TranslationHandler.languageFilesPath);
+
+    if (languageDirs) {
+      for (const language of languageDirs) {
+        if (!this.isSupportedLocale(language)) {
+          throw new Error(`Invalid language locale '${language}'`);
+        }
+        this.loadTranslationFiles(language);
+      };
+      displayLoaded(languageDirs.map(dir => `\x1B[35m${dir}\x1B[0m`).join(", ")
+        + " directories");
+    }
+  }
+
+  /**
+   * Loads a language translation files into memory for translations.
+   * @param language language for storing translations
+   */
+  private loadTranslationFiles(language: Locale): void {
+    const languagePath = join(TranslationHandler.languageFilesPath, language);
+    const languageFiles = readdirSync(languagePath);
+
+    this.translations.set(language, new Map());
+    if (!languageFiles.every(file => file.endsWith(".json"))) {
+      throw new Error("The " + language
+        + " directory contain more than just json files.");
+    }
+
+    for (const file of languageFiles) {
+      const filePath = join(languagePath, file);
+      const fileContent = JSON.parse(readFileSync(filePath, "utf8"));
+      const fileName = file.replace(".json", "");
+
+      this.translations.get(language)!.set(fileName, fileContent);
+    }
+  }
+
+  /** @returns language locales that have stored translations */
+  public getLocales(): string[] {
+    return this.translations ? Array.from(this.translations.keys()) : [];
+  }
+
+  /**
+   * Checks whether a locale string is a supported Discord locale.
+   * @param locale locale string to validate.
+   * @returns true when the locale is a valid Locale enum value.
+   */
+  public isSupportedLocale(locale: string): locale is Locale {
+    return Object.values(Locale).includes(locale as Locale);
+  }
+
+  /**
+   * Translates a text from the <language>/common.json file.
+   * @param language language code
+   * @param translationKey identifier in the translation file
+   * @param parameters optional parameters for placeholders
+   * @returns Translated text or a fallback if translation is missing
+   */
+  public translateCommon(
+    language: Locale,
+    translationKey: string,
+    parameters: Record<string, string> = {},
+  ): string {
+    const translated: string = this.getNestedProperty(
+      this.translations.get(language)?.get("common"),
+      translationKey,
+    ) || TranslationHandler.MISSING_TRANSLATION_MESSAGE + translationKey;
+
+    return this.replaceParameters(translated, parameters);
+  }
+
+  /**
+   * Translates a text from the <language>/commands.json file.
+   * @param language language code
+   * @param command name of the command the text is originated
+   * @param translationKey identifier in the translation file
+   * @param parameters optional parameters for placeholders
+   * @returns translated text or a fallback if translation is missing
+   */
+  public translateCommand(
+    language: Locale,
+    command: string,
+    translationKey: string,
+    parameters: Record<string, string> = {},
+  ): string {
+    const translated: string = this.getNestedProperty(
+      this.translations.get(language)?.get("commands"),
+      `${command}.${translationKey}`,
+    ) || TranslationHandler.MISSING_TRANSLATION_MESSAGE + translationKey;
+
+    return this.replaceParameters(translated, parameters);
+  }
+
+  /**
+   * Retrieves a nested property from an object using a dot-separated key.
+   * @param data the object to retrieve the property from
+   * @param nestedKey the dot-separated key
+   * @returns the value of the nested property, or undefined if any part
+   *          of the path is missing
+   */
+  private getNestedProperty(
+    data: TranslationDictionary | undefined,
+    nestedKey: string,
+  ): string | undefined {
+    const keys: string[] = nestedKey.split(".");
+    let nestedProperty: any = data;
+    if (!nestedProperty) {
+      return undefined;
+    }
+
+    for (let keyIndex = 0;
+      nestedProperty !== undefined && keyIndex < keys.length;
+      keyIndex++) {
+      nestedProperty = nestedProperty[keys[keyIndex]];
+    }
+
+    return nestedProperty;
+  }
+
+  /**
+   * Replaces JSON placeholders in a translated text.
+   *
+   * Placeholders are in the format {{ parameterName }} and can be used for
+   * both parameters, provided in the parameters param, and emotes defined in
+   * the bot config.
+   *
+   * @param translatedText the translated text with placeholders.
+   * @param parameters record containing placeholder values.
+   * @returns translated text with placeholders replaced.
+   */
+  private replaceParameters(
+    translatedText: string,
+    parameters: Record<string, string>,
+  ): string {
+    return translatedText.replace(/\{\{(.*?)\}\}/g, (_match, parameter) => {
+      const trimmedParameter = parameter.trim();
+      if (parameters[trimmedParameter]) { // parameter provided
+        return parameters[trimmedParameter];
+      }
+
+      const emotes = this.client?.getConfig()?.emotes;
+      if (emotes && trimmedParameter in emotes) { // emote parameter
+        return emotes[trimmedParameter as keyof typeof emotes];
+      }
+
+      return ""; // no parameter provided
+    });
+  }
+}
