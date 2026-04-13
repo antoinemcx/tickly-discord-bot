@@ -10,11 +10,13 @@ import { SlashCommand } from "@bot/commands/SlashCommand";
 import { UserCommand } from "@bot/commands/UserCommand";
 import { Tickly } from "@bot/Tickly";
 import {
+  displayDetailedError,
   displayError,
   displayInfo,
   displayLoaded,
   displaySuccess,
   displayWarning,
+  generateErrorCode,
 } from "@src/utils/logger";
 import { Events, Locale, REST, Routes } from "discord.js";
 import { Handler } from "./Handler";
@@ -192,9 +194,14 @@ export class CommandHandler extends Handler {
    *
    * @param interaction the interaction to handle
    * @returns a promise that resolves when the interaction is handled
+   * @throws {Error} if the client is not set for this handler
    */
   private async handleInteraction(interaction: Interaction): Promise<void> {
     let command: BaseCommand | undefined;
+    if (!this.client) {
+      throw new Error("The client is not set for handler.");
+    }
+
     // TODO fetch user preferred language OR interaction.locale OR default
     const preferredLanguage: Omit<Language, "id">
       = { code: Locale.EnglishUS, name: "English" };
@@ -209,7 +216,22 @@ export class CommandHandler extends Handler {
 
     if (interaction.isCommand() && command
       && this.isCommandRunnable(command, interaction, preferredLanguage.code)) {
-      await command.execute(interaction, preferredLanguage.code);
+      try {
+        await command.execute(interaction, preferredLanguage.code);
+      } catch (error) {
+        const errorCode = generateErrorCode();
+        displayDetailedError(
+          `Unknown error while executing ${command?.getData().name || ""} command`,
+          error,
+          errorCode,
+        );
+        interaction.reply({
+          content: this.translate(preferredLanguage.code, "executionError", {
+            errorCode,
+          }),
+          ephemeral: true,
+        });
+      }
     }
   }
 

@@ -4,6 +4,7 @@
     "missingPermission": {
       "user": "{{x}} You are missing permissions (required : {{required}})",
       "bot": "{{x}} I am missing permissions (required : {{required}})"
-    }
+    },
+    "executionError": "{{x}} An unknown error occurred while executing the command (code: {{errorCode}})."
   }
 }

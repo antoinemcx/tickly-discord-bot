@@ -2,6 +2,20 @@ import moment from "moment";
 
 const timestamp: string = `[\x1B[90m${moment().format("HH:mm:ss")}\x1B[0m]`;
 
+/**
+ * Generates a random error code to be used for logging with
+ * 2 random characters and 6 random digits.
+ * @returns the generated error code
+ */
+export function generateErrorCode(): string {
+  const randomChars = 2;
+  const randomDigits = 6;
+  return Math.random().toString(36).substring(2, 2 + randomChars)
+    + Math.floor(
+      10 * 10 ** (randomDigits - 1) + Math.random() * 9 * 10 ** (randomDigits - 1),
+    ).toString();
+}
+
 export function displayCustom(content: string) {
   if (!content)
     throw new SyntaxError("There is no content to display.");
@@ -14,11 +28,12 @@ export function displayError(content: string) {
   console.error(`${timestamp} \x1B[31mError\x1B[0m : ${content}`);
 }
 
-export function displayDetailedError(content: string, error: unknown) {
+export function displayDetailedError(content: string, error: unknown, errorCode?: string) {
   if (!content) {
     throw new SyntaxError("There is no content to display.");
   }
   console.error(`${timestamp} \x1B[31mError\x1B[0m : ${content}`
+    + (errorCode ? ` (code: ${errorCode})` : "")
     + " (" + (error instanceof Error ? error.message : String(error)) + ")"
     + (error instanceof Error ? `\n${error.stack}` : ""));
 }
