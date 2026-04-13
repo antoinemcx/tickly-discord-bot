@@ -11,7 +11,7 @@ Connect your Todoist account and manage your tasks directly from the Discord bot
 
 ## 📋 Overview
 ### Features [**NOT YET IMPLEMENTED**]
-* 📝 Create Todoist tasks via slash command or message context menu (when right-clicking a message)
+* 📝 Create Todoist tasks via command or right-clicking a message
 * 🔄 Automatically sync your Todoist tasks
 * 📊 View and summarize your incoming tasks
 * 🧰 Create custom in-bot filters for task display (for example by project, due date, etc.)
@@ -22,7 +22,11 @@ Tickly can be installed in two ways:
 - [**Guild install:**](https://discord.com/oauth2/authorize?client_id=1483931102514249830&permissions=274878286848&integration_type=0&scope=bot) use Tickly inside a specific server.
 - [**User install (recommended):**](https://discord.com/oauth2/authorize?client_id=1483931102514249830) use Tickly from anywhere in Discord, including DMs and servers.
 
-> New to Discord bots ?  
+After it is installed, you can interact with the bot by using:
+- [**Slash commands**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): type `/` in any text channel or DM and select a command.
+- [**Message context menu**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): right-click on any message and select a command from the "Apps" section.
+
+> New to Tickly?  
 > Follow the instructions in [docs/getting-started.md](./docs/getting-started.md) to install the bot, log into Todoist and start interacting with it.
 
 <br><br>

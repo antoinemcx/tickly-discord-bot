@@ -11,8 +11,9 @@ import type {
 
 export type CommandData = Omit<
   APIApplicationCommand,
-  "id" | "application_id" | "guild_id" | "version" | "default_member_permissions"
->;
+  "id" | "application_id" | "guild_id"
+  | "version" | "default_member_permissions" | "description"
+> & { description?: APIApplicationCommand["description"] };
 
 /** Base class for all discord bots commands. */
 export abstract class BaseCommand {
@@ -46,6 +47,11 @@ export abstract class BaseCommand {
   /** @returns the data to register the command */
   public getData(): CommandData {
     return { ...this.data, type: this.type };
+  }
+
+  /** @returns the command name used to index it in handler collections. */
+  public getName(): string {
+    return this.data.name;
   }
 
   /**

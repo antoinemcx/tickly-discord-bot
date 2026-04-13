@@ -31,12 +31,19 @@ import "dotenv/config";
   }
 
   /* Initialize database */
-  const database = await DrizzleDatabase.connect({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME,
-  });
+  let database: DrizzleDatabase;
+  try {
+    database = await DrizzleDatabase.connect({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD || "",
+      database: process.env.DB_NAME,
+    });
+  } catch (error) {
+    displayError((error as Error).message);
+    process.exit(1);
+  }
+
   const repositories = new RepositoryFactory(database);
 
   /* Initialize Todoist utilities */

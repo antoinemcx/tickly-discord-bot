@@ -2,7 +2,7 @@ import type { BaseCommand } from "@bot/commands/BaseCommand";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { Language } from "@database/schema";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type { CommandInteraction, GuildMember, Interaction } from "discord.js";
+import type { CommandInteraction, GuildMember, Interaction, Locale } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MessageCommand } from "@bot/commands/MessageCommand";
@@ -13,12 +13,11 @@ import {
   displayDetailedError,
   displayError,
   displayInfo,
-  displayLoaded,
   displaySuccess,
   displayWarning,
   generateErrorCode,
 } from "@src/utils/logger";
-import { Events, Locale, REST, Routes } from "discord.js";
+import { Events, REST, Routes } from "discord.js";
 import { Handler } from "./Handler";
 
 /**
@@ -88,11 +87,16 @@ export class CommandHandler extends Handler {
             const module = await import(join(filePath, file));
             this.storeCommand(module.default);
           }
-
-          displayLoaded(`\x1B[35m${entry}\x1B[0m folder`
-            + ` (${files.length} commands)`);
         }
       }
+      displaySuccess(`\x1B[35m${this.slashCommands.size}\x1B[0m (/) commands`
+        + (this.messageContextMenuCommands.size > 0
+          ? `, \x1B[35m${this.messageContextMenuCommands.size}\x1B[0m message commands`
+          : "")
+        + (this.userContextMenuCommands.size > 0
+          ? ` and \x1B[35m${this.userContextMenuCommands.size}\x1B[0m user commands`
+          : "")
+        + ` loaded in \x1B[35m${entries.length}\x1B[0m categories.`);
     } catch {
       displayWarning("No commands were found.");
     }
@@ -116,13 +120,13 @@ export class CommandHandler extends Handler {
     );
 
     if (command instanceof SlashCommand) {
-      this.slashCommands.set(command.getData().name, command);
+      this.slashCommands.set(command.getName(), command);
     } else if (command instanceof MessageCommand) {
-      this.messageContextMenuCommands.set(command.getData().name, command);
+      this.messageContextMenuCommands.set(command.getName(), command);
     } else if (command instanceof UserCommand) {
-      this.userContextMenuCommands.set(command.getData().name, command);
+      this.userContextMenuCommands.set(command.getName(), command);
     } else {
-      throw new TypeError(`Unknown command type for ${command.getData().name}`);
+      throw new TypeError(`Unknown command type for ${command.getName()}`);
     }
   }
 
@@ -202,9 +206,10 @@ export class CommandHandler extends Handler {
       throw new Error("The client is not set for handler.");
     }
 
-    // TODO fetch user preferred language OR interaction.locale OR default
+    // TODO fetch user preferred language OR use interaction locale if supported OR default
+    const defaultLocale = this.client.getTranslationHandler().getDefaultLocale();
     const preferredLanguage: Omit<Language, "id">
-      = { code: Locale.EnglishUS, name: "English" };
+      = { code: defaultLocale, name: String(defaultLocale) };
 
     if (interaction.isChatInputCommand()) {
       command = this.getSlashCommand(interaction.commandName);

@@ -1,5 +1,6 @@
 {
   "ping": {
-    "PROCESS": "Calcul..."
+    "description": "Affiche le temps de réponse du bot.",
+    "process": "Calcul..."
   }
 }

@@ -2,7 +2,6 @@ import {
   displayCustom,
   displayError,
   displayInfo,
-  displayLoaded,
   displaySuccess,
 } from "@src/utils/logger";
 
@@ -59,18 +58,6 @@ describe("displaySuccess", () => {
   it("should not throw if content is valid", () => {
     validMessages.forEach((message) => {
       expect(() => displaySuccess(message)).not.toThrow();
-    });
-  });
-});
-
-describe("displayLoaded", () => {
-  it("should throw SyntaxError if content is empty", () => {
-    expect(() => displayLoaded("")).toThrow(SyntaxError);
-  });
-
-  it("should not throw if content is valid", () => {
-    validMessages.forEach((message) => {
-      expect(() => displayLoaded(message)).not.toThrow();
     });
   });
 });

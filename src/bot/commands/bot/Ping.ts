@@ -4,12 +4,8 @@ import { SlashCommand } from "../SlashCommand";
 
 /** Shows the discord client and API response time. */
 export default class Ping extends SlashCommand {
-  protected readonly data = {
+  readonly data = {
     name: "ping",
-    description: "🏓 Displays the bot response time.",
-    description_localizations: {
-      fr: "🏓 Affiche le temps de réponse du bot.",
-    },
     integration_types: [
       ApplicationIntegrationType.GuildInstall,
       ApplicationIntegrationType.UserInstall,
@@ -21,14 +17,14 @@ export default class Ping extends SlashCommand {
     language: Locale,
   ): Promise<void> {
     const message = await interaction.reply({
-      content: this.translate(language, "PROCESS"),
+      content: this.translate(language, "process"),
     });
+    const clientPing = message.createdTimestamp - interaction.createdTimestamp;
 
     await interaction.editReply({
-      content: "\\🏓 Pong!\n\n"
-        + "**" + this.client.user!.username + "** » `"
-        + (message.createdTimestamp - interaction.createdTimestamp)
-        + "ms`\n**Gateway API** » `" + this.client.ws.ping + "ms`",
+      content: "\\🏓 Pong!\n"
+        + " ㄴ Tickly » `" + clientPing + "ms`\n"
+        + " ㄴ Discord Websocket » `" + this.client.ws.ping + "ms`",
     });
   }
 }

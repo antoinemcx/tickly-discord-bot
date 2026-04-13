@@ -1,6 +1,7 @@
+import type { LocalizationMap } from "discord.js";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { displayInfo, displayLoaded } from "@src/utils/logger";
+import { displayInfo, displaySuccess } from "@src/utils/logger";
 import { Locale } from "discord.js";
 import { Handler } from "./Handler";
 
@@ -35,8 +36,12 @@ export class TranslationHandler extends Handler {
         }
         this.loadTranslationFiles(language);
       };
-      displayLoaded(languageDirs.map(dir => `\x1B[35m${dir}\x1B[0m`).join(", ")
-        + " directories");
+
+      const localesFormatted = Array.from(this.translations.keys())
+        .map(locale => `\x1B[35m${locale}\x1B[0m`)
+        .join(", ");
+      displaySuccess(`\x1B[35m${this.translations.size}\x1B[0m translation `
+        + `locales loaded : ${localesFormatted}.`);
     }
   }
 
@@ -64,7 +69,7 @@ export class TranslationHandler extends Handler {
   }
 
   /** @returns language locales that have stored translations */
-  public getLocales(): string[] {
+  public getLocales(): Locale[] {
     return this.translations ? Array.from(this.translations.keys()) : [];
   }
 
@@ -75,6 +80,20 @@ export class TranslationHandler extends Handler {
    */
   public isSupportedLocale(locale: string): locale is Locale {
     return Object.values(Locale).includes(locale as Locale);
+  }
+
+  /**
+   * Retrieves the default locale of the bot from its configuration file.
+   * @returns the default locale if it's valid and supported, or the first
+   *          supported locale as a fallback.
+   */
+  public getDefaultLocale(): Locale {
+    const defaultLocale
+      = this.client?.getConfig()?.defaultLocale as Locale | undefined;
+
+    return defaultLocale && this.isSupportedLocale(defaultLocale)
+      ? defaultLocale
+      : this.getLocales()[0];
   }
 
   /**
@@ -117,6 +136,30 @@ export class TranslationHandler extends Handler {
     ) || TranslationHandler.MISSING_TRANSLATION_MESSAGE + translationKey;
 
     return this.replaceParameters(translated, parameters);
+  }
+
+  /**
+   * Collects every available command description for a command across locales.
+   * Locales without a description are omitted from the returned object.
+   *
+   * @param command name of the command
+   * @returns an object keyed by locale with the translated description
+   */
+  public getCommandDescriptions(command: string): LocalizationMap {
+    const descriptions: LocalizationMap = {};
+
+    for (const [locale, files] of this.translations.entries()) {
+      const description = this.getNestedProperty(
+        files.get("commands"),
+        `${command}.description`,
+      );
+
+      if (typeof description === "string" && description.trim().length > 0) {
+        descriptions[locale] = this.replaceParameters(description, {});
+      }
+    }
+
+    return descriptions;
   }
 
   /**
