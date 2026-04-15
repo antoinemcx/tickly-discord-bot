@@ -1,4 +1,5 @@
 import type { DrizzleDatabase } from "@database/DrizzleDatabase";
+import type { UserSession as DbUserSession } from "@database/schema/user.schema";
 import type { UserSessionManager } from "@services/todoist/sessions/UserSessionManager";
 import { BaseRepository } from "@database/repositories/BaseRepository";
 import { userSessionsTable } from "@database/schema/user.schema";
@@ -21,7 +22,7 @@ export class UserSessionRepository extends BaseRepository implements UserSession
         .where(eq(userSessionsTable.userId, this.toBigIntUserId(userId)))
         .limit(1);
 
-      return session ? this.toDomainSession(session) : undefined;
+      return session ? this.toSessionModel(session) : undefined;
     } catch (error) {
       throw this.toPersistenceError("Failed to get session by user ID.", error);
     }
@@ -36,7 +37,7 @@ export class UserSessionRepository extends BaseRepository implements UserSession
         .where(eq(userSessionsTable.oauthState, oauthState))
         .limit(1);
 
-      return session ? this.toDomainSession(session) : undefined;
+      return session ? this.toSessionModel(session) : undefined;
     } catch (error) {
       throw this.toPersistenceError("Failed to get session by OAuth state.", error);
     }
@@ -52,7 +53,7 @@ export class UserSessionRepository extends BaseRepository implements UserSession
       await this.db
         .getConnection()
         .insert(userSessionsTable)
-        .values(this.toEntitySession(session));
+        .values(this.toSessionEntity(session));
     } catch (error) {
       throw this.toPersistenceError("Failed to create session.", error);
     }
@@ -68,7 +69,7 @@ export class UserSessionRepository extends BaseRepository implements UserSession
       await this.db
         .getConnection()
         .insert(userSessionsTable)
-        .values(this.toEntitySession(session));
+        .values(this.toSessionEntity(session));
     } catch (error) {
       throw this.toPersistenceError("Failed to update session.", error);
     }
@@ -104,17 +105,17 @@ export class UserSessionRepository extends BaseRepository implements UserSession
     }
   }
 
-  private toDomainSession(session: typeof userSessionsTable.$inferSelect): UserSession {
+  private toSessionModel(session: DbUserSession): UserSession {
     return new UserSession(
       session.userId.toString(),
-      session.status as UserSession["status"],
+      session.status,
       session.oauthState,
       session.accessToken,
       session.expiresAt,
     );
   }
 
-  private toEntitySession(session: UserSession): typeof userSessionsTable.$inferInsert {
+  private toSessionEntity(session: UserSession): typeof userSessionsTable.$inferInsert {
     return {
       userId: this.toBigIntUserId(session.userId),
       status: session.status,

@@ -75,7 +75,7 @@ export class DrizzleDatabase {
 
     displayInfo("Seeding base configuration data...");
     await this.seedTables();
-    displaySuccess("Base configuration data is ready.");
+    displaySuccess("Base configuration data is ready.\n");
   }
 
   /**

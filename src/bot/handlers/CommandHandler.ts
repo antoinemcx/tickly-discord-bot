@@ -1,6 +1,5 @@
 import type { BaseCommand } from "@bot/commands/BaseCommand";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
-import type { Language } from "@database/schema";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { CommandInteraction, GuildMember, Interaction, Locale } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
@@ -207,11 +206,23 @@ export class CommandHandler extends Handler {
       throw new Error("The client is not set for handler.");
     }
 
-    // TODO fetch user preferred language OR use interaction locale if supported OR default
-    const defaultLocale = this.client.getTranslationHandler().getDefaultLocale();
-    const preferredLanguage: Omit<Language, "id">
-      = { code: defaultLocale, name: String(defaultLocale) };
+    /* Retrieve the preferred language for commands */
+    const translationHandler = this.client.getTranslationHandler();
+    const defaultLocale = interaction.locale;
+    let language: Locale = defaultLocale;
+    try {
+      const preferredLanguage = await this.repositories
+        .getUserRepository()
+        .getUserPreferredLanguage(interaction.user.id);
+      language = preferredLanguage?.code ?? defaultLocale;
+    } catch {
+      // Interaction locale will be used
+    }
+    if (!translationHandler.isSupportedLocale(language)) {
+      language = translationHandler.getDefaultLocale();
+    }
 
+    /* Retrieve the interaction command */
     if (interaction.isChatInputCommand()) {
       command = this.getSlashCommand(interaction.commandName);
     } else if (interaction.isMessageContextMenuCommand()) {
@@ -221,9 +232,9 @@ export class CommandHandler extends Handler {
     }
 
     if (interaction.isCommand() && command
-      && this.isCommandRunnable(command, interaction, preferredLanguage.code)) {
+      && this.isCommandRunnable(command, interaction, language)) {
       try {
-        await command.execute(interaction, preferredLanguage.code);
+        await command.execute(interaction, language);
       } catch (error) {
         const errorCode = generateErrorCode();
         displayDetailedError(
@@ -232,7 +243,7 @@ export class CommandHandler extends Handler {
           errorCode,
         );
         interaction.reply({
-          content: this.translate(preferredLanguage.code, "executionError", {
+          content: this.translate(language, "executionError", {
             errorCode,
           }),
           ephemeral: true,

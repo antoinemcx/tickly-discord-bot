@@ -39,6 +39,7 @@ import "dotenv/config";
       password: process.env.DB_PASSWORD || "",
       database: process.env.DB_NAME,
     });
+    await database.initializeBaseData();
   } catch (error) {
     displayError((error as Error).message);
     process.exit(1);

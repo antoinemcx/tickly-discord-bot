@@ -1,5 +1,6 @@
 import type { DrizzleDatabase } from "@database/DrizzleDatabase";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
+import { UserRepository } from "@database/repositories/UserRepository";
 import { UserSessionRepository } from "@database/repositories/UserSessionRepository";
 
 /**
@@ -8,6 +9,7 @@ import { UserSessionRepository } from "@database/repositories/UserSessionReposit
  */
 export class RepositoryFactory {
   private languageRepository?: LanguageRepository;
+  private userRepository?: UserRepository;
   private userSessionRepository?: UserSessionRepository;
 
   public constructor(private readonly database: DrizzleDatabase) {}
@@ -16,6 +18,12 @@ export class RepositoryFactory {
   public getLanguageRepository(): LanguageRepository {
     this.languageRepository ??= new LanguageRepository(this.database);
     return this.languageRepository;
+  }
+
+  /** @returns the user repository instance. */
+  public getUserRepository(): UserRepository {
+    this.userRepository ??= new UserRepository(this.database);
+    return this.userRepository;
   }
 
   /** @returns the user session repository instance. */
