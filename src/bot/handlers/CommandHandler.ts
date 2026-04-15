@@ -1,7 +1,7 @@
 import type { BaseCommand } from "@bot/commands/BaseCommand";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type { CommandInteraction, GuildMember, Interaction, Locale } from "discord.js";
+import type { CommandInteraction, Interaction, Locale } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { MessageCommand } from "@bot/commands/MessageCommand";
@@ -148,10 +148,10 @@ export class CommandHandler extends Handler {
       throw new Error("The client must be ready to register commands.");
     }
     const rest = new REST().setToken(token);
-    const commands = Array.from(this.getAllSlashCommands().values());
+    const commands = Array.from(this.getAllCommands().values());
 
     try {
-      displayInfo("Now refreshing (/) commands "
+      displayInfo("Now refreshing commands "
         + (guildId ? `in guild ${guildId}` : "globally")
         + "...");
       await rest.put(
@@ -161,7 +161,7 @@ export class CommandHandler extends Handler {
         { body: commands.map(cmd => cmd.getData()) },
       );
 
-      displaySuccess("Application (/) commands reloaded"
+      displaySuccess("Application commands reloaded"
         + ` (${commands.length} commands).`);
     } catch (error) {
       displayError(error instanceof Error
@@ -171,21 +171,15 @@ export class CommandHandler extends Handler {
   }
 
   /**
-   * Retrieves a slash command by name.
-   * @param commandName name of the command to search
-   * @returns the corresponding command object, or undefined if
-   *          the command does not exist
+   * Retrieves all of this' commands
+   * @returns all the handler's commands by their name
    */
-  public getSlashCommand(commandName: string): SlashCommand | undefined {
-    return this.slashCommands.get(commandName);
-  }
-
-  /**
-   * Retrieves all of this' slash commands
-   * @returns all the handler's slash commands with their name
-   */
-  public getAllSlashCommands(): Map<string, SlashCommand> {
-    return this.slashCommands;
+  public getAllCommands(): Map<string, BaseCommand> {
+    return new Map<string, BaseCommand>([
+      ...this.messageContextMenuCommands,
+      ...this.userContextMenuCommands,
+      ...this.slashCommands,
+    ]);
   }
 
   /**
@@ -224,7 +218,7 @@ export class CommandHandler extends Handler {
 
     /* Retrieve the interaction command */
     if (interaction.isChatInputCommand()) {
-      command = this.getSlashCommand(interaction.commandName);
+      command = this.slashCommands.get(interaction.commandName);
     } else if (interaction.isMessageContextMenuCommand()) {
       command = this.messageContextMenuCommands.get(interaction.commandName);
     } else if (interaction.isUserContextMenuCommand()) {
@@ -266,17 +260,15 @@ export class CommandHandler extends Handler {
     interaction: CommandInteraction,
     language: Locale,
   ): boolean {
-    const author: GuildMember = interaction.member as GuildMember;
     let isRunnable: boolean = false;
-    const botMember = interaction.guild?.members.me;
 
     if (command.isAdminOnly // private command
-      && !this.client?.getConfig().ownerIds.includes(author.id)) {
+      && !this.client?.getConfig().ownerIds.includes(interaction.user.id)) {
       interaction.reply({
         content: this.translate(language, "privateCommand"),
         ephemeral: true,
       });
-    } else if (!command.hasUserPermission(author)) { // missing user permissions
+    } else if (!command.hasUserPermission(interaction)) { // missing permissions
       const permissionFlags
         = Tickly.permissionsToText(command.userRequiredPermissions);
 
@@ -286,7 +278,7 @@ export class CommandHandler extends Handler {
         }),
         ephemeral: true,
       });
-    } else if (!command.hasBotPermission(botMember!)) { // missing bot permissions
+    } else if (!command.hasBotPermission(interaction)) { // bot missing permissions
       const permissionFlags
         = Tickly.permissionsToText(command.clientRequiredPermissions);
 

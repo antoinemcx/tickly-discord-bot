@@ -4,7 +4,6 @@ import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type {
   APIApplicationCommand,
   BaseInteraction,
-  GuildMember,
   Locale,
   PermissionResolvable,
 } from "discord.js";
@@ -64,29 +63,24 @@ export abstract class BaseCommand {
 
   /**
    * Verifies that a discord user has permissions to use the command.
-   * @param parsedMember guild member whose permissions are checked
+   * @param interaction command interaction to check the user permissions for
    * @returns true if the user has the required permissions, false if not
    */
-  public hasUserPermission(parsedMember: GuildMember): boolean {
+  public hasUserPermission(interaction: BaseInteraction): boolean {
     return this.userRequiredPermissions === undefined
       || this.userRequiredPermissions.length === 0
-      || parsedMember.permissions.has(this.userRequiredPermissions);
+      || (interaction.memberPermissions?.has(this.userRequiredPermissions) ?? false);
   }
 
   /**
    * Verifies that the discord client has permissions to run the command.
-   * @param bot guild member where the command is executed
+   * @param interaction command interaction to check the bot permissions for
    * @returns true if the bot has the required permissions, false if not
-   * @throws {Error} if the provided guild member is not the bot itself
    */
-  public hasBotPermission(bot: GuildMember): boolean {
-    if (bot.id !== this.client.user?.id) {
-      throw new Error("The provided guild member is not the bot.");
-    }
-
+  public hasBotPermission(interaction: BaseInteraction): boolean {
     return this.clientRequiredPermissions === undefined
       || this.clientRequiredPermissions.length === 0
-      || bot.permissions.has(this.clientRequiredPermissions);
+      || interaction.appPermissions.has(this.clientRequiredPermissions);
   }
 
   /**
