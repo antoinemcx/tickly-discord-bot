@@ -9,6 +9,11 @@
 - Use JSDoc blocks with `/** */` for non-trivial public methods: include a short description, `@param`, `@returns`, and `@throws`.
 - Document propagated exceptions as well, including unhandled exceptions from Todoist or Discord SDK calls.
 
+## Change Scope
+- Do not modify existing code unless it directly impacts the requested feature or fixes related bugs.
+- Avoid refactoring, style improvements, or restructuring in areas not involved in the current request.
+- Keep changes focused and minimal to reduce risk of unintended side effects.
+
 ## Architecture
 - Keep boundaries clear:
   - `src/bot/*`: Discord bot commands, interactions, and integration entry points

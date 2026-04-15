@@ -25,14 +25,14 @@ export function displayCustom(content: string) {
 export function displayError(content: string) {
   if (!content)
     throw new SyntaxError("There is no content to display.");
-  console.error(`${timestamp} \x1B[31mError\x1B[0m : ${content}`);
+  console.error(`${timestamp} ${red("Error")} : ${content}`);
 }
 
 export function displayDetailedError(content: string, error: unknown, errorCode?: string) {
   if (!content) {
     throw new SyntaxError("There is no content to display.");
   }
-  console.error(`${timestamp} \x1B[31mError\x1B[0m : ${content}`
+  console.error(`${timestamp} ${red("Error")} : ${content}`
     + (errorCode ? ` (code: ${errorCode})` : "")
     + " (" + (error instanceof Error ? error.message : String(error)) + ")"
     + (error instanceof Error ? `\n${error.stack}` : ""));
@@ -41,23 +41,43 @@ export function displayDetailedError(content: string, error: unknown, errorCode?
 export function displayInfo(content: string) {
   if (!content)
     throw new SyntaxError("There is no content to display.");
-  console.log(`${timestamp} \x1B[36mInfo\x1B[0m ${content}`);
+  console.log(`${timestamp} ${blue("Info")} : ${content}`);
 }
 
 export function displayWarning(content: string) {
   if (!content)
     throw new SyntaxError("There is no content to display.");
-  console.warn(`${timestamp} \x1B[33mWarning\x1B[0m ${content}`);
+  console.warn(`${timestamp} ${yellow("Warning")} : ${content}`);
 }
 
 export function displaySuccess(content: string) {
   if (!content)
     throw new SyntaxError("There is no content to display.");
-  console.log(`${timestamp} \x1B[32mSuccess\x1B[0m ${content}`);
+  console.log(`${timestamp} ${green("Success")} : ${content}`);
 }
 
 export function displayLoaded(content: string) {
   if (!content)
     throw new SyntaxError("There is no content to display.");
   console.log(`${timestamp} ㄴ ${content} loaded`);
+}
+
+export function red(text: unknown): string {
+  return `\x1B[31m${text}\x1B[0m`;
+}
+
+export function blue(text: unknown): string {
+  return `\x1B[36m${text}\x1B[0m`;
+}
+
+export function yellow(text: unknown): string {
+  return `\x1B[33m${text}\x1B[0m`;
+}
+
+export function green(text: unknown): string {
+  return `\x1B[32m${text}\x1B[0m`;
+}
+
+export function pink(text: unknown): string {
+  return `\x1B[35m${text}\x1B[0m`;
 }

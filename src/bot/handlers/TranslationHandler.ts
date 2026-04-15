@@ -1,7 +1,7 @@
 import type { LocalizationMap } from "discord.js";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { displayInfo, displaySuccess } from "@src/utils/logger";
+import { displayInfo, displaySuccess, pink } from "@src/utils/logger";
 import { Locale } from "discord.js";
 import { Handler } from "./Handler";
 
@@ -38,9 +38,9 @@ export class TranslationHandler extends Handler {
       };
 
       const localesFormatted = Array.from(this.translations.keys())
-        .map(locale => `\x1B[35m${locale}\x1B[0m`)
+        .map(locale => pink(locale))
         .join(", ");
-      displaySuccess(`\x1B[35m${this.translations.size}\x1B[0m translation `
+      displaySuccess(`${pink(this.translations.size)} translation `
         + `locales loaded : ${localesFormatted}.`);
     }
   }

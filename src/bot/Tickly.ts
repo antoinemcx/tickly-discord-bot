@@ -1,12 +1,13 @@
 import type { Handler } from "@bot/handlers/Handler";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type {
+  APIApplication,
   PermissionResolvable,
 } from "discord.js";
 import type configurationExample from "../../config.example";
 import type { CommandHandler } from "./handlers/CommandHandler";
 import type { TranslationHandler } from "./handlers/TranslationHandler";
-import { displayInfo, displaySuccess } from "@src/utils/logger";
+import { displayCustom, displayInfo, displaySuccess, pink } from "@src/utils/logger";
 import {
   ActivityType,
   AllowedMentionsTypes,
@@ -110,15 +111,21 @@ export class Tickly extends Client {
 
     await new Promise<void>((resolve) => {
       this.once(Events.ClientReady, async () => {
-        const guildCount: number = this.guilds.cache.size;
+        const fetchedApplication = await this.application?.fetch();
+        const cachedGuildCount = this.guilds.cache.size;
+        const guildInstallCount = fetchedApplication?.approximateGuildCount;
+        const userInstallCount = fetchedApplication?.approximateUserInstallCount;
 
         /* Register slash commands after the bot is ready */
         await this.commandHandler.registerCommands(this.token!, null);
-        this.reloadStatus(guildCount);
+        this.reloadStatus(cachedGuildCount);
 
         console.log("");
         displaySuccess(`\x1B[32m'${this.user?.username}'`
-          + " is ready to serve " + guildCount + " guilds !\x1B[0m 🚀\n");
+          + " is ready to serve !\x1B[0m 🚀");
+        displayCustom(" ㄴ Approximate guilds: " + pink(guildInstallCount)
+          + ` (${cachedGuildCount} cached)`);
+        displayCustom(` ㄴ Approximate user installs: ${pink(userInstallCount)}\n`);
         resolve();
       });
     });

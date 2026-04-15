@@ -16,6 +16,7 @@ import {
   displaySuccess,
   displayWarning,
   generateErrorCode,
+  pink,
 } from "@src/utils/logger";
 import { Events, REST, Routes } from "discord.js";
 import { Handler } from "./Handler";
@@ -89,14 +90,14 @@ export class CommandHandler extends Handler {
           }
         }
       }
-      displaySuccess(`\x1B[35m${this.slashCommands.size}\x1B[0m (/) commands`
+      displaySuccess(`${pink(this.slashCommands.size)} (/) commands`
         + (this.messageContextMenuCommands.size > 0
-          ? `, \x1B[35m${this.messageContextMenuCommands.size}\x1B[0m message commands`
+          ? `, ${pink(this.messageContextMenuCommands.size)} message commands`
           : "")
         + (this.userContextMenuCommands.size > 0
-          ? ` and \x1B[35m${this.userContextMenuCommands.size}\x1B[0m user commands`
+          ? ` and ${pink(this.userContextMenuCommands.size)} user commands`
           : "")
-        + ` loaded in \x1B[35m${entries.length}\x1B[0m categories.`);
+        + ` loaded in ${pink(entries.length)} categories.`);
     } catch {
       displayWarning("No commands were found.");
     }
