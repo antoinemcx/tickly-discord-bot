@@ -12,5 +12,8 @@ applyTo: ["tests/**/*.ts"]
 - Structure each test with `Arrange`, `Act`, and `Assert` sections.
 - Name `it` blocks with `should ...` and optionally `when ...` to describe the expected behavior.
 - Mock external services and IO boundaries instead of calling them directly.
+- Do not mock logger utilities and do not assert console/log output in tests; focus on business behavior and returned values.
+- Keep test doubles and fixtures as small as possible; prefer direct property mutation, explicit casts, or plain Jest mocks over extra helper methods or large reusable builders when the test can stay simpler without them.
+- When a test-only subclass is used, expose behavior only when needed; if direct access through `jest` or a cast is enough, avoid adding wrapper methods just for the test.
 - If a test fails, rerun the failing test and iterate until the failure is understood or resolved.
 - Keep assertions focused on behavior, not implementation details, unless the behavior depends on a specific interaction.

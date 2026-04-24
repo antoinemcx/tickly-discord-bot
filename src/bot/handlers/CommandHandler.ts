@@ -226,6 +226,7 @@ export class CommandHandler extends Handler {
     }
 
     if (interaction.isCommand() && command
+      /* isCommandRunnable handles runnable errors */
       && this.isCommandRunnable(command, interaction, language)) {
       try {
         await command.execute(interaction, language);
@@ -243,7 +244,7 @@ export class CommandHandler extends Handler {
           ephemeral: true,
         });
       }
-    }
+    } // else if not found, let Discord handle the error
   }
 
   /**

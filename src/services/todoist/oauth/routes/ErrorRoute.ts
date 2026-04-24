@@ -12,7 +12,9 @@ export class ErrorRoute extends OAuthErrorRoute {
   }
 
   public async handle(req: Request, res: Response): Promise<void> {
-    const reason = typeof req.query.reason === "string" ? req.query.reason : "unknown_error";
+    const reason = typeof req.query.reason === "string"
+      ? req.query.reason
+      : "unknown_error";
 
     res.status(400).type("html").send(`OAuth connection failed. Reason: ${reason}`);
   }

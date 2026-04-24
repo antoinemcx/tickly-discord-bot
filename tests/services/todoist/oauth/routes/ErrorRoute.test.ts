@@ -35,5 +35,26 @@ describe("ErrorRoute", () => {
         expect.stringContaining(req.query.reason),
       );
     });
+
+    it("should respond with 'unknown_error' if reason is not provided", async () => {
+      // Arrange
+      const req = {
+        query: {},
+      } as any;
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        type: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      } as any;
+
+      // Act
+      await route.handle(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(
+        expect.stringContaining("unknown_error"),
+      );
+    });
   });
 });

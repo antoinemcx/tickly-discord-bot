@@ -1,9 +1,6 @@
 import type { Handler } from "@bot/handlers/Handler";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type {
-  APIApplication,
-  PermissionResolvable,
-} from "discord.js";
+import type { PermissionResolvable } from "discord.js";
 import type configurationExample from "../../config.example";
 import type { CommandHandler } from "./handlers/CommandHandler";
 import type { TranslationHandler } from "./handlers/TranslationHandler";
