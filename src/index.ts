@@ -1,5 +1,5 @@
 import { CommandHandler } from "@bot/handlers/CommandHandler";
-import { Handler } from "@bot/handlers/Handler";
+import { EventHandler } from "@bot/handlers/EventHandler";
 import { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import { Tickly } from "@bot/Tickly";
 import { DrizzleDatabase } from "@database/DrizzleDatabase";
@@ -74,9 +74,7 @@ import "dotenv/config";
 
   /* Initialize and start the bot */
   const commandHandler = new CommandHandler(todoistClient, repositories);
-  const eventHandler = new (class extends Handler { // TODO
-    public async setup(): Promise<void> {}
-  })();
+  const eventHandler = new EventHandler(todoistClient, repositories);
 
   const translationHandler = new TranslationHandler();
   displayInfo("Initializing the bot...\n");

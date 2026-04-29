@@ -56,12 +56,6 @@ export function displaySuccess(content: string) {
   console.log(`${timestamp} ${green("Success")} : ${content}`);
 }
 
-export function displayLoaded(content: string) {
-  if (!content)
-    throw new SyntaxError("There is no content to display.");
-  console.log(`${timestamp} ㄴ ${content} loaded`);
-}
-
 export function red(text: unknown): string {
   return `\x1B[31m${text}\x1B[0m`;
 }

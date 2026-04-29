@@ -1,8 +1,8 @@
-import type { Handler } from "@bot/handlers/Handler";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { PermissionResolvable } from "discord.js";
 import type configurationExample from "../../config.example";
 import type { CommandHandler } from "./handlers/CommandHandler";
+import type { EventHandler } from "./handlers/EventHandler";
 import type { TranslationHandler } from "./handlers/TranslationHandler";
 import { displayCustom, displayInfo, displaySuccess, pink } from "@src/utils/logger";
 import {
@@ -25,7 +25,7 @@ export class Tickly extends Client {
   private readonly config: Configuration;
   private readonly todoistClient: TodoistApiClient;
   private readonly commandHandler: CommandHandler;
-  private readonly eventHandler: Handler;
+  private readonly eventHandler: EventHandler;
   private readonly translationHandler: TranslationHandler;
 
   /**
@@ -47,7 +47,7 @@ export class Tickly extends Client {
     config: Configuration,
     todoistClient: TodoistApiClient,
     commandHandler: CommandHandler,
-    eventHandler: Handler,
+    eventHandler: EventHandler,
     translationHandler: TranslationHandler,
   ) {
     if (!token) {

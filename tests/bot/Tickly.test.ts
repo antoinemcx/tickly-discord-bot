@@ -1,4 +1,5 @@
 import type { CommandHandler } from "@bot/handlers/CommandHandler";
+import type { EventHandler } from "@bot/handlers/EventHandler";
 import type { Handler } from "@bot/handlers/Handler";
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { Configuration } from "@bot/Tickly";
@@ -10,7 +11,7 @@ import { Events } from "discord.js";
 let mockedBot: Tickly;
 let mockedTodoistClient: TodoistApiClient;
 let mockedCommandHandler: CommandHandler;
-let mockedEventHandler: Handler;
+let mockedEventHandler: EventHandler;
 let mockedTranslationHandler: TranslationHandler;
 
 beforeEach(() => {
@@ -24,7 +25,7 @@ beforeEach(() => {
     ...mockedGenericHandler,
     registerCommands: jest.fn().mockResolvedValue(undefined),
   } as unknown as CommandHandler;
-  mockedEventHandler = mockedGenericHandler;
+  mockedEventHandler = mockedGenericHandler as EventHandler;
   mockedTranslationHandler = mockedGenericHandler as TranslationHandler;
 
   // Arrange

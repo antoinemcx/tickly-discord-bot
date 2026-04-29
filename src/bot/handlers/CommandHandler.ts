@@ -32,7 +32,7 @@ export class CommandHandler extends Handler {
   private readonly userContextMenuCommands: Map<string, UserCommand>;
 
   /**
-   * Initialize this with empty state. ou must call setClient() and setup()
+   * Initialize this with empty state. You must call setClient() and setup()
    * to load the commands and registerSlashCommands() register them.
    * @param todoistClient the Todoist client all the commands will use
    * @param repositories the repository factory all the commands will use
@@ -63,7 +63,7 @@ export class CommandHandler extends Handler {
   }
 
   /**
-   * Load all commands from the file system.
+   * Loads all commands from the file system.
    * @returns a promise that resolves when the commands are loaded
    */
   private async loadCommands(): Promise<void> {
@@ -77,8 +77,7 @@ export class CommandHandler extends Handler {
       displayInfo("Loading slash commands...");
 
       for (const entry of entries) {
-        const filePath
-          = join(CommandHandler.commandsDirectory, entry);
+        const filePath = join(CommandHandler.commandsDirectory, entry);
 
         if (statSync(filePath).isDirectory()) {
           files = readdirSync(filePath);
@@ -97,8 +96,9 @@ export class CommandHandler extends Handler {
           ? ` and ${pink(this.userContextMenuCommands.size)} user commands`
           : "")
         + ` loaded in ${pink(entries.length)} categories.`);
-    } catch {
-      displayWarning("No commands were found.");
+    } catch (e) {
+      displayWarning("An error happened, no commands were found.");
+      console.error(e);
     }
   }
 
@@ -113,7 +113,7 @@ export class CommandHandler extends Handler {
       repositories: RepositoryFactory,
     ) => BaseCommand;
 
-    const command: BaseCommand = new Command(
+    const command = new Command(
       this.client,
       this.todoistClient,
       this.repositories,
