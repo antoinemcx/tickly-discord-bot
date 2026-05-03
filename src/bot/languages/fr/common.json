@@ -5,6 +5,7 @@
       "user": "{{x}} Il vous manque des permissions (requises : {{required}})",
       "bot": "{{x}} Il me manque des permissions (requises : {{required}})"
     },
-    "executionError": "{{x}} Une erreur inconnue s'est produite lors de l'exécution de la commande (code : {{errorCode}})."
+    "executionError": "{{x}} Une erreur inconnue s'est produite lors de l'exécution de la commande (code : {{errorCode}}).",
+    "unkownCommand": "{{x}} Commande inconnue."
   }
 }

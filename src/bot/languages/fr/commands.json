@@ -2,5 +2,11 @@
   "ping": {
     "description": "Affiche le temps de réponse du bot.",
     "process": "Calcul..."
+  },
+  "todoist": {
+    "description": "Gérez vos tâches et projets Todoist.",
+    "login": {
+      "description": "🎉 Connectez-vous à votre compte Todoist."
+    }
   }
 }

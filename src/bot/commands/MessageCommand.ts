@@ -7,13 +7,13 @@ import type {
   MessageContextMenuCommandInteraction,
 } from "discord.js";
 import { ApplicationCommandType } from "discord.js";
-import { BaseCommand } from "./BaseCommand";
+import { RegisterableBaseCommand } from "./RegisterableBaseCommand";
 
 /**
  * Base abstraction class for all message commands.
  * Message commands are executed by the user by right-clicking a message.
  */
-export abstract class MessageCommand extends BaseCommand {
+export abstract class MessageCommand extends RegisterableBaseCommand {
   protected readonly type: APIApplicationCommand["type"]
     = ApplicationCommandType.Message;
 
@@ -22,7 +22,7 @@ export abstract class MessageCommand extends BaseCommand {
    * context menu commands.
    * @see https://docs.discord.com/developers/interactions/application-commands#message-commands
    */
-  protected abstract readonly data: BaseCommand["data"]
+  protected abstract readonly data: RegisterableBaseCommand["data"]
     & { description?: never; description_localizations?: never };
 
   constructor(

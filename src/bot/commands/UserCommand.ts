@@ -7,13 +7,14 @@ import type {
   UserContextMenuCommandInteraction,
 } from "discord.js";
 import { ApplicationCommandType } from "discord.js";
-import { BaseCommand } from "./BaseCommand";
+import { RegisterableBaseCommand } from "./RegisterableBaseCommand";
 
 /**
  * Base abstraction class for all user commands.
  * User commands are executed by the user by right-clicking a user.
  */
-export abstract class UserCommand extends BaseCommand {
+export abstract class UserCommand extends RegisterableBaseCommand {
+  public readonly isRegisterable = true;
   protected readonly type: APIApplicationCommand["type"]
     = ApplicationCommandType.User;
 
@@ -22,7 +23,7 @@ export abstract class UserCommand extends BaseCommand {
    * context menu user commands.
    * @see https://docs.discord.com/developers/interactions/application-commands#user-commands
    */
-  protected abstract readonly data: BaseCommand["data"]
+  protected abstract readonly data: RegisterableBaseCommand["data"]
     & { description?: never; description_localizations?: never };
 
   constructor(

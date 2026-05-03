@@ -3,6 +3,8 @@ import type { RepositoryFactory } from "@database/repositories/RepositoryFactory
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type {
   APIApplicationCommand,
+  APIApplicationCommandSubcommandOption,
+  ApplicationCommandOptionType,
   BaseInteraction,
   Locale,
   PermissionResolvable,
@@ -10,20 +12,21 @@ import type {
 
 export type CommandData = Omit<
   APIApplicationCommand,
-  "id" | "application_id" | "guild_id"
+  "type" // handled separately in abstract subclasses
+  | "id" | "application_id" | "guild_id"
   | "version" | "default_member_permissions" | "description"
 > & { description?: APIApplicationCommand["description"] };
+export type SubCommandData = Omit<
+  APIApplicationCommandSubcommandOption,
+  "type" // handled separately in SubCommand class
+  | "description"
+> & { description?: APIApplicationCommandSubcommandOption["description"] };
 
-/** Base class for all discord bots commands. */
+/** Base class for all discord bots commands and subcommands. */
 export abstract class BaseCommand {
-  /** Discord API command type. */
-  protected abstract readonly type: APIApplicationCommand["type"];
+  /** Discord API data. */
+  protected abstract readonly data: CommandData | SubCommandData;
 
-  /** Discord API data to register the command. */
-  protected abstract readonly data: Omit<CommandData, "type">
-    & { integration_types: APIApplicationCommand["integration_types"] };
-
-  // Additional options for command settings
   /** Whether the command is only available to administrators. */
   public readonly isAdminOnly: boolean = false;
   /** The permissions required to use the command. */
@@ -43,15 +46,27 @@ export abstract class BaseCommand {
     protected repositories: RepositoryFactory,
   ) {}
 
-  /** @returns the data to register the command */
-  public getData(): CommandData {
-    return { ...this.data, type: this.type };
-  }
-
   /** @returns the command name used to index it in handler collections. */
   public getName(): string {
     return this.data.name;
   }
+
+  /**
+   * Returns the command namespace used to look up translations.
+   *
+   * Subclasses may override this when their translations live under a parent
+   * command namespace, such as subcommands.
+   *
+   * @returns the translation namespace for this command
+   */
+  protected getTranslationCommandName(): string {
+    return this.getName();
+  }
+
+  /** @returns the data to register the command */
+  public abstract getData():
+    CommandData & { type: APIApplicationCommand["type"] }
+    | SubCommandData & { type: ApplicationCommandOptionType.Subcommand };
 
   /**
    * Executes the command's behavior.
@@ -96,6 +111,11 @@ export abstract class BaseCommand {
     parameters: Record<string, string> = {},
   ): string {
     return this.client.getTranslationHandler()
-      .translateCommand(language, this.data.name, translationKey, parameters);
+      .translateCommand(
+        language,
+        this.getTranslationCommandName(),
+        translationKey,
+        parameters,
+      );
   }
 }

@@ -1,15 +1,10 @@
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
-import { ApplicationIntegrationType } from "discord.js";
 import { SlashCommand } from "../SlashCommand";
 
 /** Shows the discord client and API response time. */
 export default class Ping extends SlashCommand {
   readonly data = {
     name: "ping",
-    integration_types: [
-      ApplicationIntegrationType.GuildInstall,
-      ApplicationIntegrationType.UserInstall,
-    ],
   };
 
   public async execute(

@@ -18,6 +18,7 @@
 - Keep boundaries clear:
   - src/bot/*: Discord bot commands, interactions, and integration entry points
     - src/bot/commands/<category>/<CommandName>.ts: individual command implementations organized by category
+    - src/bot/commands/RegisterableBaseCommand.ts: shared base for Discord application commands that CommandHandler registers directly
     - src/bot/languages/*: localization files organized as one folder per language
   - src/database/*: Drizzle database access, schema, and repositories
   - src/services/oauth/*: OAuth HTTP service and route abstractions

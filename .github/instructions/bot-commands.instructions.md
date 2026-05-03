@@ -16,8 +16,10 @@ applyTo: ["src/bot/commands/**/*.ts", "src/bot/languages/**/*.json", "src/bot/ha
 - New commands must keep constructor injection compatible with this loader: constructor(client: Tickly, todoistClient: TodoistApiClient, repositories: RepositoryFactory).
 
 ## Command class responsibilities
-- src/bot/commands/BaseCommand.ts defines shared command metadata, permission checks, and command-level translation access.
-- src/bot/commands/SlashCommand.ts is responsible for slash-command description localization via TranslationHandler.
+- src/bot/commands/BaseCommand.ts defines the shared runtime behavior for commands and subcommands, including translation access and option ordering helpers.
+- src/bot/commands/RegisterableBaseCommand.ts centralizes the metadata shared by registerable Discord application commands (slash, message context menu, user context menu).
+- src/bot/commands/SlashCommand.ts is responsible for slash-command description localization via TranslationHandler and for merging its SubCommand options into the final registration payload.
+- src/bot/commands/SubCommand.ts models a slash-command option of type subcommand and must keep its translation namespace aligned with its parent slash command.
 - src/bot/commands/MessageCommand.ts (and similarly UserCommand) must not include description fields because Discord context menu commands do not allow them.
 
 ## Localization workflow
@@ -33,7 +35,8 @@ applyTo: ["src/bot/commands/**/*.ts", "src/bot/languages/**/*.json", "src/bot/ha
 
 ## Safe extension checklist for new bot features
 - Add or update command implementation in src/bot/commands/<category>/.
-- Keep command metadata aligned with command type constraints (slash commands can have descriptions; context menu commands cannot).
+- Keep command metadata aligned with command type constraints: slash commands can have descriptions and nested subcommands; context menu commands cannot have descriptions.
+- Use RegisterableBaseCommand only for commands that CommandHandler should register with Discord; do not treat SubCommand as a standalone registerable command.
 - Add translation keys in both src/bot/languages/en-US and src/bot/languages/fr.
 - If user preference or session data is needed, integrate through RepositoryFactory repositories rather than ad-hoc database access.
 - Verify command registration behavior after startup changes by checking logs for loaded command count.
@@ -41,6 +44,7 @@ applyTo: ["src/bot/commands/**/*.ts", "src/bot/languages/**/*.json", "src/bot/ha
 ## Pitfalls and constraints
 - Command loading is recursive: subdirectories in src/bot/commands/ are scanned; non-directory entries are skipped.
 - Commands must have a constructor with the exact signature above; no-arg constructors will fail during storeCommand().
+- Subcommands are instantiated by slash commands and should not be picked up by CommandHandler as top-level commands.
 - Translation keys must exist in all supported locales; missing translations log warnings but do not crash.
 - User preferred language is queried on every interaction, so ensure getUserPreferredLanguage() handles missing users gracefully.
 - Context menu commands cannot have descriptions; remove description and description_localizations from data for Message/User commands.

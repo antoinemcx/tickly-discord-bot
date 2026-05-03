@@ -1,11 +1,14 @@
 import type { BaseCommand } from "@bot/commands/BaseCommand";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type { CommandInteraction, Interaction, Locale } from "discord.js";
+import type { ChatInputCommandInteraction, CommandInteraction, Interaction, Locale } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+
 import { MessageCommand } from "@bot/commands/MessageCommand";
+import { RegisterableBaseCommand } from "@bot/commands/RegisterableBaseCommand";
 import { SlashCommand } from "@bot/commands/SlashCommand";
+import { SubCommand } from "@bot/commands/SubCommand";
 import { UserCommand } from "@bot/commands/UserCommand";
 import { Tickly } from "@bot/Tickly";
 import {
@@ -28,6 +31,7 @@ export class CommandHandler extends Handler {
   public static readonly commandsDirectory = join(__dirname, "..", "commands");
 
   private readonly slashCommands: Map<string, SlashCommand>;
+  private subCommandCount: number = 0;
   private readonly messageContextMenuCommands: Map<string, MessageCommand>;
   private readonly userContextMenuCommands: Map<string, UserCommand>;
 
@@ -67,7 +71,7 @@ export class CommandHandler extends Handler {
    * @returns a promise that resolves when the commands are loaded
    */
   private async loadCommands(): Promise<void> {
-    let files: string[];
+    let categoryCount: number = 0;
     this.slashCommands.clear();
     this.messageContextMenuCommands.clear();
     this.userContextMenuCommands.clear();
@@ -77,43 +81,81 @@ export class CommandHandler extends Handler {
       displayInfo("Loading slash commands...");
 
       for (const entry of entries) {
-        const filePath = join(CommandHandler.commandsDirectory, entry);
+        const entryPath = join(CommandHandler.commandsDirectory, entry);
 
-        if (statSync(filePath).isDirectory()) {
-          files = readdirSync(filePath);
-
-          for (const file of files) {
-            const module = await import(join(filePath, file));
-            this.storeCommand(module.default);
-          }
-        }
+        if (statSync(entryPath).isDirectory()) {
+          categoryCount++;
+          await this.loadCommandsFromDirectory(entryPath);
+        } // else root files ignored by design (base classes and interfaces)
       }
       displaySuccess(`${pink(this.slashCommands.size)} (/) commands`
+        + (this.subCommandCount > 0
+          ? ` (with ${pink(this.subCommandCount)} subcommands)`
+          : "")
         + (this.messageContextMenuCommands.size > 0
           ? `, ${pink(this.messageContextMenuCommands.size)} message commands`
           : "")
         + (this.userContextMenuCommands.size > 0
           ? ` and ${pink(this.userContextMenuCommands.size)} user commands`
           : "")
-        + ` loaded in ${pink(entries.length)} categories.`);
+        + ` loaded in ${pink(categoryCount)} categories.`);
     } catch (e) {
       displayWarning("An error happened, no commands were found.");
       console.error(e);
     }
   }
 
-  private storeCommand(constructor: any): void {
+  /**
+   * Recursively loads command modules from a directory and its descendants.
+   * @param directoryPath absolute path of a directory under the commands root
+   */
+  private async loadCommandsFromDirectory(directoryPath: string): Promise<void> {
+    const entries = readdirSync(directoryPath);
+
+    for (const entry of entries) {
+      const entryPath = join(directoryPath, entry);
+
+      if (statSync(entryPath).isDirectory()) {
+        await this.loadCommandsFromDirectory(entryPath);
+      } else {
+        await this.loadCommandModule(entryPath);
+      }
+    }
+  }
+
+  /**
+   * Imports a module and stores its default export if it is a BaseCommand class.
+   * @param filePath absolute path to a command module file
+   */
+  private async loadCommandModule(filePath: string): Promise<void> {
+    const module = await import(filePath);
+    const defaultExport = module.default as unknown;
+
+    if (this.isRegisterableCommand(defaultExport)) {
+      this.storeCommand(defaultExport);
+    } else if (this.isSubCommand(defaultExport)) {
+      this.subCommandCount++;
+    } // else ignore
+  }
+
+  private isRegisterableCommand(
+    constructor: unknown,
+  ): constructor is RegisterableCommandConstructor {
+    return typeof constructor === "function"
+      && constructor.prototype instanceof RegisterableBaseCommand;
+  }
+
+  private isSubCommand(constructor: unknown): boolean {
+    return typeof constructor === "function"
+      && constructor.prototype instanceof SubCommand;
+  }
+
+  private storeCommand(constructor: RegisterableCommandConstructor): void {
     if (!this.client) {
       throw new Error("The client is not set for handler.");
     }
 
-    const Command = constructor as new (
-      client: Tickly,
-      todoistClient: TodoistApiClient,
-      repositories: RepositoryFactory,
-    ) => BaseCommand;
-
-    const command = new Command(
+    const command = new constructor(
       this.client,
       this.todoistClient,
       this.repositories,
@@ -183,8 +225,8 @@ export class CommandHandler extends Handler {
   }
 
   /**
-   * Handles a user interaction wheteher it is a slash command, a context
-   * menu command, a modal submit or any other type.
+   * Handles a user interaction wheteher it is a slash command, a subcommand,
+   * a context menu command, a modal submit or any other type.
    * It handles these in both user and guild application commands contexts.
    *
    * The interaction is handled in the preferred language of the user if
@@ -201,31 +243,31 @@ export class CommandHandler extends Handler {
     }
 
     /* Retrieve the preferred language for commands */
-    const translationHandler = this.client.getTranslationHandler();
-    const defaultLocale = interaction.locale;
-    let language: Locale = defaultLocale;
-    try {
-      const preferredLanguage = await this.repositories
-        .getUserRepository()
-        .getUserPreferredLanguage(interaction.user.id);
-      language = preferredLanguage?.code ?? defaultLocale;
-    } catch {
-      // Interaction locale will be used
-    }
-    if (!translationHandler.isSupportedLocale(language)) {
-      language = translationHandler.getDefaultLocale();
-    }
+    const language = await this.getUserPreferredLanguage(interaction);
 
     /* Retrieve the interaction command */
     if (interaction.isChatInputCommand()) {
       command = this.slashCommands.get(interaction.commandName);
+
+      /* Look for subcommands */
+      const subCommands = command instanceof SlashCommand
+        ? command.getSubCommands()
+        : undefined;
+
+      if (subCommands && subCommands.length > 0) {
+        command = await this.getSubCommandFromInteraction(
+          interaction,
+          subCommands,
+          language,
+        );
+      }
     } else if (interaction.isMessageContextMenuCommand()) {
       command = this.messageContextMenuCommands.get(interaction.commandName);
     } else if (interaction.isUserContextMenuCommand()) {
       command = this.userContextMenuCommands.get(interaction.commandName);
     }
 
-    if (interaction.isCommand() && command
+    if (interaction.isCommand() && command !== undefined
       /* isCommandRunnable handles runnable errors */
       && this.isCommandRunnable(command, interaction, language)) {
       try {
@@ -245,6 +287,62 @@ export class CommandHandler extends Handler {
         });
       }
     } // else if not found, let Discord handle the error
+  }
+
+  /**
+   * Retrieves the preferred language for a user interaction, falling back to the
+   * interaction locale or the default one if not found or not supported.
+   * @param interaction the interaction to retrieve the user from
+   * @returns the preferred language locale code
+   */
+  private async getUserPreferredLanguage(interaction: Interaction): Promise<Locale> {
+    const translationHandler = this.client!.getTranslationHandler();
+    const defaultLocale = interaction.locale;
+    let language: Locale = defaultLocale;
+
+    try {
+      const preferredLanguage = await this.repositories
+        .getUserRepository()
+        .getUserPreferredLanguage(interaction.user.id);
+      language = preferredLanguage?.code ?? defaultLocale;
+    } catch {
+      // Interaction locale will be used
+    }
+    if (!translationHandler.isSupportedLocale(language)) {
+      language = translationHandler.getDefaultLocale();
+    }
+    return language;
+  }
+
+  /**
+   * Retrieves a subcommand from a slash command interaction, if any, and handles
+   * the errors if the subcommand is not found.
+   * @param interaction the slash command interaction
+   * @param subCommands the slash command subcommands to look into
+   * @param language the language to use in case of error
+   * @returns the subcommand to execute, or undefined if not found
+   */
+  private async getSubCommandFromInteraction(
+    interaction: ChatInputCommandInteraction,
+    subCommands: SubCommand[],
+    language: Locale,
+  ): Promise<SubCommand | undefined> {
+    let command: SubCommand | undefined;
+
+    try {
+      const requestedSubCommandName = interaction.options.getSubcommand(true);
+      command = subCommands.find(s => s.getName() === requestedSubCommandName);
+    } catch {
+      command = undefined; // forces the not found error reply
+    }
+
+    if (!command) {
+      await interaction.reply({
+        content: this.translate(language, "unknownCommand"),
+        ephemeral: true,
+      });
+    }
+    return command;
   }
 
   /**
@@ -309,3 +407,9 @@ export class CommandHandler extends Handler {
       ) ?? "Translation error";
   }
 }
+
+type RegisterableCommandConstructor = new (
+  client: Tickly,
+  todoistClient: TodoistApiClient,
+  repositories: RepositoryFactory,
+) => RegisterableBaseCommand;

@@ -1,3 +1,4 @@
+import type { CommandData } from "@bot/commands/BaseCommand";
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
@@ -23,6 +24,10 @@ class TestCommand extends BaseCommand {
     _interaction: BaseInteraction,
     _language: Locale,
   ): Promise<void> { /* empty body */ }
+
+  public getData(): (CommandData & { type: APIApplicationCommand["type"] }) {
+    return {} as (CommandData & { type: APIApplicationCommand["type"] });
+  }
 }
 
 describe("BaseCommand", () => {
@@ -60,20 +65,6 @@ describe("BaseCommand", () => {
 
   it("should have no clientRequiredPermissions by default", () => {
     expect(command.clientRequiredPermissions).toEqual([]);
-  });
-
-  describe("getData", () => {
-    it("should return command data with type", () => {
-      // Act
-      const data = command.getData();
-
-      // Assert
-      expect(data).toEqual(expect.objectContaining({
-        name: "test",
-        description: "test description",
-        type: ApplicationCommandType.ChatInput,
-      }));
-    });
   });
 
   describe("getName", () => {
@@ -188,6 +179,42 @@ describe("BaseCommand", () => {
         "test",
         "my.key",
         { name: "Tickly" },
+      );
+    });
+
+    it("should use getTranslationCommandName for the translation key", () => {
+      // Arrange
+      class CustomCommand extends BaseCommand {
+        protected readonly type = ApplicationCommandType.ChatInput;
+        protected readonly data = { name: "custom", description: "desc" };
+        protected getTranslationCommandName(): string {
+          return "custom_command.child";
+        }
+
+        public async execute(
+          _interaction: BaseInteraction,
+          _language: Locale,
+        ): Promise<void> { /* empty body */ }
+
+        public getData(): CommandData & { type: APIApplicationCommand["type"] } {
+          return {} as CommandData & { type: APIApplicationCommand["type"] };
+        }
+      }
+      const customCommand = new CustomCommand(
+        clientMock,
+        todoistClientMock,
+        repositoriesMock,
+      );
+
+      // Act
+      (customCommand as any).translate(Locale.EnglishUS, "key");
+
+      // Assert
+      expect(translationHandlerMock.translateCommand).toHaveBeenCalledWith(
+        "en-US",
+        "custom_command.child",
+        "key",
+        {},
       );
     });
   });

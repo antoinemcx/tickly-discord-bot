@@ -9,7 +9,7 @@
     "build": "tsc --build && tsc-alias -p tsconfig.json",
     "start": "npm run clean && npm run build && node .",
     "start:nobuild": "node .",
-    "test": "jest",
+    "test": "jest --silent",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "db:generate": "drizzle-kit generate",

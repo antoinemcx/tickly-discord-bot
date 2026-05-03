@@ -1,9 +1,13 @@
 import type { BaseCommand } from "@bot/commands/BaseCommand";
+import type { MessageCommand } from "@bot/commands/MessageCommand";
+import type { SubCommand } from "@bot/commands/SubCommand";
+import type { UserCommand } from "@bot/commands/UserCommand";
 import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { UserRepository } from "@database/repositories/UserRepository";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import { readdirSync, statSync } from "node:fs";
+import { SlashCommand } from "@bot/commands/SlashCommand";
 import { CommandHandler } from "@bot/handlers/CommandHandler";
 import { Events, Locale, REST, Routes } from "discord.js";
 
@@ -51,6 +55,19 @@ function createCommand(
     execute,
     ...overrides,
   } as unknown as BaseCommand;
+}
+
+function createSlashCommand(
+  execute: jest.Mock,
+  overrides: Record<string, unknown> = {},
+): SlashCommand {
+  const command = {
+    ...createCommand(execute, overrides),
+    getSubCommands: jest.fn().mockReturnValue([]),
+    ...overrides,
+  } as unknown as SlashCommand;
+  Object.setPrototypeOf(command, SlashCommand.prototype);
+  return command;
 }
 
 describe("CommandHandler", () => {
@@ -109,15 +126,46 @@ describe("CommandHandler", () => {
       await expect(result).rejects.toThrow();
     });
 
-    it("should load commands", async () => {
+    it("should load commands recursively from command category directories", async () => {
       // Arrange
       (readdirSync as unknown as jest.Mock).mockImplementation((path: any) => {
         const current = String(path).split(/[\\/]/).at(-1);
 
         if (current === "commands") {
           return ["bot"];
+        } else if (current === "nested") {
+          return [String.raw`..\Ping.ts`];
         } else if (current === "bot") {
-          return ["Ping.ts"];
+          return ["nested"];
+        }
+        return [];
+      });
+      (statSync as unknown as jest.Mock).mockImplementation((path: any) => ({
+        isDirectory: () => {
+          const current = String(path).split(/[\\/]/).at(-1);
+
+          return current === "bot" || current === "nested";
+        },
+      } as any));
+      handler.setClient(clientMock);
+
+      // Act
+      await handler.setup();
+
+      // Assert
+      expect(readdirSync).toHaveBeenCalledWith(CommandHandler.commandsDirectory);
+      expect(Array.from(handler.getAllCommands().keys())).toContain("ping");
+    });
+
+    it("should ignore root files and non-BaseCommand default exports", async () => {
+      // Arrange
+      (readdirSync as unknown as jest.Mock).mockImplementation((path: any) => {
+        const current = String(path).split(/[\\/]/).at(-1);
+
+        if (current === "commands") {
+          return ["bot", "BaseCommand.ts", "not-found.ts"];
+        } else if (current === "bot") {
+          return [String.raw`..\BaseCommand.ts`, "Ping.ts"];
         }
         return [];
       });
@@ -130,8 +178,7 @@ describe("CommandHandler", () => {
       await handler.setup();
 
       // Assert
-      expect(readdirSync).toHaveBeenCalledWith(CommandHandler.commandsDirectory);
-      expect(Array.from(handler.getAllCommands().keys())).toContain("ping");
+      expect(Array.from(handler.getAllCommands().keys())).toEqual(["ping"]);
     });
 
     it("should listen for interaction create events once the bot is ready", async () => {
@@ -233,7 +280,10 @@ describe("CommandHandler", () => {
       it("should execute matching slash command for chat input interactions", async () => {
         // Arrange
         const execute = jest.fn().mockResolvedValue(undefined);
-        (interactionHandler as any).slashCommands.set("ping", createCommand(execute));
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(execute),
+        );
         const interaction = createInteraction();
 
         // Act
@@ -246,7 +296,10 @@ describe("CommandHandler", () => {
       it("should execute matching message command for message context interactions", async () => {
         // Arrange
         const execute = jest.fn().mockResolvedValue(undefined);
-        (interactionHandler as any).messageContextMenuCommands.set("ping", createCommand(execute));
+        (interactionHandler as any).messageContextMenuCommands.set(
+          "ping",
+          createCommand(execute) as MessageCommand,
+        );
         const interaction = createInteraction({
           isChatInputCommand: jest.fn().mockReturnValue(false),
           isMessageContextMenuCommand: jest.fn().mockReturnValue(true),
@@ -262,7 +315,10 @@ describe("CommandHandler", () => {
       it("should execute matching user command for user context interactions", async () => {
         // Arrange
         const execute = jest.fn().mockResolvedValue(undefined);
-        (interactionHandler as any).userContextMenuCommands.set("ping", createCommand(execute));
+        (interactionHandler as any).userContextMenuCommands.set(
+          "ping",
+          createCommand(execute) as UserCommand,
+        );
         const interaction = createInteraction({
           isChatInputCommand: jest.fn().mockReturnValue(false),
           isUserContextMenuCommand: jest.fn().mockReturnValue(true),
@@ -275,10 +331,40 @@ describe("CommandHandler", () => {
         expect(execute).toHaveBeenCalledWith(interaction, expect.any(String));
       });
 
+      it("should execute matching subcommand for chat input interactions with subcommands", async () => {
+        // Arrange
+        const containerExecute = jest.fn().mockResolvedValue(undefined);
+        const execute = jest.fn().mockResolvedValue(undefined);
+        const subCommand = createCommand(execute, {
+          getName: jest.fn().mockReturnValue("sub"),
+        }) as unknown as SubCommand;
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(execute, {
+            getSubCommands: jest.fn().mockReturnValue([subCommand]),
+          }),
+        );
+        const interaction = createInteraction({
+          options: {
+            getSubcommand: jest.fn().mockReturnValue("sub"),
+          },
+        });
+
+        // Act
+        await interactionListener(interaction);
+
+        // Assert
+        expect(execute).toHaveBeenCalledWith(interaction, expect.any(String));
+        expect(containerExecute).not.toHaveBeenCalled();
+      });
+
       it("should execute commands with user preferred locale when available", async () => {
         // Arrange
         const execute = jest.fn().mockResolvedValue(undefined);
-        (interactionHandler as any).slashCommands.set("ping", createCommand(execute));
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(execute),
+        );
         const interaction = createInteraction();
         (userRepositoryMock.getUserPreferredLanguage as jest.Mock)
           .mockResolvedValue({ code: Locale.French });
@@ -293,7 +379,10 @@ describe("CommandHandler", () => {
       it("should execute commands with interaction locale when no preferred locale exists", async () => {
         // Arrange
         const execute = jest.fn().mockResolvedValue(undefined);
-        (interactionHandler as any).slashCommands.set("ping", createCommand(execute));
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(execute),
+        );
         const interaction = createInteraction({ locale: Locale.EnglishUS });
 
         // Act
@@ -306,7 +395,10 @@ describe("CommandHandler", () => {
       it("should reply with an error when command execution fails", async () => {
         // Arrange
         const execute = jest.fn().mockRejectedValue(new Error("Execution failed"));
-        (interactionHandler as any).slashCommands.set("ping", createCommand(execute));
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(execute),
+        );
         const interaction = createInteraction();
         (userRepositoryMock.getUserPreferredLanguage as jest.Mock)
           .mockResolvedValue(undefined);
@@ -320,12 +412,71 @@ describe("CommandHandler", () => {
         }));
       });
 
+      it("should reply with an error when a subcommand is requested but not found", async () => {
+        // Arrange
+        const containerExecute = jest.fn().mockResolvedValue(undefined);
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(containerExecute, {
+            getSubCommands: jest.fn().mockReturnValue([createCommand(jest.fn(), {
+              getName: jest.fn().mockReturnValue("another-sub"),
+            }) as unknown as SubCommand]),
+          }),
+        );
+        const interaction = createInteraction({
+          options: {
+            getSubcommand: jest.fn().mockReturnValue("missing-sub"),
+          },
+        });
+
+        // Act
+        await interactionListener(interaction);
+
+        // Assert
+        expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
+          content: "unknownCommand",
+        }));
+        expect(containerExecute).not.toHaveBeenCalled();
+      });
+
+      it("should reply with an error when a command has subcommands but the interaction does not specify one", async () => {
+        // Arrange
+        const containerExecute = jest.fn().mockResolvedValue(undefined);
+        const execute = jest.fn().mockResolvedValue(undefined);
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(containerExecute, {
+            getSubCommands: jest.fn().mockReturnValue([
+              createCommand(execute, {
+                getName: jest.fn().mockReturnValue("sub"),
+              }) as unknown as SubCommand,
+            ]),
+          }),
+        );
+        const interaction = createInteraction({
+          options: {
+            getSubcommand: jest.fn().mockImplementation(() => {
+              throw new Error("No subcommand specified");
+            }),
+          },
+        });
+
+        // Act
+        await interactionListener(interaction);
+
+        // Assert
+        expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
+          content: "unknownCommand",
+        }));
+        expect(containerExecute).not.toHaveBeenCalled();
+      });
+
       it("should reply with an error when the command is private and the user not an owner", async () => {
         // Arrange
         const execute = jest.fn().mockResolvedValue(undefined);
         (interactionHandler as any).slashCommands.set(
           "ping",
-          createCommand(execute, { isAdminOnly: true }),
+          createSlashCommand(execute, { isAdminOnly: true }),
         );
         const interaction = createInteraction();
         (userRepositoryMock.getUserPreferredLanguage as jest.Mock)
@@ -350,7 +501,7 @@ describe("CommandHandler", () => {
         const execute = jest.fn().mockResolvedValue(undefined);
         (interactionHandler as any).slashCommands.set(
           "ping",
-          createCommand(execute, { isAdminOnly: true }),
+          createSlashCommand(execute, { isAdminOnly: true }),
         );
         const interaction = createInteraction({
           user: { id: ownerId },
@@ -370,7 +521,7 @@ describe("CommandHandler", () => {
         const execute = jest.fn().mockResolvedValue(undefined);
         (interactionHandler as any).slashCommands.set(
           "ping",
-          createCommand(execute, {
+          createSlashCommand(execute, {
             hasUserPermission: jest.fn().mockReturnValue(false),
           }),
         );
@@ -392,7 +543,7 @@ describe("CommandHandler", () => {
         const execute = jest.fn().mockResolvedValue(undefined);
         (interactionHandler as any).slashCommands.set(
           "ping",
-          createCommand(execute, {
+          createSlashCommand(execute, {
             hasBotPermission: jest.fn().mockReturnValue(false),
           }),
         );
