@@ -4,7 +4,7 @@ import type { Handler } from "@bot/handlers/Handler";
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { Configuration } from "@bot/Tickly";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type { PermissionResolvable } from "discord.js";
+import type { ApplicationCommand, PermissionResolvable } from "discord.js";
 import { Tickly } from "@bot/Tickly";
 import { Events } from "discord.js";
 
@@ -142,6 +142,80 @@ describe("Tickly", () => {
   });
 
   describe("Discord SDK utility methods", () => {
+    describe("getCommandMention", () => {
+      it("should return a mention for an existing command", async () => {
+        // Arrange
+        const mockCommand = { id: "12345", name: "test" } as ApplicationCommand;
+        mockedBot.application = {
+          commands: {
+            fetch: jest.fn().mockResolvedValue([mockCommand]),
+          },
+        } as unknown as Tickly["application"];
+
+        // Act
+        const result = await mockedBot.getCommandMention("test");
+
+        // Assert
+        expect(result).toBe("</test:12345>");
+      });
+
+      it("should retrieve commands with the correct guild ID when provided", async () => {
+        // Arrange
+        const mockCommand = { id: "12345", name: "test" } as ApplicationCommand;
+        mockedBot.application = {
+          commands: {
+            fetch: jest.fn().mockResolvedValue([mockCommand]),
+          },
+        } as unknown as Tickly["application"];
+        const guildId = "67890";
+
+        // Act
+        await mockedBot.getCommandMention("test", guildId);
+
+        // Assert
+        expect(mockedBot.application?.commands.fetch).toHaveBeenCalledWith({ guildId });
+      });
+
+      it("should return a fallback mention if the application is not available", async () => {
+        // Arrange
+        mockedBot.application = null;
+        // Act
+        const result = await mockedBot.getCommandMention("test");
+        // Assert
+        expect(result).toBe("`/test`");
+      });
+
+      it("should return a fallback mention if the command cannot be fetched", async () => {
+        // Arrange
+        mockedBot.application = {
+          commands: {
+            fetch: jest.fn().mockRejectedValue(new Error("Fetch failed")),
+          },
+        } as unknown as Tickly["application"];
+
+        // Act
+        const result = await mockedBot.getCommandMention("test");
+
+        // Assert
+        expect(result).toBe("`/test`");
+      });
+
+      it("should return a fallback mention if the command is not found", async () => {
+        // Arrange
+        mockedBot.application = {
+          commands: {
+            fetch: jest.fn().mockResolvedValue([]),
+          },
+        } as unknown as Tickly["application"];
+
+        // Act
+        const result = await mockedBot.getCommandMention("test");
+
+        // Assert
+        expect(result).toBe("`/test`");
+      });
+    });
+
     describe("permissionsToText", () => {
       it("should convert permissions to text", () => {
         // Arrange

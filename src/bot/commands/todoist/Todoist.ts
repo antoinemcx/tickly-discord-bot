@@ -4,6 +4,7 @@ import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
 import { SlashCommand } from "../SlashCommand";
 import Login from "./Login";
+import Logout from "./Logout";
 
 export default class Todoist extends SlashCommand {
   readonly data = {
@@ -18,6 +19,7 @@ export default class Todoist extends SlashCommand {
     super(client, todoistClient, repositories);
     this.subcommands = [
       new Login(client, todoistClient, repositories, this.data.name),
+      new Logout(client, todoistClient, repositories, this.data.name),
     ];
   }
 

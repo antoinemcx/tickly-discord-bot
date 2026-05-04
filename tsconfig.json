@@ -22,8 +22,7 @@
     "./config.example.ts",
     "./src/**/*.ts",
     "./src/**/*.json",
-    "./tests/**/*.ts",
-    "./playground/**/*.ts"
+    "./tests/**/*.ts"
   ],
   "exclude": ["./build/*", "./node_modules/*"]
 }

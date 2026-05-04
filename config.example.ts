@@ -4,6 +4,9 @@ export default {
   emotes: { // emotes used in the bot (emojis, unicode or discord emotes)
     v: "✅",
     x: "❌",
+    i: "ℹ️",
+    todoist: "🟥",
+    todoistSmall: "🟥",
   },
 
   defaultLocale: "en-US", // default language if no preference (see https://docs.discord.com/developers/reference#locales)

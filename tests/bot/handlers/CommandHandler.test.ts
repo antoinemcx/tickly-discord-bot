@@ -6,6 +6,7 @@ import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { UserRepository } from "@database/repositories/UserRepository";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
+import type { CommandInteraction } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
 import { SlashCommand } from "@bot/commands/SlashCommand";
 import { CommandHandler } from "@bot/handlers/CommandHandler";
@@ -39,6 +40,7 @@ function createInteraction(overrides: Record<string, unknown> = {}) {
     isUserContextMenuCommand: jest.fn().mockReturnValue(false),
     isCommand: jest.fn().mockReturnValue(true),
     reply: jest.fn(),
+    editReply: jest.fn(),
     ...overrides,
   };
 }
@@ -399,7 +401,9 @@ describe("CommandHandler", () => {
           "ping",
           createSlashCommand(execute),
         );
-        const interaction = createInteraction();
+        const interaction = createInteraction() as unknown as CommandInteraction;
+        interaction.replied = false;
+        interaction.deferred = false;
         (userRepositoryMock.getUserPreferredLanguage as jest.Mock)
           .mockResolvedValue(undefined);
 
@@ -408,6 +412,28 @@ describe("CommandHandler", () => {
 
         // Assert
         expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
+          content: "executionError",
+        }));
+      });
+
+      it("should edit reply with an error when command execution fails after already been replied to", async () => {
+        // Arrange
+        const execute = jest.fn().mockRejectedValue(new Error("Execution failed"));
+        (interactionHandler as any).slashCommands.set(
+          "ping",
+          createSlashCommand(execute),
+        );
+        const interaction = createInteraction() as unknown as CommandInteraction;
+        interaction.replied = true;
+        interaction.deferred = false;
+        (userRepositoryMock.getUserPreferredLanguage as jest.Mock)
+          .mockResolvedValue(undefined);
+
+        // Act
+        await interactionListener(interaction);
+
+        // Assert
+        expect(interaction.editReply).toHaveBeenCalledWith(expect.objectContaining({
           content: "executionError",
         }));
       });

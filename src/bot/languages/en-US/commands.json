@@ -6,7 +6,17 @@
   "todoist": {
     "description": "Handle your Todoist tasks and projects.",
     "login": {
-      "description": "🎉 Log in to your Todoist account."
+      "description": "🎉 Log in to your Todoist account.",
+      "alreadyLoggedIn": "{{x}} You are already logged in to your Todoist account. Use {{helpCommand}} to learn how to use Tickly.",
+      "existingPendingSession": "{{i}} You already started a login session but haven't completed it yet.\nA new authentication link will be sent in the next message, the previous one is now invalid.",
+      "instructions": "**Click the link below to log in.**\nYou will be redirected to a secure Todoist login page, where you'll be asked to authorize Tickly to access your account.",
+      "link": "Login link"
+    },
+    "logout": {
+      "description": "⛔ Log out from your Todoist account.",
+      "noSession": "{{x}} You are not logged in to a Todoist account.\n> Perhaps you wanted to log in? Use {{loginCommand}} to do so.",
+      "logoutError": "{{x}} An error occurred while logging out of your Todoist account. Please try again.",
+      "logoutSuccess": "{{v}} You have been logged out of your Todoist account successfully."
     }
   }
 }

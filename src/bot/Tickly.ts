@@ -1,5 +1,5 @@
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type { PermissionResolvable } from "discord.js";
+import type { ApplicationCommand, PermissionResolvable } from "discord.js";
 import type configurationExample from "../../config.example";
 import type { CommandHandler } from "./handlers/CommandHandler";
 import type { EventHandler } from "./handlers/EventHandler";
@@ -141,6 +141,33 @@ export class Tickly extends Client {
       `/help・${guildCount} server${guildCount !== 1 ? "s" : ""}`,
       { type: ActivityType.Watching },
     );
+  }
+
+  /**
+   * Generates a mention string for a command, using its name and optionally
+   * its guild ID if it's a guild command.
+   * If the command cannot be found, it falls back to a simple slash command format.
+   *
+   * @param commandName the name of the command to mention
+   * @param guildId the ID of the guild to look in, if applicable
+   * @returns a string that mentions the command in Discord
+   */
+  public async getCommandMention(commandName: string, guildId?: string): Promise<string> {
+    let mention = `\`/${commandName}\``;
+    if (!this.application) {
+      return mention;
+    }
+
+    try {
+      const commands = await this.application.commands.fetch({ guildId });
+      const command = commands.find(cmd => cmd.name === commandName);
+      if (command) {
+        mention = `</${commandName}:${command.id}>`;
+      }
+    } catch {
+      // Do nothing, just return the fallback mention
+    }
+    return mention;
   }
 
   /**

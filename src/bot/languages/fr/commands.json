@@ -6,7 +6,17 @@
   "todoist": {
     "description": "Gérez vos tâches et projets Todoist.",
     "login": {
-      "description": "🎉 Connectez-vous à votre compte Todoist."
+      "description": "🎉 Connectez-vous à votre compte Todoist.",
+      "alreadyLoggedIn": "{{x}} Vous êtes déjà connecté à votre compte Todoist. Utilisez {{helpCommand}} pour savoir comment utiliser Tickly.",
+      "existingPendingSession": "{{i}} Vous avez déjà commencé une session de connexion mais ne l'avez pas encore terminée.\n Un nouveau lien d'authentification sera envoyé dans le message suivant, le précédent est maintenant invalide.",
+      "instructions": "**Cliquez sur le lien ci-dessous pour vous connecter.**\nVous serez redirigé vers une page de connexion sécurisée de Todoist vous demandant d'autoriser Tickly à accéder à votre compte.",
+      "link": "Lien de connexion"
+    },
+    "logout": {
+      "description": "⛔ Déconnectez-vous de votre compte Todoist.",
+      "noSession": "{{x}} Vous n'êtes pas connecté à un compte Todoist.\n> Peut-être souhaitiez-vous vous connecter ? Utilisez {{loginCommand}} pour cela.",
+      "logoutError": "{{x}} Une erreur est survenue lors de la déconnexion de votre compte Todoist. Veuillez réessayer.",
+      "logoutSuccess": "{{v}} Vous avez été déconnecté de votre compte Todoist avec succès."
     }
   }
 }

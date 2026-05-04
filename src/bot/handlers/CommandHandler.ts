@@ -273,18 +273,7 @@ export class CommandHandler extends Handler {
       try {
         await command.execute(interaction, language);
       } catch (error) {
-        const errorCode = generateErrorCode();
-        displayDetailedError(
-          `Unknown error while executing ${command?.getData().name || ""} command`,
-          error,
-          errorCode,
-        );
-        interaction.reply({
-          content: this.translate(language, "executionError", {
-            errorCode,
-          }),
-          ephemeral: true,
-        });
+        this.sendInteractionExecutionError(error, command, interaction, language);
       }
     } // else if not found, let Discord handle the error
   }
@@ -392,6 +381,34 @@ export class CommandHandler extends Handler {
     }
 
     return isRunnable;
+  }
+
+  private sendInteractionExecutionError(
+    error: unknown,
+    command: BaseCommand | undefined,
+    interaction: CommandInteraction,
+    language: Locale,
+  ) {
+    const errorCode = generateErrorCode();
+    displayDetailedError(
+      `Unknown error while executing ${command?.getName() || ""} command`,
+      error,
+      errorCode,
+    );
+    if (interaction.replied || interaction.deferred) {
+      interaction.editReply({
+        content: this.translate(language, "executionError", {
+          errorCode,
+        }),
+      });
+    } else {
+      interaction.reply({
+        content: this.translate(language, "executionError", {
+          errorCode,
+        }),
+        ephemeral: true,
+      });
+    }
   }
 
   private translate(
