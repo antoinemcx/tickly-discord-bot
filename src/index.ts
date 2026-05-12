@@ -3,6 +3,7 @@ import { EventHandler } from "@bot/handlers/EventHandler";
 import { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import { Tickly } from "@bot/Tickly";
 import { DrizzleDatabase } from "@database/DrizzleDatabase";
+import { runMigrations } from "@database/migrate";
 import { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import { OAuthApiService } from "@services/oauth/OAuthApiService";
 import {
@@ -31,14 +32,22 @@ import "dotenv/config";
   }
 
   /* Initialize database */
+  const dbConfig = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME,
+  };
+
   let database: DrizzleDatabase;
   try {
-    database = await DrizzleDatabase.connect({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME,
-    });
+    /* Always migrate the database in production */
+    if (process.env.NODE_ENV === "production") {
+      await DrizzleDatabase.ensureDatabaseExists(dbConfig);
+      await runMigrations(dbConfig);
+    }
+
+    database = await DrizzleDatabase.connect(dbConfig);
     await database.initializeBaseData();
   } catch (error) {
     displayError((error as Error).message);

@@ -1,0 +1,25 @@
+node_modules/
+build/
+.git/
+.github/
+docs/
+*.md
+.env*
+.DS_Store
+Thumbs.db
+*.log
+
+# Development environment
+.vscode/
+.idea/
+eslint.config.js
+drizzle.config.ts
+
+# Tests
+tests/
+jest.config.ts
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore

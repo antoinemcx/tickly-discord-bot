@@ -1,16 +1,17 @@
 import type { DbOptions } from "@database/DrizzleDatabase";
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import type { Pool as Pool2 } from "mysql2";
-import type { Pool } from "mysql2/promise";
+import type { Connection, Pool } from "mysql2/promise";
 import { DrizzleDatabase } from "@database/DrizzleDatabase";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
 import * as schema from "@database/schema";
 import { getTableName } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { createPool } from "mysql2/promise";
+import { createConnection, createPool } from "mysql2/promise";
 
 let dbMock: DrizzleDatabase;
 let poolMock: Pool;
+let rawConnectionMock: Connection;
 let connectionMock: MySql2Database<any>;
 let transactionMock: any;
 const requiredTables = Object.values(schema).map(table => getTableName(table));
@@ -28,6 +29,7 @@ jest.mock("drizzle-orm/mysql2", () => ({
 
 jest.mock("mysql2/promise", () => ({
   createPool: jest.fn(),
+  createConnection: jest.fn(),
 }));
 
 beforeEach(async () => {
@@ -59,9 +61,17 @@ beforeEach(async () => {
     }),
   };
 
-  (connectionMock.transaction as jest.Mock).mockImplementation(async (callback: any) => callback(transactionMock));
+  (connectionMock.transaction as jest.Mock)
+    .mockImplementation(async (callback: any) => callback(transactionMock));
+
+  rawConnectionMock = {
+    query: jest.fn().mockResolvedValue(undefined),
+    end: jest.fn().mockResolvedValue(undefined),
+  } as any as Connection;
 
   (createPool as jest.MockedFunction<typeof createPool>).mockReturnValue(poolMock);
+  (createConnection as jest.MockedFunction<typeof createConnection>)
+    .mockResolvedValue(rawConnectionMock);
   (drizzle as jest.MockedFunction<typeof drizzle>).mockReturnValue(
     connectionMock as MySql2Database<Record<string, unknown>> & { $client: Pool2 },
   );
@@ -265,6 +275,59 @@ describe("DrizzleDatabase", () => {
 
       // Assert
       await expect(result).rejects.toThrow("Failed to seed base configuration data");
+    });
+  });
+
+  describe("ensureDatabaseExists", () => {
+    it("should create the database if it does not exist", async () => {
+      // Act
+      await DrizzleDatabase.ensureDatabaseExists(configMock);
+
+      // Assert
+      expect(createConnection).toHaveBeenCalledWith({
+        host: configMock.host,
+        user: configMock.user,
+        password: configMock.password,
+      });
+      expect(rawConnectionMock.query).toHaveBeenCalledWith(
+        `CREATE DATABASE IF NOT EXISTS \`${configMock.database}\``,
+      );
+      expect(rawConnectionMock.end).toHaveBeenCalled();
+    });
+
+    it("should close the connection even when query fails", async () => {
+      // Arrange
+      (rawConnectionMock.query as jest.Mock).mockRejectedValueOnce(
+        new Error("access denied"),
+      );
+
+      // Act & Assert
+      await expect(DrizzleDatabase.ensureDatabaseExists(configMock))
+        .rejects
+        .toThrow("Failed to ensure database exists");
+      expect(rawConnectionMock.end).toHaveBeenCalled();
+    });
+
+    it("should throw when database name is empty", async () => {
+      // Arrange
+      const emptyDbConfig: DbOptions = { ...configMock, database: "  " };
+
+      // Act & Assert
+      await expect(DrizzleDatabase.ensureDatabaseExists(emptyDbConfig))
+        .rejects
+        .toThrow("Database name is required.");
+    });
+
+    it("should throw when connection fails", async () => {
+      // Arrange
+      (createConnection as jest.Mock).mockRejectedValueOnce(
+        new Error("ECONNREFUSED"),
+      );
+
+      // Act & Assert
+      await expect(DrizzleDatabase.ensureDatabaseExists(configMock))
+        .rejects
+        .toThrow("Failed to ensure database exists");
     });
   });
 });

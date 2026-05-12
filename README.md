@@ -55,20 +55,54 @@ TODO docs/**.md file + "follow the "Getting Started" instructions to set up a lo
 <br>
 
 ## 🛠️ Getting Started
-### Prerequisites
-TODO Node.js, Redis, MariaDB, Docker (optional)
 
-### Development
-TODO setup process, environment variables, etc.
-
-Other npm scripts are available for development purposes. You can find more information about them in the TODO! file.
-
-### Production
+### Start the app
 #### With Docker (recommended)
-TODO setup process, environment variables, etc.
+1. Copy `.env.example` to a new `.env` file and fill in all required values.
+
+2. Copy `config.example.ts` to a `config.ts` file and replace with your own values.
+`DB_HOST` must be set to `tickly-db` to work with the Docker setup.
+
+3. Build and start all services:
+   ```sh
+   docker compose up -d --build
+   ```
+
+This starts:
+- **tickly-bot**: the Discord bot and OAuth web service (exposed via [Traefik](https://traefik.io/) reverse proxy)
+- **tickly-db**: a MariaDB instance with persistent storage (migrations are run automatically)
+
+> [!IMPORTANT]
+> For the OAuth callback service, [Traefik](https://traefik.io/) handles TLS termination with a Cloudflare certificate resolver.  
+> Make sure the external `traefik-proxy` Docker network and your Traefik instance are already running before starting Tickly.
 
 #### Without Docker
-TODO setup process, environment variables, etc.
+1. **Prerequisites**: Node.js (v22+) and a running MariaDB instance.
+
+2. Copy `.env.example` to `.env` and fill in the values (`DB_HOST` will be `localhost` if the database is running locally).
+
+3. Copy `config.example.ts` to `config.ts` and replace with your own values.
+
+4. Install dependencies and build:
+   ```sh
+   npm install
+   npm run build
+   ```
+
+5. Run database migrations on the first run:
+   ```sh
+   npm run db:migrate
+   ```
+
+6. Start the bot:
+   ```sh
+   npm run start:nobuild
+   ```
+
+This starts the bot and the OAuth web service (default port `3999`) together.
+
+### Development
+TODO Other npm scripts are available for development purposes. You can find more information about them in the TODO! file.
 
 <br>
 

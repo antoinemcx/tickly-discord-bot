@@ -1,12 +1,12 @@
 import type { Language } from "@database/schema/user.schema";
 import type { MySql2Database } from "drizzle-orm/mysql2";
 import type { RowDataPacket } from "mysql2";
-import type { Pool } from "mysql2/promise";
+import type { Connection, Pool } from "mysql2/promise";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
 import { Locale } from "discord.js";
 import { getTableName } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { createPool } from "mysql2/promise";
+import { createConnection, createPool } from "mysql2/promise";
 import { displayInfo, displaySuccess } from "../utils/logger";
 import * as schema from "./schema";
 
@@ -30,6 +30,38 @@ export class DrizzleDatabase {
   private constructor(pool: Pool) {
     this.pool = pool;
     this.connection = drizzle(this.pool, { schema, mode: "default" });
+  }
+
+  /**
+   * Ensures the target database exists, creating it if necessary.
+   * Connects to the server without specifying a database, runs
+   * `CREATE DATABASE IF NOT EXISTS`, then closes the connection.
+   *
+   * @param config database configuration
+   * @throws {Error} if the database cannot be created
+   */
+  public static async ensureDatabaseExists(config: DbOptions): Promise<void> {
+    const dbName = config.database.trim();
+    if (!dbName) {
+      throw new Error("Database name is required.");
+    }
+
+    let connection: Connection | undefined;
+    try {
+      connection = await createConnection({
+        host: config.host.trim(),
+        user: config.user.trim(),
+        password: config.password,
+      });
+      await connection.query(
+        `CREATE DATABASE IF NOT EXISTS \`${dbName}\``,
+      );
+      displaySuccess(`Database "${dbName}" is ready.`);
+    } catch (error) {
+      throw new Error("Failed to ensure database exists (" + error + ")");
+    } finally {
+      await connection?.end();
+    }
   }
 
   /**
@@ -106,7 +138,7 @@ export class DrizzleDatabase {
 
     if (existingTables.size !== requiredTables.length) {
       throw new Error("Database tables are missing. "
-        + "Run 'npm run db:migrate' before starting the app.");
+        + "Ensure migrations have completed successfully before starting the app.");
     }
   }
 
