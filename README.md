@@ -2,12 +2,8 @@
 > This project is currently in early development and is not yet ready for production use.  
 > If you want to follow the development progress or contribute, feel free to join the [support discord server](https://antoinemcx.fr/discord) !
 
-<h1><code>🤖</code> Tickly : a Todoist app to sync with Discord</h1>
 
-An unofficial Todoist integration for Discord.  
-Connect your Todoist account and manage your tasks directly from the Discord bot !
-
-<br>
+![Tickly banner](./docs/banner.png)
 
 ## 📋 Overview
 ### Features [**NOT YET IMPLEMENTED**]
