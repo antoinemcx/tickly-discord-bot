@@ -3,8 +3,10 @@ import type { EventHandler } from "@bot/handlers/EventHandler";
 import type { Handler } from "@bot/handlers/Handler";
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { Configuration } from "@bot/Tickly";
+import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ApplicationCommand, PermissionResolvable } from "discord.js";
+import Ping from "@bot/commands/bot/Ping";
 import { Tickly } from "@bot/Tickly";
 import { Events } from "discord.js";
 
@@ -68,6 +70,63 @@ describe("Tickly", () => {
       expect(mockedCommandHandler.setClient).toHaveBeenCalledWith(mockedBot);
       expect(mockedEventHandler.setClient).toHaveBeenCalledWith(mockedBot);
       expect(mockedTranslationHandler.setClient).toHaveBeenCalledWith(mockedBot);
+    });
+  });
+
+  describe("getSlashCommandByName", () => {
+    const mockedRepositoryFactory = {} as RepositoryFactory;
+
+    it("should return undefined with empty command name", () => {
+      // Assert
+      const commandName = "";
+      // Act
+      const result = mockedBot.getSlashCommandByName(commandName);
+      // Assert
+      expect(result).toBeUndefined();
+    });
+
+    it("should return undefined with unknown command name", () => {
+      // Arrange
+      const commandName = "unknown";
+      mockedCommandHandler.getAllCommands = jest.fn().mockReturnValue(
+        ["ping", new Ping(mockedBot, mockedTodoistClient, mockedRepositoryFactory)],
+      );
+
+      // Act
+      const result = mockedBot.getSlashCommandByName(commandName);
+
+      // Assert
+      expect(result).toBeUndefined();
+    });
+
+    it("should return the command with a known command name", () => {
+      // Arrange
+      const commandName = "ping";
+      const pingCommand = new Ping(mockedBot, mockedTodoistClient, mockedRepositoryFactory);
+      mockedCommandHandler.getAllCommands = jest.fn().mockReturnValue(
+        ["ping", pingCommand],
+      );
+
+      // Act
+      const result = mockedBot.getSlashCommandByName(commandName);
+
+      // Assert
+      expect(result).toBe(pingCommand);
+    });
+
+    it("should return the main command even with a nested command name", () => {
+      // Arrange
+      const commandName = "ping subcommand";
+      const pingCommand = new Ping(mockedBot, mockedTodoistClient, mockedRepositoryFactory);
+      mockedCommandHandler.getAllCommands = jest.fn().mockReturnValue(
+        ["ping", pingCommand],
+      );
+
+      // Act
+      const result = mockedBot.getSlashCommandByName(commandName);
+
+      // Assert
+      expect(result).toBe(pingCommand);
     });
   });
 

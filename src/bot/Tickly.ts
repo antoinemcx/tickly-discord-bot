@@ -1,6 +1,7 @@
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type { ApplicationCommand, PermissionResolvable } from "discord.js";
+import type { PermissionResolvable } from "discord.js";
 import type configurationExample from "../../config.example";
+import type { SlashCommand } from "./commands/SlashCommand";
 import type { CommandHandler } from "./handlers/CommandHandler";
 import type { EventHandler } from "./handlers/EventHandler";
 import type { TranslationHandler } from "./handlers/TranslationHandler";
@@ -90,6 +91,26 @@ export class Tickly extends Client {
     return this.translationHandler;
   }
 
+  public getSlashCommands(): Map<string, SlashCommand> {
+    return this.commandHandler.getSlashCommands();
+  }
+
+  /**
+   * Retrieves a slash command by its name.
+   * @param commandName the command name
+   * @returns the matching command, or undefined when the path is unknown
+   */
+  public getSlashCommandByName(commandName: string): SlashCommand | undefined {
+    const commandPath = commandName.trim().split(" ").filter(Boolean);
+    const [rootCommandName, ..._] = commandPath;
+    if (!rootCommandName) {
+      return undefined;
+    }
+
+    const registerableCommands = this.commandHandler.getSlashCommands();
+    return registerableCommands.get(rootCommandName);
+  }
+
   /**
    * Sets up commands and event listeners for the client and logs it
    * into Discord.
@@ -138,7 +159,7 @@ export class Tickly extends Client {
     }
 
     this.user?.setActivity(
-      `/help・${guildCount} server${guildCount !== 1 ? "s" : ""}`,
+      `/help・${guildCount} server${guildCount === 1 ? "" : "s"}`,
       { type: ActivityType.Watching },
     );
   }
@@ -160,7 +181,8 @@ export class Tickly extends Client {
 
     try {
       const commands = await this.application.commands.fetch({ guildId });
-      const command = commands.find(cmd => cmd.name === commandName);
+      const command = commands.find(cmd =>
+        cmd.name === commandName.split(" ")[0]);
       if (command) {
         mention = `</${commandName}:${command.id}>`;
       }
@@ -176,6 +198,8 @@ export class Tickly extends Client {
    * @returns permissions converted into text.
    */
   public static permissionsToText(permissions: PermissionResolvable[]): string[] {
-    return new PermissionsBitField(permissions).toArray();
+    return permissions.length === 0
+      ? []
+      : new PermissionsBitField(permissions).toArray();
   }
 }
