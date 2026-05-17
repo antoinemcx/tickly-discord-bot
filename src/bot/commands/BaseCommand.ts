@@ -3,27 +3,59 @@ import type { RepositoryFactory } from "@database/repositories/RepositoryFactory
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type {
   APIApplicationCommand,
+  APIApplicationCommandOption,
   APIApplicationCommandSubcommandOption,
   ApplicationCommandOptionType,
   BaseInteraction,
   Locale,
+  MessageComponentInteraction,
   PermissionResolvable,
 } from "discord.js";
+import {
+
+  ApplicationIntegrationType,
+
+} from "discord.js";
+
+/** Handler function for a component interaction (button, select menu, etc.). */
+export type MessageComponentHandler = (
+  interaction: MessageComponentInteraction,
+  language: Locale,
+) => Promise<void>;
+
+export type LocalizedCommandOption = Omit<
+  APIApplicationCommandOption,
+  "description" | "options"
+> & {
+  description?: APIApplicationCommandOption["description"];
+  options?: LocalizedCommandOption[];
+};
 
 export type CommandData = Omit<
   APIApplicationCommand,
   "type" // handled separately in abstract subclasses
   | "id" | "application_id" | "guild_id"
-  | "version" | "default_member_permissions" | "description"
-> & { description?: APIApplicationCommand["description"] };
+  | "version" | "default_member_permissions"
+  | "description" | "options"
+> & {
+  description?: APIApplicationCommand["description"];
+  options?: LocalizedCommandOption[];
+};
+
 export type SubCommandData = Omit<
   APIApplicationCommandSubcommandOption,
   "type" // handled separately in SubCommand class
   | "description"
-> & { description?: APIApplicationCommandSubcommandOption["description"] };
+  | "options"
+> & {
+  description?: APIApplicationCommandSubcommandOption["description"];
+  options?: LocalizedCommandOption[];
+};
 
 /** Base class for all discord bots commands and subcommands. */
 export abstract class BaseCommand {
+  public static readonly EMBED_COLOR = 0xE44232;
+
   /** Discord API data. */
   protected abstract readonly data: CommandData | SubCommandData;
 
@@ -33,6 +65,9 @@ export abstract class BaseCommand {
   public readonly userRequiredPermissions: PermissionResolvable[] = [];
   /** The permissions required for the bot to be able to run the command. */
   public readonly clientRequiredPermissions: PermissionResolvable[] = [];
+
+  /** Registered component interaction handlers keyed by full customId. */
+  private readonly messageComponentHandlers = new Map<string, MessageComponentHandler>();
 
   /**
    * Constructs and initializes a new discord command.
@@ -75,7 +110,6 @@ export abstract class BaseCommand {
    */
   public abstract execute(
     interaction: BaseInteraction, language: Locale): Promise<void>;
-
   /**
    * Verifies that a discord user has permissions to use the command.
    * @param interaction command interaction to check the user permissions for
@@ -96,6 +130,45 @@ export abstract class BaseCommand {
     return this.clientRequiredPermissions === undefined
       || this.clientRequiredPermissions.length === 0
       || interaction.appPermissions.has(this.clientRequiredPermissions);
+  }
+
+  /**
+   * Checks if the bot is installed as a user integration.
+   * @param interaction the interaction context to check from
+   * @returns true if the bot is user-installed, false otherwise
+   */
+  public isUserInstalled(interaction: BaseInteraction): boolean {
+    return interaction.authorizingIntegrationOwners
+      ?.[ApplicationIntegrationType.UserInstall] !== undefined;
+  }
+
+  /**
+   * Builds a customId for a component scoped to this command.
+   * The resulting format is "commandName:action".
+   * @param action identifier for the component action
+   * @returns the full customId string
+   */
+  protected buildComponentId(action: string): string {
+    return `${this.getName()}:${action}`;
+  }
+
+  /**
+   * Registers a handler for a component interaction with this command.
+   * The full customId is built automatically as "commandName:action".
+   * @param action identifier matching the one used in buildComponentId
+   * @param handler async function invoked when the component is interacted with
+   */
+  protected onMessageComponent(action: string, handler: MessageComponentHandler): void {
+    const fullId = this.buildComponentId(action);
+    this.messageComponentHandlers.set(fullId, handler);
+  }
+
+  /**
+   * Returns registered component interaction handlers.
+   * @returns read-only map of customId to handler
+   */
+  public getMessageComponentHandlers(): ReadonlyMap<string, MessageComponentHandler> {
+    return this.messageComponentHandlers;
   }
 
   /**

@@ -2,11 +2,12 @@ import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
-import { SlashCommand } from "../SlashCommand";
+import { SlashCommand, SlashCommandCategory } from "../SlashCommand";
 import Login from "./Login";
 import Logout from "./Logout";
 
 export default class Todoist extends SlashCommand {
+  readonly category = SlashCommandCategory.Todoist;
   readonly data = {
     name: "todoist",
   };
@@ -18,8 +19,20 @@ export default class Todoist extends SlashCommand {
   ) {
     super(client, todoistClient, repositories);
     this.subcommands = [
-      new Login(client, todoistClient, repositories, this.data.name),
-      new Logout(client, todoistClient, repositories, this.data.name),
+      new Login(
+        client,
+        todoistClient,
+        repositories,
+        this.data.name,
+        this.category,
+      ),
+      new Logout(
+        client,
+        todoistClient,
+        repositories,
+        this.data.name,
+        this.category,
+      ),
     ];
   }
 

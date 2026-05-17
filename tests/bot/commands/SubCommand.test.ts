@@ -3,6 +3,7 @@ import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
+import { SlashCommandCategory } from "@bot/commands/SlashCommand";
 import { SubCommand } from "@bot/commands/SubCommand";
 import { ApplicationCommandOptionType } from "discord.js";
 
@@ -41,6 +42,7 @@ describe("SubCommand", () => {
       {} as TodoistApiClient,
       {} as RepositoryFactory,
       "parentCommand",
+      SlashCommandCategory.Bot,
     );
   });
 
@@ -61,6 +63,14 @@ describe("SubCommand", () => {
 
       // Assert
       expect(result).toBe("parentCommand");
+    });
+
+    it("should init the parent category if provided", () => {
+      // Act
+      const result = command.getParentCommandCategory();
+
+      // Assert
+      expect(result).toBe(SlashCommandCategory.Bot);
     });
   });
 

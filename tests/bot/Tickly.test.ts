@@ -26,6 +26,7 @@ beforeEach(() => {
   mockedCommandHandler = {
     ...mockedGenericHandler,
     registerCommands: jest.fn().mockResolvedValue(undefined),
+    getSlashCommands: jest.fn().mockReturnValue(new Map()),
   } as unknown as CommandHandler;
   mockedEventHandler = mockedGenericHandler as EventHandler;
   mockedTranslationHandler = mockedGenericHandler as TranslationHandler;
@@ -88,8 +89,10 @@ describe("Tickly", () => {
     it("should return undefined with unknown command name", () => {
       // Arrange
       const commandName = "unknown";
-      mockedCommandHandler.getAllCommands = jest.fn().mockReturnValue(
-        ["ping", new Ping(mockedBot, mockedTodoistClient, mockedRepositoryFactory)],
+      mockedCommandHandler.getSlashCommands = jest.fn().mockReturnValue(
+        new Map([
+          ["ping", new Ping(mockedBot, mockedTodoistClient, mockedRepositoryFactory)],
+        ]),
       );
 
       // Act
@@ -103,8 +106,8 @@ describe("Tickly", () => {
       // Arrange
       const commandName = "ping";
       const pingCommand = new Ping(mockedBot, mockedTodoistClient, mockedRepositoryFactory);
-      mockedCommandHandler.getAllCommands = jest.fn().mockReturnValue(
-        ["ping", pingCommand],
+      mockedCommandHandler.getSlashCommands = jest.fn().mockReturnValue(
+        new Map([["ping", pingCommand]]),
       );
 
       // Act
@@ -118,8 +121,8 @@ describe("Tickly", () => {
       // Arrange
       const commandName = "ping subcommand";
       const pingCommand = new Ping(mockedBot, mockedTodoistClient, mockedRepositoryFactory);
-      mockedCommandHandler.getAllCommands = jest.fn().mockReturnValue(
-        ["ping", pingCommand],
+      mockedCommandHandler.getSlashCommands = jest.fn().mockReturnValue(
+        new Map([["ping", pingCommand]]),
       );
 
       // Act
@@ -197,6 +200,17 @@ describe("Tickly", () => {
         expect.stringContaining("5 servers"),
         expect.anything(),
       );
+    });
+  });
+
+  describe("getInviteLink", () => {
+    it("should return an invite link containing the application ID", () => {
+      // Arrange
+      mockedBot.application = { id: "12345" } as unknown as Tickly["application"];
+      // Act
+      const inviteLink = mockedBot.getInviteLink();
+      // Assert
+      expect(inviteLink).toBe("https://discord.com/oauth2/authorize?client_id=12345");
     });
   });
 

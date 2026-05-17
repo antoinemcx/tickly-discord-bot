@@ -1,4 +1,4 @@
-import type { BaseCommand } from "@bot/commands/BaseCommand";
+import type { BaseCommand, MessageComponentHandler } from "@bot/commands/BaseCommand";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, CommandInteraction, Interaction, Locale } from "discord.js";
@@ -34,6 +34,7 @@ export class CommandHandler extends Handler {
   private subCommandCount: number = 0;
   private readonly messageContextMenuCommands: Map<string, MessageCommand>;
   private readonly userContextMenuCommands: Map<string, UserCommand>;
+  private readonly messageComponentHandlers: Map<string, MessageComponentHandler>;
 
   /**
    * Initialize this with empty state. You must call setClient() and setup()
@@ -49,6 +50,7 @@ export class CommandHandler extends Handler {
     this.slashCommands = new Map<string, SlashCommand>();
     this.messageContextMenuCommands = new Map<string, MessageCommand>();
     this.userContextMenuCommands = new Map<string, UserCommand>();
+    this.messageComponentHandlers = new Map<string, MessageComponentHandler>();
   }
 
   public async setup(): Promise<void> {
@@ -170,6 +172,27 @@ export class CommandHandler extends Handler {
     } else {
       throw new TypeError(`Unknown command type for ${command.getName()}`);
     }
+
+    this.collectComponentHandlers(command);
+  }
+
+  /**
+   * Collects component interaction handlers from a command and its
+   * subcommands (if any) into the central registry.
+   * @param command the command to collect the handlers from
+   */
+  private collectComponentHandlers(command: RegisterableBaseCommand): void {
+    for (const [id, handler] of command.getMessageComponentHandlers()) {
+      this.messageComponentHandlers.set(id, handler);
+    }
+
+    if (command instanceof SlashCommand) {
+      for (const sub of command.getSubCommands()) {
+        for (const [id, handler] of sub.getMessageComponentHandlers()) {
+          this.messageComponentHandlers.set(id, handler);
+        }
+      }
+    }
   }
 
   /**
@@ -224,6 +247,11 @@ export class CommandHandler extends Handler {
     ]);
   }
 
+  /** @returns the handled slash commands */
+  public getSlashCommands(): Map<string, SlashCommand> {
+    return this.slashCommands;
+  }
+
   /**
    * Handles a user interaction wheteher it is a slash command, a subcommand,
    * a context menu command, a modal submit or any other type.
@@ -274,6 +302,18 @@ export class CommandHandler extends Handler {
         await command.execute(interaction, language);
       } catch (error) {
         this.sendInteractionExecutionError(error, command, interaction, language);
+      }
+    } else if (interaction.isMessageComponent()) {
+      const handler = this.messageComponentHandlers.get(interaction.customId);
+      if (handler) {
+        try {
+          await handler(interaction, language);
+        } catch (error) {
+          displayDetailedError(
+            `Unknown error while executing message component handler for ${interaction.customId}`,
+            error,
+          );
+        }
       }
     } // else if not found, let Discord handle the error
   }

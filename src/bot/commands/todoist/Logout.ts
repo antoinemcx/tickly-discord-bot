@@ -17,7 +17,7 @@ export default class Logout extends SubCommand {
     const session
       = await this.todoistClient.getSessionByUserId(interaction.user.id);
 
-    if (session && session.status === UserSessionStatus.Completed) {
+    if (session?.status === UserSessionStatus.Completed) {
       try {
         await this.todoistClient.clearUserSession(interaction.user.id);
         await interaction.editReply({

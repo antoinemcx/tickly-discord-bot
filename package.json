@@ -6,7 +6,7 @@
   "main": "build/src/index.js",
   "scripts": {
     "clean": "rimraf build/* --glob",
-    "build": "tsc --build && tsc-alias -p tsconfig.json",
+    "build": "tsc --build && tsc-alias -p tsconfig.json && copyfiles -u 3 \"src/bot/assets/**/*\" build/src/bot/assets",
     "start": "npm run clean && npm run build && node .",
     "start:nobuild": "node .",
     "test": "jest --silent",
@@ -31,6 +31,7 @@
     "@types/express": "^5.0.6",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.14.6",
+    "copyfiles": "^2.4.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.1.0",
     "jest": "^29.7.0",

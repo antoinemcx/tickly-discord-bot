@@ -3,7 +3,6 @@ import type { RepositoryFactory } from "@database/repositories/RepositoryFactory
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type {
   APIApplicationCommand,
-  APIApplicationCommandOption,
   ChatInputCommandInteraction,
   Locale,
 } from "discord.js";
@@ -13,6 +12,11 @@ import { displayWarning } from "@src/utils/logger";
 import { ApplicationCommandOptionType, ApplicationCommandType } from "discord.js";
 import { RegisterableBaseCommand } from "./RegisterableBaseCommand";
 
+export enum SlashCommandCategory {
+  Bot = "Bot",
+  Todoist = "Todoist",
+}
+
 /**
  * Base abstraction class for all slash commands.
  * Slash commands (or chat inputs) are executed by the user by typing "/".
@@ -20,6 +24,7 @@ import { RegisterableBaseCommand } from "./RegisterableBaseCommand";
  * A slash command can have groups and subcommands to organize commands.
  */
 export abstract class SlashCommand extends RegisterableBaseCommand {
+  protected abstract readonly category: SlashCommandCategory;
   protected readonly type: APIApplicationCommand["type"]
     = ApplicationCommandType.ChatInput;
 
@@ -81,6 +86,7 @@ export abstract class SlashCommand extends RegisterableBaseCommand {
         );
       }
     }
+    const localizedOptions = this.localizeOptions(options);
 
     return {
       ...super.getData(),
@@ -88,12 +94,18 @@ export abstract class SlashCommand extends RegisterableBaseCommand {
       description_localizations: descriptionFields.description_localizations,
       options: this.sortOptionsByRequired([
         ...subCommandOptions,
-        ...options,
-      ] as APIApplicationCommandOption[]),
+        ...(localizedOptions ?? []),
+      ]) as CommandData["options"],
     };
   }
 
+  /** @returns the subcommands of this command */
   public getSubCommands(): SubCommand[] {
     return this.subcommands?.slice() ?? [];
+  }
+
+  /** @returns the category of this command, or undefined if none set */
+  public getCategory(): string {
+    return this.category;
   }
 }

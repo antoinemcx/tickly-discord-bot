@@ -39,6 +39,7 @@ function createInteraction(overrides: Record<string, unknown> = {}) {
     isMessageContextMenuCommand: jest.fn().mockReturnValue(false),
     isUserContextMenuCommand: jest.fn().mockReturnValue(false),
     isCommand: jest.fn().mockReturnValue(true),
+    isMessageComponent: jest.fn().mockReturnValue(false),
     reply: jest.fn(),
     editReply: jest.fn(),
     ...overrides,
@@ -54,6 +55,9 @@ function createCommand(
     getData: jest.fn().mockReturnValue({ name: "ping" }),
     hasUserPermission: jest.fn().mockReturnValue(true),
     hasBotPermission: jest.fn().mockReturnValue(true),
+    userRequiredPermissions: [],
+    clientRequiredPermissions: [],
+    getMessageComponentHandlers: jest.fn().mockReturnValue(new Map()),
     execute,
     ...overrides,
   } as unknown as BaseCommand;
@@ -585,6 +589,47 @@ describe("CommandHandler", () => {
           content: "missingPermission.bot",
         }));
       });
+
+      it("should dispatch component interaction to registered handler", async () => {
+        // Arrange
+        const componentHandler = jest.fn().mockResolvedValue(undefined);
+        (interactionHandler as any).messageComponentHandlers.set(
+          "ping:action",
+          componentHandler,
+        );
+        const interaction = createInteraction({
+          isChatInputCommand: jest.fn().mockReturnValue(false),
+          isCommand: jest.fn().mockReturnValue(false),
+          isMessageComponent: jest.fn().mockReturnValue(true),
+          customId: "ping:action",
+        });
+
+        // Act
+        await interactionListener(interaction);
+
+        // Assert
+        expect(componentHandler).toHaveBeenCalledWith(
+          interaction,
+          expect.any(String),
+        );
+      });
+
+      it("should do nothing for component interactions with no registered handler", async () => {
+        // Arrange
+        const interaction = createInteraction({
+          isChatInputCommand: jest.fn().mockReturnValue(false),
+          isCommand: jest.fn().mockReturnValue(false),
+          isMessageComponent: jest.fn().mockReturnValue(true),
+          customId: "unknown:action",
+        });
+
+        // Act
+        await interactionListener(interaction);
+
+        // Assert
+        expect(interaction.reply).not.toHaveBeenCalled();
+        expect(interaction.editReply).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -652,7 +697,7 @@ describe("CommandHandler", () => {
       });
     });
 
-    it("should not exit systme if command registration fails", async () => {
+    it("should not exit system if command registration fails", async () => {
       // Arrange
       handler.setClient(clientMock);
       jest.spyOn(handler, "getAllCommands").mockReturnValue(new Map());

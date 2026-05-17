@@ -8,7 +8,7 @@ import type {
   Locale,
   LocalizationMap,
 } from "discord.js";
-import { SlashCommand } from "@bot/commands/SlashCommand";
+import { SlashCommand, SlashCommandCategory } from "@bot/commands/SlashCommand";
 import { SubCommand } from "@bot/commands/SubCommand";
 import {
   ApplicationCommandOptionType,
@@ -17,6 +17,7 @@ import {
 } from "discord.js";
 
 class TestSlashCommand extends SlashCommand {
+  readonly category = SlashCommandCategory.Todoist;
   protected readonly data = {
     name: "ping",
     integration_types: [ApplicationIntegrationType.GuildInstall],
@@ -32,12 +33,24 @@ describe("SlashCommand", () => {
   let descriptionsMock: LocalizationMap;
   let command: TestSlashCommand;
   let clientMock: Tickly;
+  let translateCommandMock: jest.Mock;
 
   beforeEach(() => {
     const translationHandlerMock = {
       getDefaultLocale: jest.fn().mockReturnValue("en-US"),
       getCommandDescriptions: jest.fn().mockImplementation(() => descriptionsMock),
+      getLocales: jest.fn().mockReturnValue(["en-US", "fr"]),
+      translateCommand: jest.fn().mockImplementation(
+        (_locale: Locale, _command: string, translationKey: string) => {
+          if (translationKey === "options.command.description") {
+            return "Get help for a specific command.";
+          }
+
+          return "Missing translation for " + translationKey;
+        },
+      ),
     };
+    translateCommandMock = translationHandlerMock.translateCommand;
     clientMock = {
       getTranslationHandler: jest.fn().mockReturnValue(translationHandlerMock),
     } as unknown as Tickly;
@@ -106,6 +119,31 @@ describe("SlashCommand", () => {
         { ...requiredOption, name: "required2" },
         { ...optionalOption, name: "optional1" },
         { ...optionalOption, name: "optional2" },
+      ]);
+    });
+
+    it("should translate option descriptions from commands.json", () => {
+      // Arrange
+      (command as any).data.options = [{
+        name: "command",
+        type: ApplicationCommandOptionType.String,
+        required: false,
+      }];
+
+      // Act
+      const result = command.getData();
+
+      // Assert
+      expect(translateCommandMock).toHaveBeenCalledWith(
+        "en-US",
+        "ping",
+        "options.command.description",
+      );
+      expect(result.options).toEqual([
+        expect.objectContaining({
+          name: "command",
+          description: "Get help for a specific command.",
+        }),
       ]);
     });
 

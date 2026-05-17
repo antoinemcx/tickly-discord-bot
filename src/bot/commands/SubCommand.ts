@@ -3,6 +3,7 @@ import type { RepositoryFactory } from "@database/repositories/RepositoryFactory
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
 import type { SubCommandData } from "./BaseCommand";
+import type { SlashCommandCategory } from "./SlashCommand";
 import { ApplicationCommandOptionType } from "discord.js";
 import { LocalizedCommand } from "./LocalizedCommand";
 
@@ -18,6 +19,7 @@ export abstract class SubCommand extends LocalizedCommand {
     todoistClient: TodoistApiClient,
     repositories: RepositoryFactory,
     private readonly parentCommandName: string,
+    private readonly parentCommandCategory?: SlashCommandCategory,
   ) {
     super(client, todoistClient, repositories);
     if (!parentCommandName) {
@@ -29,8 +31,16 @@ export abstract class SubCommand extends LocalizedCommand {
     return this.parentCommandName;
   }
 
+  public getParentCommandCategory(): SlashCommandCategory | undefined {
+    return this.parentCommandCategory;
+  }
+
   protected override getTranslationCommandName(): string {
     return `${this.getParentCommandName()}.${this.getName()}`;
+  }
+
+  protected override buildComponentId(action: string): string {
+    return `${this.getParentCommandName()}:${this.getName()}:${action}`;
   }
 
   public getData(): SubCommandData & {
@@ -43,7 +53,7 @@ export abstract class SubCommand extends LocalizedCommand {
       type: ApplicationCommandOptionType.Subcommand,
       description: descriptionFields.description,
       description_localizations: descriptionFields.description_localizations,
-      options: this.sortOptionsByRequired(this.data.options ?? []),
+      options: this.localizeOptions(this.data.options ?? []),
     };
   }
 

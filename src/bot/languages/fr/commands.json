@@ -1,4 +1,71 @@
 {
+  "help": {
+    "description": "❓ Affiche des informations d'aide sur le bot et ses commandes.",
+    "options": {
+      "command": {
+        "description": "Nom d'une commande pour obtenir de l'aide spécifique à celle-ci."
+      },
+      "ephemeral": {
+        "description": "Si activé, la réponse ne sera visible que par vous."
+      }
+    },
+    "errors": {
+      "unknownCommand": "{{x}} Commande `{{command}}` introuvable.",
+      "unknownSubcommand": "{{x}} Sous-commande `{{subcommand}}` introuvable pour la commande `{{command}}`.",
+      "adminOnlyCommand": "{{x}} La commande `{{command}}` est réservée à mes administrateurs."
+    },
+    "fields": {
+      "category": "Catégorie",
+      "description": "Description",
+      "requiredPermissions": "Permissions requises",
+      "subcommands": "Sous-commandes"
+    },
+    "subCommandsHelpTip": "Pour plus d'informations sur une sous-commande spécifique, utilisez `/help {{command}} <subcommand>`.",
+    "userPermissions": "Utilisateur : {{permissions}}",
+    "botPermissions": "Tickly : {{permissions}}",
+    "noRequiredPermissions": "Aucune permission requise.",
+    "buttons": {
+      "support": "Serveur Support",
+      "invite": "Ajouter le bot",
+      "source": "Code source",
+      "backToCommands": "Retour aux commandes",
+      "guide": "Guide de démarrage"
+    },
+    "categories": {
+      "Bot": "{{robot}} Bot",
+      "Todoist": "{{todoistSmall}} Todoist",
+      "Other": "Autre"
+    },
+    "botDescription": "Tickly est une intégration [Todoist]({{todoistLink}}) non officielle, mais [open-source]({{githubLink}}), pour Discord.",
+    "commandList": {
+      "intro": {
+        "title": "## Qu'est-ce que Tickly ?",
+        "features": "Avec ce bot, vous pouvez facilement :\n- **gérer vos tâches et projets Todoist** directement depuis Discord\n- **recevoir des rappels** pour vos tâches à venir ou manquées"
+      },
+      "commands": {
+        "title": "## Commandes",
+        "tip": "> {{i}} Tapez `/help [commande]` pour plus de détails sur une commande."
+      },
+      "startGuidePrompt": "> **Besoin d'un guide rapide ?** Cliquez sur le bouton suivant."
+    },
+    "startingGuide": {
+      "title": "## Démarrage rapide",
+      "step1": {
+        "title": "### 1. Installation",
+        "body": "Les bots Discord peuvent être ajoutés en **installation de serveur** (dans un serveur spécifique) ou en **installation utilisateur**.\n\nTickly supporte les deux méthodes, mais **nous recommandons de l'ajouter à votre compte** afin de pouvoir l'utiliser partout sur Discord, y compris dans tous les serveurs et les messages privés.\nPour cela, cliquez sur le [bouton \"Ajouter le bot\"]({{inviteLink}}), puis choisissez \"Ajouter à mes applications\" :",
+        "imageDescription": "Cliquez sur \"Ajouter à\" pour installer le bot sur votre compte : \"Ajouter à mes applications\"",
+        "note": "> Notez que certains serveurs peuvent désactiver les applications installées par l'utilisateur (\"externes\"), ce qui signifie que le bot doit être ajouté directement sur ces serveurs."
+      },
+      "step2": {
+        "title": "### 2. Connexion à votre compte Todoist",
+        "body": "Exécutez {{loginMention}}, vous serez redirigé vers la connexion OAuth2 de Todoist.\nAprès avoir approuvé l'accès, Tickly chiffre et stocke votre jeton d'accès Todoist dans une session pour les interactions futures."
+      },
+      "step3": {
+        "title": "### 3. Ajoutez votre première tâche",
+        "body": "Vous pouvez désormais interagir avec le bot en utilisant les **commandes `/`** ou en **faisant un clic droit sur un message**. Ces commandes sont disponibles dans n'importe quel salon textuel – et en message privé si vous avez installé Tickly sur votre compte.\n\nPour ajouter votre première tâche, utilisez {{addTaskMention}} ou faites un clic droit sur un message et allez dans \"Applications\".\nLes deux méthodes ouvrent la même fenêtre, pré-remplie si un message était sélectionné :"
+      }
+    }
+  },
   "ping": {
     "description": "Affiche le temps de réponse du bot.",
     "process": "Calcul..."

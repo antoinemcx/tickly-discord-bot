@@ -16,7 +16,7 @@ interface TranslationDictionary {
  */
 export class TranslationHandler extends Handler {
   public static readonly languageFilesPath = join(__dirname, "..", "languages");
-  private static readonly MISSING_TRANSLATION_MESSAGE
+  public static readonly MISSING_TRANSLATION_MESSAGE
     = "Missing translation for ";
 
   /**

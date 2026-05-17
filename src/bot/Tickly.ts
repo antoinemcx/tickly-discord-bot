@@ -101,8 +101,7 @@ export class Tickly extends Client {
    * @returns the matching command, or undefined when the path is unknown
    */
   public getSlashCommandByName(commandName: string): SlashCommand | undefined {
-    const commandPath = commandName.trim().split(" ").filter(Boolean);
-    const [rootCommandName, ..._] = commandPath;
+    const rootCommandName = commandName.trim().split(" ")[0];
     if (!rootCommandName) {
       return undefined;
     }
@@ -162,6 +161,12 @@ export class Tickly extends Client {
       `/help・${guildCount} server${guildCount === 1 ? "" : "s"}`,
       { type: ActivityType.Watching },
     );
+  }
+
+  /** @returns the link to invite the bot (user install or guild install) */
+  public getInviteLink(): string {
+    return "https://discord.com/oauth2/authorize?client_id="
+      + this.application?.id;
   }
 
   /**

@@ -1,4 +1,71 @@
 {
+  "help": {
+    "description": "❓ Displays help information about the bot and its commands.",
+    "options": {
+      "command": {
+        "description": "Name of a command to get help specific to that command."
+      },
+      "ephemeral": {
+        "description": "If enabled, the response will only be visible to you."
+      }
+    },
+    "errors": {
+      "unknownCommand": "{{x}} Command `{{command}}` not found.",
+      "unknownSubcommand": "{{x}} Subcommand `{{subcommand}}` not found for command `{{command}}`.",
+      "adminOnlyCommand": "{{x}} The command `{{command}}` is reserved for my administrators."
+    },
+    "fields": {
+      "category": "Category",
+      "description": "Description",
+      "requiredPermissions": "Required permissions",
+      "subcommands": "Subcommands"
+    },
+    "subCommandsHelpTip": "For more information on a specific subcommand, use `/help {{command}} <subcommand>`.",
+    "userPermissions": "User: {{permissions}}",
+    "botPermissions": "Tickly: {{permissions}}",
+    "noRequiredPermissions": "No permissions required.",
+    "buttons": {
+      "support": "Support Server",
+      "invite": "Add Bot",
+      "source": "Source Code",
+      "backToCommands": "Back to commands",
+      "guide": "Start Guide"
+    },
+    "categories": {
+      "Bot": "{{robot}} Bot",
+      "Todoist": "{{todoistSmall}} Todoist",
+      "Other": "Other"
+    },
+    "botDescription": "Tickly is an unofficial, but [open-sourced]({{githubLink}}), [Todoist]({{todoistLink}}) integration for Discord.",
+    "commandList": {
+      "intro": {
+        "title": "## What is Tickly?",
+        "features": "With this bot, you can easily :\n- **manage your Todoist tasks** and projects directly from Discord\n- **receive reminders** for upcoming or missed tasks"
+      },
+      "commands": {
+        "title": "## Commands",
+        "tip": "> {{i}} Type `/help [command]` for more details on a specific command."
+      },
+      "startGuidePrompt": "> **Need a quick start guide?** Click the following button."
+    },
+    "startingGuide": {
+      "title": "## Get started",
+      "step1": {
+        "title": "### 1. Installation",
+        "body": "Discord bots can be added as **guild install** (in a specific server) or **user install**.\n\nTickly supports both methods, but **we recommend adding it to your account** so you can use it anywhere in Discord, including all servers and private messages.\nTo do so, click the [\"Add Bot\" button]({{inviteLink}}), then chose \"Add to my apps\":",
+        "imageDescription": "Click \"Add to\" to install the bot on your account: \"Add to my apps\"",
+        "note": "> Note that some servers may disable user-installed (\"external\") apps, meaning the bot must be added directly on these servers."
+      },
+      "step2": {
+        "title": "### 2. Sign in to your Todoist account",
+        "body": "Run {{loginMention}}, you will be redirected to Todoist OAuth2 login.\nAfter you approve access, Tickly encrypts and stores your Todoist access token in a session for future interactions."
+      },
+      "step3": {
+        "title": "### 3. Add your first task",
+        "body": "You can now interact with the bot by using **`/` commands** or **right-clicking on a message**. These commands are available in any text channel — and private message if you have installed Tickly on your account.\n\nTo add your first task, use {{addTaskMention}} or right-click a message and go to \"Apps\".\nBoth methods open the same window, pre-filled if a message was selected:"
+      }
+    }
+  },
   "ping": {
     "description": "Displays the bot response time.",
     "process": "Calculating..."

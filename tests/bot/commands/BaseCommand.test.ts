@@ -162,6 +162,51 @@ describe("BaseCommand", () => {
     });
   });
 
+  describe("isUserInstalled", () => {
+    it("should return true when the interaction has a user installation owner", () => {
+      // Arrange
+      const interaction = {
+        authorizingIntegrationOwners: {
+          [ApplicationIntegrationType.UserInstall]: "123456789012345678",
+        },
+      } as unknown as BaseInteraction;
+
+      // Act
+      const result = command.isUserInstalled(interaction);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it("should return false when the interaction has no user installation owner", () => {
+      // Arrange
+      const interaction = {
+        authorizingIntegrationOwners: {},
+      } as unknown as BaseInteraction;
+
+      // Act
+      const result = command.isUserInstalled(interaction);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it("should return false when the interaction has only a guild installation", () => {
+      // Arrange
+      const interaction = {
+        authorizingIntegrationOwners: {
+          [ApplicationIntegrationType.GuildInstall]: "123456789012345678",
+        },
+      } as unknown as BaseInteraction;
+
+      // Act
+      const result = command.isUserInstalled(interaction);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
   describe("translate", () => {
     it("should delegate to translation handler", () => {
       // Act
@@ -216,6 +261,46 @@ describe("BaseCommand", () => {
         "key",
         {},
       );
+    });
+  });
+
+  describe("buildComponentId", () => {
+    it("should build a customId with the command name prefix", () => {
+      // Act
+      const id = (command as any).buildComponentId("my_action");
+      // Assert
+      expect(id).toBe("test:my_action");
+    });
+  });
+
+  describe("onMessageComponent", () => {
+    it("should register a handler accessible", () => {
+      // Arrange
+      const handler = jest.fn();
+      // Act
+      (command as any).onMessageComponent("action", handler);
+      // Assert
+      expect(command.getMessageComponentHandlers().get("test:action")).toBe(handler);
+    });
+
+    it("should return an empty map when no handlers are registered", () => {
+      // Act
+      const handlers = command.getMessageComponentHandlers();
+      // Assert
+      expect(handlers.size).toBe(0);
+    });
+
+    it("should support multiple handlers for different actions", () => {
+      // Arrange
+      const handler1 = jest.fn();
+      const handler2 = jest.fn();
+      // Act
+      (command as any).onMessageComponent("first", handler1);
+      (command as any).onMessageComponent("second", handler2);
+      // Assert
+      expect(command.getMessageComponentHandlers().size).toBe(2);
+      expect(command.getMessageComponentHandlers().get("test:first")).toBe(handler1);
+      expect(command.getMessageComponentHandlers().get("test:second")).toBe(handler2);
     });
   });
 });

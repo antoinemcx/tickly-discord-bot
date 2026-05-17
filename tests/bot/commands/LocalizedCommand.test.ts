@@ -138,6 +138,140 @@ describe("LocalizedCommand", () => {
     });
   });
 
+  describe("buildOptionDescriptionFields", () => {
+    it("should return default and localized option descriptions", () => {
+      // Arrange
+      const locales: Locale[] = [defaultLocale, "fr" as Locale];
+      translationHandlerMock.getLocales = jest.fn().mockReturnValue(locales);
+      translationHandlerMock.translateCommand = jest.fn().mockImplementation(
+        (locale: Locale, commandName: string, translationKey: string) => {
+          if (commandName !== "test" || translationKey !== "options.command.description") {
+            return "Missing translation for " + translationKey;
+          }
+
+          if (locale === defaultLocale) {
+            return "Get help for a specific command.";
+          }
+
+          if (locale === "fr") {
+            return "Obtenir de l'aide pour une commande précise.";
+          }
+
+          return "Missing translation for " + translationKey;
+        },
+      );
+
+      // Act
+      const result = (command as any).buildOptionDescriptionFields("command");
+
+      // Assert
+      expect(translationHandlerMock.translateCommand).toHaveBeenCalledWith(
+        defaultLocale,
+        "test",
+        "options.command.description",
+      );
+      expect(result.description).toBe("Get help for a specific command.");
+      expect(result.description_localizations).toEqual({
+        fr: "Obtenir de l'aide pour une commande précise.",
+      });
+    });
+  });
+
+  describe("localizeOptions", () => {
+    it("should localize nested options and keep required ones first", () => {
+      // Arrange
+      const locales: Locale[] = [defaultLocale, "fr" as Locale];
+      translationHandlerMock.getLocales = jest.fn().mockReturnValue(locales);
+      translationHandlerMock.translateCommand = jest.fn().mockImplementation(
+        (locale: Locale, commandName: string, translationKey: string) => {
+          if (commandName !== "test") {
+            return "Missing translation for " + translationKey;
+          }
+
+          const translations: Record<string, Partial<Record<Locale, string>>> = {
+            "options.required.description": {
+              [defaultLocale]: "Required option",
+              fr: "Option requise",
+            },
+            "options.optional.description": {
+              [defaultLocale]: "Optional option",
+              fr: "Option facultative",
+            },
+            "options.group.description": {
+              [defaultLocale]: "Group option",
+              fr: "Option groupe",
+            },
+            "options.child.description": {
+              [defaultLocale]: "Child option",
+              fr: "Option enfant",
+            },
+          };
+
+          return translations[translationKey]?.[locale]
+            ?? "Missing translation for " + translationKey;
+        },
+      );
+
+      const options = [
+        {
+          name: "optional",
+          type: ApplicationCommandOptionType.String,
+          required: false,
+          description: "Optional option",
+        },
+        {
+          name: "group",
+          type: ApplicationCommandOptionType.Subcommand,
+          required: false,
+          description: "Group option",
+          options: [{
+            name: "child",
+            type: ApplicationCommandOptionType.String,
+            required: false,
+            description: "Child option",
+          }],
+        },
+        {
+          name: "required",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+          description: "Required option",
+        },
+      ] as APIApplicationCommandOption[];
+
+      // Act
+      const result = (command as any).localizeOptions(options);
+
+      // Assert
+      expect(result?.map((option: APIApplicationCommandOption) => option.name)).toEqual([
+        "required",
+        "optional",
+        "group",
+      ]);
+      expect(result?.[0]).toEqual(expect.objectContaining({
+        name: "required",
+        description: "Required option",
+        description_localizations: {
+          fr: "Option requise",
+        },
+      }));
+      expect(result?.[2]).toEqual(expect.objectContaining({
+        name: "group",
+        description: "Group option",
+        description_localizations: {
+          fr: "Option groupe",
+        },
+        options: [expect.objectContaining({
+          name: "child",
+          description: "Child option",
+          description_localizations: {
+            fr: "Option enfant",
+          },
+        })],
+      }));
+    });
+  });
+
   describe("sortOptionsByRequired", () => {
     const optionalOption: APIApplicationCommandOption = {
       name: "toBeChanged",

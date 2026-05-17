@@ -1,23 +1,25 @@
 # Getting started with Tickly
 ## Installation
 Tickly can be installed in two ways:
-- [**Guild install:**](https://discord.com/oauth2/authorize?client_id=1483931102514249830&permissions=274878286848&integration_type=0&scope=bot) use Tickly inside a specific server.
+- [**Guild install:**](https://discord.com/oauth2/authorize?client_id=1483931102514249830) use Tickly inside a specific server.
 - [**User install (recommended):**](https://discord.com/oauth2/authorize?client_id=1483931102514249830) use Tickly from anywhere in Discord, including DMs and servers.
 
-We recommand installing Tickly on your user account for the best experience, as it allows you to use the bot from anywhere in Discord.  
+We recommand installing Tickly **on your user account**, as a user install, for the best experience.  
+It allows you to use the bot from anywhere in Discord : in DMs or in any server, even if they didn't add it.  
 Some commands may be available only with a user installation.
 
-Nevertheless, please note that some servers can disallow user-installed apps (called external apps in Discord permissions).  
-The bot would thus not work in those servers and you might need the server to install it as a guild install instead.
+![User install button](../src/bot/assets/user_install.png)
+
+> Nevertheless, please note that some servers can disallow user-installed apps (called "external apps" in Discord permissions).  
+> The bot would thus not work in those servers and you might need the server to install it as a guild install instead.
 
 ## First steps
 If you are new to the bot, follow these simple steps:
 1. Install Tickly on your user account or on your server.
-2. Open any chat where Tickly is available, type `/`, and run `/login`.
+2. Open any chat where Tickly is available, type `/`, and run `/todoist login`.
 3. You will be redirected to Todoist OAuth2 login.  
 After you approve access, Tickly encrypts and stores your Todoist access token in a session for future interactions.
-4. Back in Discord, run `/get-started` to help you navigate your first times using the bot.
-5. You can also run `/help` to see what commands are available and how to use them.
+4. Back in Discord, run `/help` to see the commands list and a start guide.
 
 ## Interacting with the bot
 After it is installed, you can interact with the bot by using:
