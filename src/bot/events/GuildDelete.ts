@@ -7,10 +7,8 @@ export default class GuildDelete extends Event<Events.GuildDelete> {
   public override name: Events.GuildDelete = Events.GuildDelete;
 
   public async execute(_guild: Guild): Promise<void> {
-    const cachedGuildCount = this.client.guilds.cache.size;
-
     try {
-      this.client.reloadStatus(cachedGuildCount);
+      await this.client.reloadStatus();
     } catch {
       displayWarning("Failed to update status on guild delete.");
     }

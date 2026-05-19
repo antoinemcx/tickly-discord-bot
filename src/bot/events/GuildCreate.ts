@@ -7,10 +7,8 @@ export default class GuildCreate extends Event<Events.GuildCreate> {
   public override name: Events.GuildCreate = Events.GuildCreate;
 
   public async execute(_guild: Guild): Promise<void> {
-    const cachedGuildCount = this.client.guilds.cache.size;
-
     try {
-      this.client.reloadStatus(cachedGuildCount);
+      await this.client.reloadStatus();
     } catch {
       displayWarning("Failed to update status on guild create.");
     }

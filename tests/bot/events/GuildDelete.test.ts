@@ -34,15 +34,13 @@ describe("GuildDelete", () => {
   });
 
   describe("execute", () => {
-    it("should call reloadStatus with the guild count", async () => {
+    it("should call reloadStatus", async () => {
       // Arrange
       const guildMock = {} as Guild;
-
       // Act
       await event.execute(guildMock);
-
       // Assert
-      expect(clientMock.reloadStatus).toHaveBeenCalledWith(3);
+      expect(clientMock.reloadStatus).toHaveBeenCalled();
     });
 
     it("should silent but log errors from reloadStatus", async () => {

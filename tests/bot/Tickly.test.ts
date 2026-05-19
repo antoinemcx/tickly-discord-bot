@@ -177,14 +177,14 @@ describe("Tickly", () => {
   });
 
   describe("reloadStatus", () => {
-    it("should throw if the client is not ready", () => {
+    it("should throw if the client is not ready", async () => {
       // Arrange
       jest.spyOn(mockedBot, "isReady").mockReturnValue(false);
       // Act & Assert
-      expect(() => mockedBot.reloadStatus(0)).toThrow();
+      await expect(mockedBot.reloadStatus(0)).rejects.toThrow();
     });
 
-    it("should set the status with the guild count", () => {
+    it("should set the status with the guild and user counts", async () => {
       // Arrange
       jest.spyOn(mockedBot, "isReady").mockReturnValue(true);
       mockedBot.user = {
@@ -192,12 +192,61 @@ describe("Tickly", () => {
       } as unknown as Tickly["user"];
 
       // Act
-      mockedBot.reloadStatus(5);
+      await mockedBot.reloadStatus(5, 10);
 
       // Assert
       const botUser = mockedBot.user as NonNullable<typeof mockedBot.user>;
       expect(botUser.setActivity).toHaveBeenCalledWith(
-        expect.stringContaining("5 servers"),
+        expect.stringContaining("10 users, 5 guilds"),
+        expect.anything(),
+      );
+    });
+
+    it("should fetch counts from the API if not provided", async () => {
+      // Arrange
+      jest.spyOn(mockedBot, "isReady").mockReturnValue(true);
+      mockedBot.user = {
+        setActivity: jest.fn(),
+      } as unknown as Tickly["user"];
+      mockedBot.application = {
+        fetch: jest.fn().mockResolvedValue({
+          approximateGuildCount: 1,
+          approximateUserInstallCount: 7,
+        }),
+      } as unknown as Tickly["application"];
+
+      // Act
+      await mockedBot.reloadStatus();
+
+      // Assert
+      expect(mockedBot.application?.fetch).toHaveBeenCalled();
+      const botUser = mockedBot.user as NonNullable<typeof mockedBot.user>;
+      expect(botUser.setActivity).toHaveBeenCalledWith(
+        expect.stringContaining("7 users, 1 guild"),
+        expect.anything(),
+      );
+    });
+
+    it("should format counts according to the english locale", async () => {
+      // Arrange
+      jest.spyOn(mockedBot, "isReady").mockReturnValue(true);
+      mockedBot.user = {
+        setActivity: jest.fn(),
+      } as unknown as Tickly["user"];
+      mockedBot.application = {
+        fetch: jest.fn().mockResolvedValue({
+          approximateGuildCount: 1234,
+          approximateUserInstallCount: 56789,
+        }),
+      } as unknown as Tickly["application"];
+
+      // Act
+      await mockedBot.reloadStatus();
+
+      // Assert
+      const botUser = mockedBot.user as NonNullable<typeof mockedBot.user>;
+      expect(botUser.setActivity).toHaveBeenCalledWith(
+        expect.stringContaining("56,789 users, 1,234 guilds"),
         expect.anything(),
       );
     });

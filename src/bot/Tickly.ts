@@ -135,7 +135,7 @@ export class Tickly extends Client {
 
         /* Register slash commands after the bot is ready */
         await this.commandHandler.registerCommands(this.token!, null);
-        this.reloadStatus(cachedGuildCount);
+        await this.reloadStatus(guildInstallCount ?? 0, userInstallCount ?? 0);
 
         console.log("");
         displaySuccess(`\x1B[32m'${this.user?.username}'`
@@ -150,15 +150,30 @@ export class Tickly extends Client {
 
   /**
    * Load or reload the discord activity of this.
+   * If no guild and user counts are provided, it will fetch the current
+   * approximate counts from the Discord API.
+   *
    * @param guildCount amount of guilds the bot is in
+   * @param userCount amount of users the bot is installed for
    */
-  public reloadStatus(guildCount: number): void {
+  public async reloadStatus(guildCount?: number, userCount?: number): Promise<void> {
     if (!this.isReady()) {
       throw new Error("The bot must be ready to reload its status.");
     }
+    if (guildCount === undefined || userCount === undefined) {
+      const fetchedApplication = await this.application?.fetch();
+      guildCount = fetchedApplication?.approximateGuildCount
+        ?? this.guilds.cache.size;
+      userCount = fetchedApplication?.approximateUserInstallCount ?? 0;
+    }
+
+    const userCountText
+      = userCount === 1 ? "1 user" : `${userCount.toLocaleString("en-US")} users`;
+    const guildCountText
+      = guildCount === 1 ? "1 guild" : `${guildCount.toLocaleString("en-US")} guilds`;
 
     this.user?.setActivity(
-      `/help・${guildCount} server${guildCount === 1 ? "" : "s"}`,
+      `/help・${userCountText}, ${guildCountText}`,
       { type: ActivityType.Watching },
     );
   }
