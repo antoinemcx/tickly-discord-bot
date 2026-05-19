@@ -41,6 +41,34 @@ applyTo: ["src/bot/commands/**/*.ts", "src/bot/languages/**/*.json", "src/bot/ha
 - If user preference or session data is needed, integrate through RepositoryFactory repositories rather than ad-hoc database access.
 - Verify command registration behavior after startup changes by checking logs for loaded command count.
 
+## Message component interactions (buttons, select menus, etc.)
+- BaseCommand exposes a registration API for handling component interactions (buttons, select menus, modals) scoped to a command.
+- Use `this.onMessageComponent(action, handler)` in the command constructor to register a handler. The `action` is a short string identifier; the full customId is built automatically as `"commandName:action"` via `buildComponentId()`.
+- When building a component (e.g. ButtonBuilder), set its customId with `this.buildComponentId(action)` to match the registered handler.
+- Handler signature: `(interaction: MessageComponentInteraction, language: Locale) => Promise<void>`. The language is resolved by CommandHandler the same way as for slash commands.
+- CommandHandler collects all component handlers at startup via `collectComponentHandlers()`, which iterates over every registerable command and its subcommands, storing handlers in a central `messageComponentHandlers` map.
+- Dispatching: when an interaction is a message component (`interaction.isMessageComponent()`), CommandHandler looks up the handler by `interaction.customId` in the central map and invokes it. Errors are caught and logged.
+- Subcommands can also register component handlers; they are collected from `SlashCommand.getSubCommands()` during startup.
+- Action identifiers must be unique per command name; collisions across commands are naturally avoided by the `"commandName:action"` namespacing.
+- Keep handler logic in the command class (or delegate to private methods) to maintain colocation with the command's execute() flow.
+- Example pattern (from Help command):
+  ```ts
+  private static readonly MY_ACTION = "my_action";
+
+  constructor(client, todoistClient, repositories) {
+    super(client, todoistClient, repositories);
+    this.onMessageComponent(Help.MY_ACTION, async (interaction, language) => {
+      // handle the component interaction
+    });
+  }
+
+  // In execute() or response builders:
+  new ButtonBuilder()
+    .setCustomId(this.buildComponentId(Help.MY_ACTION))
+    .setLabel(this.translate(language, "buttons.myButton"))
+    .setStyle(ButtonStyle.Primary);
+  ```
+
 ## Pitfalls and constraints
 - Command loading is recursive: subdirectories in src/bot/commands/ are scanned; non-directory entries are skipped.
 - Commands must have a constructor with the exact signature above; no-arg constructors will fail during storeCommand().
