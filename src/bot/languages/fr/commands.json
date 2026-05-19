@@ -84,6 +84,10 @@
       "noSession": "{{x}} Vous n'êtes pas connecté à un compte Todoist.\n> Peut-être souhaitiez-vous vous connecter ? Utilisez {{loginCommand}} pour cela.",
       "logoutError": "{{x}} Une erreur est survenue lors de la déconnexion de votre compte Todoist. Veuillez réessayer.",
       "logoutSuccess": "{{v}} Vous avez été déconnecté de votre compte Todoist avec succès."
+    },
+    "add": {
+      "description": "➕ Ajoute une tâche à votre compte Todoist (ouvre une fenêtre modale).",
+      "success": "{{v}} La tâche **{{task}}** a été ajoutée avec succès."
     }
   }
 }

@@ -7,5 +7,8 @@
     },
     "executionError": "{{x}} An unknown error occurred while executing the command (code: {{errorCode}}).",
     "unkownCommand": "{{x}} Unknown command."
+  },
+  "session": {
+    "invalid": "{{x}} You are not logged in to a Todoist account or your session has expired.\n> Please log in again using the {{loginCommand}} command."
   }
 }

@@ -84,6 +84,10 @@
       "noSession": "{{x}} You are not logged in to a Todoist account.\n> Perhaps you wanted to log in? Use {{loginCommand}} to do so.",
       "logoutError": "{{x}} An error occurred while logging out of your Todoist account. Please try again.",
       "logoutSuccess": "{{v}} You have been logged out of your Todoist account successfully."
+    },
+    "add": {
+      "description": "➕ Add a task to your Todoist account (opens a modal dialog).",
+      "success": "{{v}} Task **{{task}}** has been added successfully."
     }
   }
 }
