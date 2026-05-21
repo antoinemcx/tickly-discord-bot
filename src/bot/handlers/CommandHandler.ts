@@ -20,7 +20,7 @@ import {
   generateErrorCode,
   pink,
 } from "@src/utils/logger";
-import { Events, REST, Routes } from "discord.js";
+import { Events, MessageFlags, REST, Routes } from "discord.js";
 import { Handler } from "./Handler";
 
 /**
@@ -368,7 +368,7 @@ export class CommandHandler extends Handler {
     if (!command) {
       await interaction.reply({
         content: this.translate(language, "unknownCommand"),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
     return command;
@@ -394,7 +394,7 @@ export class CommandHandler extends Handler {
       && !this.client?.getConfig().ownerIds.includes(interaction.user.id)) {
       interaction.reply({
         content: this.translate(language, "privateCommand"),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else if (!command.hasUserPermission(interaction)) { // missing permissions
       const permissionFlags
@@ -404,7 +404,7 @@ export class CommandHandler extends Handler {
         content: this.translate(language, "missingPermission.user", {
           required: permissionFlags.map(p => `\`${p}\``).join(", "),
         }),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else if (!command.hasBotPermission(interaction)) { // bot missing permissions
       const permissionFlags
@@ -414,7 +414,7 @@ export class CommandHandler extends Handler {
         content: this.translate(language, "missingPermission.bot", {
           required: permissionFlags.map(p => `\`${p}\``).join(", "),
         }),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else { // command is runnable
       isRunnable = true;
@@ -446,7 +446,7 @@ export class CommandHandler extends Handler {
         content: this.translate(language, "executionError", {
           errorCode,
         }),
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   }

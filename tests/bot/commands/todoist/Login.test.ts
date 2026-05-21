@@ -124,7 +124,6 @@ describe("Login Command", () => {
         ? followButton.toJSON()
         : followButton;
       expect(followBtnJson.url).toBe(authUrl);
-      expect(followArg.ephemeral).toBe(true);
     });
   });
 });

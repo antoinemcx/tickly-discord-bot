@@ -48,7 +48,7 @@ export default class Login extends SubCommand {
       if (alreadyReplied) {
         await interaction.followUp({
           ...message,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.editReply(message);
