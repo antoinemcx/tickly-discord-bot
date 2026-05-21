@@ -13,6 +13,12 @@ export default {
     warning: "⚠️",
     todoist: "🟥",
     todoistSmall: "🟥",
+    priorities: {
+      1: "",
+      2: "",
+      3: "",
+      4: "",
+    },
     robot: "🤖",
   },
 

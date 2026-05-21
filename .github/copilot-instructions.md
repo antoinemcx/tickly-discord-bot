@@ -8,6 +8,7 @@
 - Code comments must be written in English.
 - Use JSDoc blocks with /** */ for non-trivial public methods: include a short description, @param, @returns, and @throws.
 - Document propagated exceptions as well, including unhandled exceptions from Todoist or Discord SDK calls.
+- Do not use `break` or `continue` inside loops.
 
 ## Change Scope
 - Do not modify existing code unless it directly impacts the requested feature or fixes related bugs.

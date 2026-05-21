@@ -10,5 +10,31 @@
   },
   "session": {
     "invalid": "{{x}} Vous n'êtes pas connecté à un compte Todoist ou votre session a expiré.\n> Veuillez vous reconnecter en utilisant la commande {{loginCommand}}."
+  },
+  "add-task": {
+    "modal-title": "Ajouter une tâche à Todoist",
+    "title": "Titre de la tâche",
+    "title-placeholder": "ex. Acheter des courses",
+    "description": "Description de la tâche",
+    "description-placeholder": "Détails supplémentaires (optionnel)",
+    "project": "Projet",
+    "project-none": "Boîte de réception",
+    "priorities": {
+      "label": "Priorité",
+      "none": "Aucune",
+      "1": "Priorité 1 (Urgent)",
+      "2": "Priorité 2",
+      "3": "Priorité 3",
+      "4": "Priorité 4 (Normal)"
+    },
+    "due-date": {
+      "label": "Date d'échéance",
+      "none": "Aucune date d'échéance",
+      "today": "Aujourd'hui",
+      "tomorrow": "Demain",
+      "next-monday": "Lundi prochain",
+      "next-week": "La semaine prochaine",
+      "next-month": "Le mois prochain"
+    }
   }
 }

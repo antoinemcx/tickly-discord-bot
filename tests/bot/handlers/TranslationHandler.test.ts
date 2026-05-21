@@ -15,6 +15,7 @@ const englishCommon = {
       user: "{{x}} You are missing permissions (required : {{required}})",
     },
   },
+  priority: "Priority: {{priorities.1}}",
 };
 const englishCommands = {
   ping: {
@@ -38,7 +39,7 @@ function createHandler(
   handler.setClient({
     getConfig: jest.fn().mockReturnValue({
       defaultLocale,
-      emotes: { x: "❌" },
+      emotes: { x: "❌", priorities: { 1: "🔴", 2: "🟠", 3: "🔵", 4: "" } },
     }),
   } as unknown as Tickly);
   return handler;
@@ -197,6 +198,18 @@ describe("TranslationHandler", () => {
       // Assert
       expect(result)
         .toBe("❌ You are missing permissions (required : ManageMessages)");
+    });
+
+    it("should resolve nested emotes with dot notation", async () => {
+      // Arrange
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.translateCommon(Locale.EnglishUS, "priority");
+
+      // Assert
+      expect(result).toBe("Priority: 🔴");
     });
 
     it("should return a fallback message when the key is missing", async () => {

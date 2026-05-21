@@ -10,5 +10,31 @@
   },
   "session": {
     "invalid": "{{x}} You are not logged in to a Todoist account or your session has expired.\n> Please log in again using the {{loginCommand}} command."
+  },
+  "add-task": {
+    "modal-title": "Add a task to Todoist",
+    "title": "Task title",
+    "title-placeholder": "e.g. Buy groceries",
+    "description": "Task description",
+    "description-placeholder": "Additional details (optional)",
+    "project": "Project",
+    "project-none": "Inbox",
+    "priorities": {
+      "label": "Priority",
+      "none": "None",
+      "1": "Priority 1 (Urgent)",
+      "2": "Priority 2",
+      "3": "Priority 3",
+      "4": "Priority 4 (Normal)"
+    },
+    "due-date": {
+      "label": "Due date",
+      "none": "No due date",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "next-monday": "Next Monday",
+      "next-week": "Next week",
+      "next-month": "Next month"
+    }
   }
 }

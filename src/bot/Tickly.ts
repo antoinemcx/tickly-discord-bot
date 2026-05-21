@@ -213,6 +213,23 @@ export class Tickly extends Client {
   }
 
   /**
+   * Formats a date string into a Discord timestamp with the short date/time style.
+   * @param dateString the date string to parse (e.g. "2026-05-21")
+   * @param displayTime whether to include the time in the output (defaults to false)
+   * @returns the Discord timestamp string, or null if the date is invalid
+   */
+  public static dateStringToDiscordTimestamp(
+    dateString: string,
+    displayTime: boolean = false,
+  ): string | null {
+    const timestamp = Math.floor(new Date(dateString).getTime() / 1000);
+    if (Number.isNaN(timestamp)) {
+      return null;
+    }
+    return `<t:${timestamp}:${displayTime ? "f" : "D"}>`;
+  }
+
+  /**
    * Converts a PermissionResolvable array into a string array.
    * @param permissions the bigint permissions to convert.
    * @returns permissions converted into text.

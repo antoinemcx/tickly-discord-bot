@@ -210,8 +210,17 @@ export class TranslationHandler extends Handler {
       }
 
       const emotes = this.client?.getConfig()?.emotes;
-      if (emotes && trimmedParameter in emotes) { // emote parameter
-        return emotes[trimmedParameter as keyof typeof emotes];
+      if (emotes) { // emote parameter (supports nested emojis)
+        const keys: string[] = trimmedParameter.split(".");
+        const value = keys.reduce<unknown>(
+          (acc, key) => acc !== null && typeof acc === "object" && key in acc
+            ? (acc as Record<string, unknown>)[key]
+            : undefined,
+          emotes,
+        );
+        if (typeof value === "string") {
+          return value;
+        }
       }
 
       return ""; // no parameter provided

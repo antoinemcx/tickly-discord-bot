@@ -338,6 +338,60 @@ describe("Tickly", () => {
       });
     });
 
+    describe("dateStringToDiscordTimestamp", () => {
+      it("should return a Discord timestamp for a valid date string", () => {
+        // Arrange
+        const dateString = "2026-05-21";
+        const expectedTimestamp = Math.floor(new Date(dateString).getTime() / 1000);
+
+        // Act
+        const result = Tickly.dateStringToDiscordTimestamp(dateString);
+
+        // Assert
+        expect(result).toBe(`<t:${expectedTimestamp}:D>`);
+      });
+
+      it("should return null for an invalid date string", () => {
+        // Act
+        const result = Tickly.dateStringToDiscordTimestamp("not-a-date");
+
+        // Assert
+        expect(result).toBeNull();
+      });
+
+      it("should return null for an empty string", () => {
+        // Act
+        const result = Tickly.dateStringToDiscordTimestamp("");
+
+        // Assert
+        expect(result).toBeNull();
+      });
+
+      it("should handle a full ISO datetime string", () => {
+        // Arrange
+        const dateString = "2026-05-21T14:30:00Z";
+        const expectedTimestamp = Math.floor(new Date(dateString).getTime() / 1000);
+
+        // Act
+        const result = Tickly.dateStringToDiscordTimestamp(dateString);
+
+        // Assert
+        expect(result).toBe(`<t:${expectedTimestamp}:D>`);
+      });
+
+      it("should display time when displayTime is true", () => {
+        // Arrange
+        const dateString = "2026-05-21T14:30:00Z";
+        const expectedTimestamp = Math.floor(new Date(dateString).getTime() / 1000);
+
+        // Act
+        const result = Tickly.dateStringToDiscordTimestamp(dateString, true);
+
+        // Assert
+        expect(result).toBe(`<t:${expectedTimestamp}:f>`);
+      });
+    });
+
     describe("permissionsToText", () => {
       it("should convert permissions to text", () => {
         // Arrange

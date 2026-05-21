@@ -15,6 +15,19 @@ export interface TodoistClientOptions {
   oauthStateLifetimeMs?: number;
 }
 
+/** Available due date selection options for quick task creation. */
+export enum DueStringSelectionOptions {
+  Today = "today",
+  Tomorrow = "tomorrow",
+  NextMonday = "next_monday",
+  NextWeek = "next_week",
+  NextMonth = "next_month",
+}
+
+/** AddTaskArgs without any due-date or due-string related fields. */
+export type AddTaskArgsWithoutDates
+  = Omit<AddTaskArgs, "dueString" | "dueDate" | "dueDatetime" | "dueLang">;
+
 /**
  * Wrapper around the Todoist SDK that handles:
  * - OAuth2 flow (authorization URL generation, callback validation,
@@ -213,14 +226,66 @@ export class TodoistApiClient {
 
   /**
    * Creates a Todoist task for the given user.
-   * @params userId ID of the user to create the task for
-   * @params args the arguments for creating the task
+   * @param userId ID of the user to create the task for
+   * @param args the arguments for creating the task
+   * @param api optional pre-fetched TodoistApi instance
    * @returns the created task
    * @throws {OAuthError} if no valid access token is found for the user
    * @throws {TodoistRequestError} if the API request fails
    */
-  public async addTaskForUser(userId: string, args: AddTaskArgs): Promise<Task> {
-    const api = await this.getUserApi(userId);
-    return api.addTask(args);
+  public async addTask(userId: string, args: AddTaskArgs, api?: TodoistApi): Promise<Task> {
+    const client = api ?? await this.getUserApi(userId);
+    return client.addTask(args);
+  }
+
+  /**
+   * Creates a Todoist task with a due date derived from a selection option.
+   * @param userId ID of the user to create the task for
+   * @param dueDate the due date selection option chosen by the user
+   * @param args task creation arguments (without date fields)
+   * @param api optional pre-fetched TodoistApi instance
+   * @returns the created task
+   * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TodoistRequestError} if the API request fails
+   */
+  public async addTaskBySelectedDate(
+    userId: string,
+    dueDate: DueStringSelectionOptions | undefined,
+    args: AddTaskArgsWithoutDates,
+    api?: TodoistApi,
+  ): Promise<Task> {
+    return this.addTask(userId, {
+      ...args,
+      dueDate: dueDate ? this.dueStringToDate(dueDate) : undefined,
+    } as AddTaskArgs, api);
+  }
+
+  /**
+   * Converts a DueStringSelectionOptions value into a RFC 3339 date string.
+   * @param dueString the due date option selected by the user
+   * @returns a date string in RFC 3339 full-date format (YYYY-MM-DD)
+   */
+  private dueStringToDate(dueString: DueStringSelectionOptions): string {
+    const date = new Date();
+    switch (dueString) {
+      case DueStringSelectionOptions.Today:
+        break;
+      case DueStringSelectionOptions.Tomorrow:
+        date.setDate(date.getDate() + 1);
+        break;
+      case DueStringSelectionOptions.NextMonday: {
+        const dayOfWeek = date.getDay();
+        const daysUntilNextMonday = (8 - dayOfWeek) % 7 || 7;
+        date.setDate(date.getDate() + daysUntilNextMonday);
+        break;
+      }
+      case DueStringSelectionOptions.NextWeek:
+        date.setDate(date.getDate() + 7);
+        break;
+      case DueStringSelectionOptions.NextMonth:
+        date.setMonth(date.getMonth() + 1);
+        break;
+    }
+    return date.toISOString().slice(0, 10);
   }
 }

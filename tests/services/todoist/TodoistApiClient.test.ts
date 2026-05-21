@@ -9,7 +9,7 @@ import {
 } from "@doist/todoist-api-typescript";
 import { PersistenceError } from "@services/todoist/errors/PersistenceError";
 import { UserSessionStatus } from "@services/todoist/sessions/UserSession";
-import { TodoistApiClient } from "@services/todoist/TodoistApiClient";
+import { DueStringSelectionOptions, TodoistApiClient } from "@services/todoist/TodoistApiClient";
 
 jest.mock("@doist/todoist-api-typescript", () => {
   const actual = jest.requireActual("@doist/todoist-api-typescript");
@@ -392,7 +392,7 @@ describe("TodoistApiClient", () => {
     });
   });
 
-  describe("addTaskForUser", () => {
+  describe("addTask", () => {
     it("should add a task for the user", async () => {
       // Arrange
       const taskArgs = {
@@ -413,11 +413,246 @@ describe("TodoistApiClient", () => {
 
       // Act
       const result
-        = await todoistApiClientMock.addTaskForUser(TEST_USER_ID, taskArgs);
+        = await todoistApiClientMock.addTask(TEST_USER_ID, taskArgs);
 
       // Assert
       expect(addTaskMock).toHaveBeenCalledWith(taskArgs);
       expect(result).toEqual(createdTask);
+    });
+
+    it("should use the provided api instance instead of fetching one", async () => {
+      // Arrange
+      const taskArgs = {
+        content: "Test task",
+      };
+      const createdTask = {
+        id: "test-task-id",
+        content: taskArgs.content,
+      };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      const providedApi = {
+        addTask: addTaskMock,
+      } as unknown as import("@doist/todoist-api-typescript").TodoistApi;
+      const getUserApiSpy = jest.spyOn(todoistApiClientMock, "getUserApi");
+
+      // Act
+      const result
+        = await todoistApiClientMock.addTask(TEST_USER_ID, taskArgs, providedApi);
+
+      // Assert
+      expect(addTaskMock).toHaveBeenCalledWith(taskArgs);
+      expect(result).toEqual(createdTask);
+      expect(getUserApiSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("addTaskBySelectedDate", () => {
+    it("should add a task with today's date when Today is selected", async () => {
+      // Arrange
+      const taskArgs = { content: "Test task" };
+      const createdTask = { id: "test-task-id", content: taskArgs.content };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        addTask: addTaskMock,
+      });
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+      const expectedDate = new Date().toISOString().slice(0, 10);
+
+      // Act
+      const result = await todoistApiClientMock.addTaskBySelectedDate(
+        TEST_USER_ID,
+        DueStringSelectionOptions.Today,
+        taskArgs,
+      );
+
+      // Assert
+      expect(addTaskMock).toHaveBeenCalledWith({
+        ...taskArgs,
+        dueDate: expectedDate,
+      });
+      expect(result).toEqual(createdTask);
+    });
+
+    it("should add a task with tomorrow's date when Tomorrow is selected", async () => {
+      // Arrange
+      const taskArgs = { content: "Test task" };
+      const createdTask = { id: "test-task-id", content: taskArgs.content };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        addTask: addTaskMock,
+      });
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const expectedDate = tomorrow.toISOString().slice(0, 10);
+
+      // Act
+      const result = await todoistApiClientMock.addTaskBySelectedDate(
+        TEST_USER_ID,
+        DueStringSelectionOptions.Tomorrow,
+        taskArgs,
+      );
+
+      // Assert
+      expect(addTaskMock).toHaveBeenCalledWith({
+        ...taskArgs,
+        dueDate: expectedDate,
+      });
+      expect(result).toEqual(createdTask);
+    });
+
+    it("should add a task with next Monday's date when NextMonday is selected", async () => {
+      // Arrange
+      const taskArgs = { content: "Test task" };
+      const createdTask = { id: "test-task-id", content: taskArgs.content };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        addTask: addTaskMock,
+      });
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const daysUntilNextMonday = (8 - dayOfWeek) % 7 || 7;
+      const nextMonday = new Date(today);
+      nextMonday.setDate(today.getDate() + daysUntilNextMonday);
+      const expectedDate = nextMonday.toISOString().slice(0, 10);
+
+      // Act
+      const result = await todoistApiClientMock.addTaskBySelectedDate(
+        TEST_USER_ID,
+        DueStringSelectionOptions.NextMonday,
+        taskArgs,
+      );
+
+      // Assert
+      expect(addTaskMock).toHaveBeenCalledWith({
+        ...taskArgs,
+        dueDate: expectedDate,
+      });
+      expect(result).toEqual(createdTask);
+    });
+
+    it("should add a task with next week's date when NextWeek is selected", async () => {
+      // Arrange
+      const taskArgs = { content: "Test task" };
+      const createdTask = { id: "test-task-id", content: taskArgs.content };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        addTask: addTaskMock,
+      });
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      const expectedDate = nextWeek.toISOString().slice(0, 10);
+
+      // Act
+      const result = await todoistApiClientMock.addTaskBySelectedDate(
+        TEST_USER_ID,
+        DueStringSelectionOptions.NextWeek,
+        taskArgs,
+      );
+
+      // Assert
+      expect(addTaskMock).toHaveBeenCalledWith({
+        ...taskArgs,
+        dueDate: expectedDate,
+      });
+      expect(result).toEqual(createdTask);
+    });
+
+    it("should add a task with next month's date when NextMonth is selected", async () => {
+      // Arrange
+      const taskArgs = { content: "Test task" };
+      const createdTask = { id: "test-task-id", content: taskArgs.content };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        addTask: addTaskMock,
+      });
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      const expectedDate = nextMonth.toISOString().slice(0, 10);
+
+      // Act
+      const result = await todoistApiClientMock.addTaskBySelectedDate(
+        TEST_USER_ID,
+        DueStringSelectionOptions.NextMonth,
+        taskArgs,
+      );
+
+      // Assert
+      expect(addTaskMock).toHaveBeenCalledWith({
+        ...taskArgs,
+        dueDate: expectedDate,
+      });
+      expect(result).toEqual(createdTask);
+    });
+
+    it("should add a task with no due date when None is selected", async () => {
+      // Arrange
+      const taskArgs = { content: "Test task" };
+      const createdTask = { id: "test-task-id", content: taskArgs.content };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        addTask: addTaskMock,
+      });
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+
+      // Act
+      const result = await todoistApiClientMock.addTaskBySelectedDate(
+        TEST_USER_ID,
+        undefined,
+        taskArgs,
+      );
+
+      // Assert
+      expect(addTaskMock).toHaveBeenCalledWith({
+        ...taskArgs,
+        dueDate: undefined,
+      });
+      expect(result).toEqual(createdTask);
+    });
+
+    it("should use the provided api instance instead of fetching one", async () => {
+      // Arrange
+      const taskArgs = { content: "Test task" };
+      const createdTask = { id: "test-task-id", content: taskArgs.content };
+      const addTaskMock = jest.fn().mockResolvedValue(createdTask);
+      const providedApi = {
+        addTask: addTaskMock,
+      } as unknown as import("@doist/todoist-api-typescript").TodoistApi;
+      const getUserApiSpy = jest.spyOn(todoistApiClientMock, "getUserApi");
+
+      // Act
+      const result = await todoistApiClientMock.addTaskBySelectedDate(
+        TEST_USER_ID,
+        DueStringSelectionOptions.Today,
+        taskArgs,
+        providedApi,
+      );
+
+      // Assert
+      expect(result).toEqual(createdTask);
+      expect(getUserApiSpy).not.toHaveBeenCalled();
     });
   });
 });
