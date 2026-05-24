@@ -1,7 +1,7 @@
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
 import { UserSessionStatus } from "@services/todoist/sessions/UserSession";
 import { MessageFlags } from "discord.js";
-import { SubCommand } from "../SubCommand";
+import { SubCommand } from "../core/SubCommand";
 
 export default class Logout extends SubCommand {
   readonly data = {

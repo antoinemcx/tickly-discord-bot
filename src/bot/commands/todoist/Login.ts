@@ -2,7 +2,7 @@ import type { UserSession } from "@services/todoist/sessions/UserSession";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
 import { UserSessionStatus } from "@services/todoist/sessions/UserSession";
 import { ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } from "discord.js";
-import { SubCommand } from "../SubCommand";
+import { SubCommand } from "../core/SubCommand";
 
 export default class Login extends SubCommand {
   readonly data = {

@@ -1,14 +1,14 @@
-import type { BaseCommand } from "@bot/commands/BaseCommand";
-import type { MessageCommand } from "@bot/commands/MessageCommand";
-import type { SubCommand } from "@bot/commands/SubCommand";
-import type { UserCommand } from "@bot/commands/UserCommand";
+import type { BaseCommand } from "@bot/commands/core/BaseCommand";
+import type { MessageCommand } from "@bot/commands/core/MessageCommand";
+import type { SubCommand } from "@bot/commands/core/SubCommand";
+import type { UserCommand } from "@bot/commands/core/UserCommand";
 import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { UserRepository } from "@database/repositories/UserRepository";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { CommandInteraction } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
-import { SlashCommand } from "@bot/commands/SlashCommand";
+import { SlashCommand } from "@bot/commands/core/SlashCommand";
 import { CommandHandler } from "@bot/handlers/CommandHandler";
 import { Events, Locale, REST, Routes } from "discord.js";
 
@@ -169,14 +169,17 @@ describe("CommandHandler", () => {
         const current = String(path).split(/[\\/]/).at(-1);
 
         if (current === "commands") {
-          return ["bot", "BaseCommand.ts", "not-found.ts"];
+          return ["bot", "core", "BaseCommand.ts", "not-found.ts"];
         } else if (current === "bot") {
-          return [String.raw`..\BaseCommand.ts`, "Ping.ts"];
+          return [String.raw`..\core\BaseCommand.ts`, "Ping.ts"];
         }
         return [];
       });
       (statSync as unknown as jest.Mock).mockImplementation((path: any) => ({
-        isDirectory: () => String(path).split(/[\\/]/).at(-1) === "bot",
+        isDirectory: () => {
+          const last = String(path).split(/[\\/]/).at(-1);
+          return last === "bot" || last === "core";
+        },
       } as any));
       handler.setClient(clientMock);
 

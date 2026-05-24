@@ -3,8 +3,8 @@ import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
-import { SlashCommandCategory } from "@bot/commands/SlashCommand";
-import { SubCommand } from "@bot/commands/SubCommand";
+import { SlashCommandCategory } from "@bot/commands/core/SlashCommand";
+import { SubCommand } from "@bot/commands/core/SubCommand";
 import { ApplicationCommandOptionType } from "discord.js";
 
 class TestSubCommand extends SubCommand {

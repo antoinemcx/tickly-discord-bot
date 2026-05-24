@@ -1,7 +1,7 @@
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { PermissionResolvable } from "discord.js";
 import type configurationExample from "../../config.example";
-import type { SlashCommand } from "./commands/SlashCommand";
+import type { SlashCommand } from "./commands/core/SlashCommand";
 import type { CommandHandler } from "./handlers/CommandHandler";
 import type { EventHandler } from "./handlers/EventHandler";
 import type { TranslationHandler } from "./handlers/TranslationHandler";

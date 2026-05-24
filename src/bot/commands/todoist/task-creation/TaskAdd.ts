@@ -1,7 +1,7 @@
 import type { TodoistApi } from "@doist/todoist-api-typescript";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
 import { MessageFlags } from "discord.js";
-import { SubCommand } from "../../SubCommand";
+import { SubCommand } from "../../core/SubCommand";
 import { ModalCancelledError, TaskAddHandler } from "./TaskAddHandler";
 
 /** Slash sub-command to add a task to Todoist via a modal dialog. */

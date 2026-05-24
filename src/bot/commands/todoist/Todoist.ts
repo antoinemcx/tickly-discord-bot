@@ -2,7 +2,7 @@ import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
-import { SlashCommand, SlashCommandCategory } from "../SlashCommand";
+import { SlashCommand, SlashCommandCategory } from "../core/SlashCommand";
 import Login from "./Login";
 import Logout from "./Logout";
 import TaskAdd from "./task-creation/TaskAdd";

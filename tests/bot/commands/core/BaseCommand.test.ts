@@ -1,4 +1,4 @@
-import type { CommandData } from "@bot/commands/BaseCommand";
+import type { CommandData } from "@bot/commands/core/BaseCommand";
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
@@ -7,7 +7,7 @@ import type {
   APIApplicationCommand,
   BaseInteraction,
 } from "discord.js";
-import { BaseCommand } from "@bot/commands/BaseCommand";
+import { BaseCommand } from "@bot/commands/core/BaseCommand";
 import { ApplicationCommandType, ApplicationIntegrationType, Locale } from "discord.js";
 
 class TestCommand extends BaseCommand {

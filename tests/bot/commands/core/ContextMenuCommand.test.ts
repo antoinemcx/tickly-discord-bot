@@ -2,7 +2,7 @@ import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { MessageContextMenuCommandInteraction } from "discord.js";
-import { ContextMenuCommand } from "@bot/commands/ContextMenuCommand";
+import { ContextMenuCommand } from "@bot/commands/core/ContextMenuCommand";
 import { ApplicationCommandType, ApplicationIntegrationType, Locale } from "discord.js";
 
 class TestContextMenuCommand extends ContextMenuCommand {

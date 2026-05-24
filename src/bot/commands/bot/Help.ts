@@ -8,7 +8,7 @@ import type {
   MessageComponentInteraction,
   PermissionResolvable,
 } from "discord.js";
-import type { SubCommand } from "../SubCommand";
+import type { SubCommand } from "../core/SubCommand";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Tickly } from "@bot/Tickly";
@@ -22,8 +22,8 @@ import {
   SeparatorBuilder,
   SeparatorSpacingSize,
 } from "discord.js";
-import { BaseCommand } from "../BaseCommand";
-import { SlashCommand, SlashCommandCategory } from "../SlashCommand";
+import { BaseCommand } from "../core/BaseCommand";
+import { SlashCommand, SlashCommandCategory } from "../core/SlashCommand";
 
 /** Shows help information for the bot commands. */
 export default class Help extends SlashCommand {

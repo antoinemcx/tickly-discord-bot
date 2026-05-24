@@ -1,5 +1,5 @@
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
-import { SlashCommand, SlashCommandCategory } from "../SlashCommand";
+import { SlashCommand, SlashCommandCategory } from "../core/SlashCommand";
 
 /** Shows the discord client and API response time. */
 export default class Ping extends SlashCommand {

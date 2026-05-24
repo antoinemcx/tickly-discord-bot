@@ -8,8 +8,8 @@ import type {
   Locale,
   LocalizationMap,
 } from "discord.js";
-import { SlashCommand, SlashCommandCategory } from "@bot/commands/SlashCommand";
-import { SubCommand } from "@bot/commands/SubCommand";
+import { SlashCommand, SlashCommandCategory } from "@bot/commands/core/SlashCommand";
+import { SubCommand } from "@bot/commands/core/SubCommand";
 import {
   ApplicationCommandOptionType,
   ApplicationCommandType,

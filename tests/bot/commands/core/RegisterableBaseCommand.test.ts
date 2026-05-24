@@ -6,7 +6,7 @@ import type {
   APIApplicationCommand,
   BaseInteraction,
 } from "discord.js";
-import { RegisterableBaseCommand } from "@bot/commands/RegisterableBaseCommand";
+import { RegisterableBaseCommand } from "@bot/commands/core/RegisterableBaseCommand";
 import {
   ApplicationCommandType,
   ApplicationIntegrationType,

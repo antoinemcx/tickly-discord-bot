@@ -1,15 +1,15 @@
-import type { BaseCommand, MessageComponentHandler } from "@bot/commands/BaseCommand";
+import type { BaseCommand, MessageComponentHandler } from "@bot/commands/core/BaseCommand";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, CommandInteraction, Interaction, Locale } from "discord.js";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-import { MessageCommand } from "@bot/commands/MessageCommand";
-import { RegisterableBaseCommand } from "@bot/commands/RegisterableBaseCommand";
-import { SlashCommand } from "@bot/commands/SlashCommand";
-import { SubCommand } from "@bot/commands/SubCommand";
-import { UserCommand } from "@bot/commands/UserCommand";
+import { MessageCommand } from "@bot/commands/core/MessageCommand";
+import { RegisterableBaseCommand } from "@bot/commands/core/RegisterableBaseCommand";
+import { SlashCommand } from "@bot/commands/core/SlashCommand";
+import { SubCommand } from "@bot/commands/core/SubCommand";
+import { UserCommand } from "@bot/commands/core/UserCommand";
 import { Tickly } from "@bot/Tickly";
 import {
   displayDetailedError,
@@ -84,10 +84,10 @@ export class CommandHandler extends Handler {
       for (const entry of entries) {
         const entryPath = join(CommandHandler.commandsDirectory, entry);
 
-        if (statSync(entryPath).isDirectory()) {
+        if (statSync(entryPath).isDirectory() && entry !== "core") {
           categoryCount++;
           await this.loadCommandsFromDirectory(entryPath);
-        } // else root files ignored by design (base classes and interfaces)
+        } // else base classes and interfaces ignored
       }
       displaySuccess(`${pink(this.slashCommands.size)} (/) commands`
         + (this.subCommandCount > 0

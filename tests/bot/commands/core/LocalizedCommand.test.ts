@@ -1,4 +1,4 @@
-import type { CommandData, SubCommandData } from "@bot/commands/BaseCommand";
+import type { CommandData, SubCommandData } from "@bot/commands/core/BaseCommand";
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
@@ -9,8 +9,8 @@ import type {
   ChatInputCommandInteraction,
   LocalizationMap,
 } from "discord.js";
-import { LocalizedCommand } from "@bot/commands/LocalizedCommand";
-import { SubCommand } from "@bot/commands/SubCommand";
+import { LocalizedCommand } from "@bot/commands/core/LocalizedCommand";
+import { SubCommand } from "@bot/commands/core/SubCommand";
 import {
   ApplicationCommandOptionType,
   ApplicationIntegrationType,

@@ -1,9 +1,9 @@
-import type { SubCommand } from "@bot/commands/SubCommand";
+import type { SubCommand } from "@bot/commands/core/SubCommand";
 import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import Help from "@bot/commands/bot/Help";
-import { SlashCommand } from "@bot/commands/SlashCommand";
+import { SlashCommand } from "@bot/commands/core/SlashCommand";
 import { Locale, MessageFlags } from "discord.js";
 
 describe("Help Command", () => {

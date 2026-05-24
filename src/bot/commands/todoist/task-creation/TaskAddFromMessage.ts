@@ -2,7 +2,7 @@ import type { TodoistApi } from "@doist/todoist-api-typescript";
 import type { Locale, MessageContextMenuCommandInteraction } from "discord.js";
 import type { TaskAddModalPrefill } from "./TaskAddModal";
 import { MessageFlags } from "discord.js";
-import { MessageCommand } from "../../MessageCommand";
+import { MessageCommand } from "../../core/MessageCommand";
 import { ModalCancelledError, TaskAddHandler } from "./TaskAddHandler";
 
 /** Message command to add a task to Todoist via a modal dialog. */
