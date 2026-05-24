@@ -37,6 +37,7 @@ class TestLocalized extends LocalizedCommand {
 describe("LocalizedCommand", () => {
   const defaultLocale: Locale = Locale.EnglishUS;
   let descriptionsMock: LocalizationMap;
+  let namesMock: LocalizationMap;
   let clientMock: Tickly;
   let translationHandlerMock: TranslationHandler;
   let command: TestLocalized;
@@ -45,6 +46,7 @@ describe("LocalizedCommand", () => {
     translationHandlerMock = {
       getDefaultLocale: jest.fn().mockReturnValue(defaultLocale),
       getCommandDescriptions: jest.fn().mockImplementation(() => descriptionsMock),
+      getCommandNames: jest.fn().mockImplementation(() => namesMock),
     } as unknown as TranslationHandler;
     clientMock = {
       getTranslationHandler: jest.fn().mockReturnValue(translationHandlerMock),
@@ -52,6 +54,7 @@ describe("LocalizedCommand", () => {
 
     // Arrange
     descriptionsMock = {};
+    namesMock = {};
     command = new TestLocalized(
       clientMock,
       {} as TodoistApiClient,
@@ -134,6 +137,86 @@ describe("LocalizedCommand", () => {
       expect(result.description).toBe("");
       expect(result.description_localizations).toEqual({
         fr: "Affiche le temps de réponse du bot.",
+      });
+    });
+  });
+
+  describe("buildNameFields", () => {
+    it("should return default and localized names", () => {
+      // Arrange
+      namesMock = {
+        "en-US": "ping",
+        "fr": "ping-fr",
+      };
+
+      // Act
+      const result = (command as any).buildNameFields();
+
+      // Assert
+      expect(translationHandlerMock.getCommandNames)
+        .toHaveBeenCalledWith("test");
+      expect(result.name).toBe("ping");
+      expect(result.name_localizations).toEqual({
+        fr: "ping-fr",
+      });
+    });
+
+    it("should omit name_localizations when only default locale exists", () => {
+      // Arrange
+      namesMock = {
+        "en-US": "ping",
+      };
+
+      // Act
+      const result = (command as any).buildNameFields();
+
+      // Assert
+      expect(translationHandlerMock.getCommandNames)
+        .toHaveBeenCalledWith("test");
+      expect(result.name).toBe("ping");
+      expect(result.name_localizations).toBeUndefined();
+    });
+
+    it("should fetch names with the correct key for subcommands", () => {
+      // Arrange
+      const subCommand = new (class extends SubCommand {
+        protected readonly type = ApplicationCommandOptionType.String as any;
+        protected readonly data = { name: "sub", description: "" };
+
+        public async execute(
+          _interaction: ChatInputCommandInteraction,
+          _language: Locale,
+        ): Promise<void> { /* noop */ }
+
+        public getData():
+        (SubCommandData & { type: ApplicationCommandOptionType.Subcommand }) {
+          return {} as (SubCommandData & {
+            type: ApplicationCommandOptionType.Subcommand;
+          });
+        }
+      })(clientMock, {} as TodoistApiClient, {} as RepositoryFactory, "parent");
+
+      // Act
+      const _result = (subCommand as any).buildNameFields();
+
+      // Assert
+      expect(translationHandlerMock.getCommandNames)
+        .toHaveBeenCalledWith("parent.sub");
+    });
+
+    it("should keep an empty default name when it is missing", () => {
+      // Arrange
+      namesMock = {
+        fr: "ping-fr",
+      };
+
+      // Act
+      const result = (command as any).buildNameFields();
+
+      // Assert
+      expect(result.name).toBe("");
+      expect(result.name_localizations).toEqual({
+        fr: "ping-fr",
       });
     });
   });

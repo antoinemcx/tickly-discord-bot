@@ -16,7 +16,6 @@ import {
   displayError,
   displayInfo,
   displaySuccess,
-  displayWarning,
   generateErrorCode,
   pink,
 } from "@src/utils/logger";
@@ -102,8 +101,7 @@ export class CommandHandler extends Handler {
           : "")
         + ` loaded in ${pink(categoryCount)} categories.`);
     } catch (e) {
-      displayWarning("An error happened, no commands were found.");
-      console.error(e);
+      displayDetailedError("An error happened, no commands were found.", e);
     }
   }
 
@@ -166,9 +164,9 @@ export class CommandHandler extends Handler {
     if (command instanceof SlashCommand) {
       this.slashCommands.set(command.getName(), command);
     } else if (command instanceof MessageCommand) {
-      this.messageContextMenuCommands.set(command.getName(), command);
+      this.messageContextMenuCommands.set(command.getData().name, command);
     } else if (command instanceof UserCommand) {
-      this.userContextMenuCommands.set(command.getName(), command);
+      this.userContextMenuCommands.set(command.getData().name, command);
     } else {
       throw new TypeError(`Unknown command type for ${command.getName()}`);
     }

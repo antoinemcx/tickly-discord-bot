@@ -117,9 +117,9 @@ export class Tickly extends Client {
    */
   public async start(): Promise<void> {
     /* Load commands, events and i18n files */
+    await this.translationHandler.setup();
     await this.commandHandler.setup();
     await this.eventHandler.setup();
-    await this.translationHandler.setup();
 
     console.log("");
     displayInfo("Logging into Discord...");

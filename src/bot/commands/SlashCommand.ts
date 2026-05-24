@@ -25,6 +25,11 @@ export enum SlashCommandCategory {
  */
 export abstract class SlashCommand extends RegisterableBaseCommand {
   protected abstract readonly category: SlashCommandCategory;
+  protected abstract readonly data: Omit<CommandData, "name"> & {
+    /* Force name to be set as slash commands names are not localized */
+    name: APIApplicationCommand["name"];
+  };
+
   protected readonly type: APIApplicationCommand["type"]
     = ApplicationCommandType.ChatInput;
 
@@ -90,6 +95,7 @@ export abstract class SlashCommand extends RegisterableBaseCommand {
 
     return {
       ...super.getData(),
+      name: this.data.name,
       description: descriptionFields.description,
       description_localizations: descriptionFields.description_localizations,
       options: this.sortOptionsByRequired([

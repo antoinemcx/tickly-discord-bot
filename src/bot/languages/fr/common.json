@@ -35,6 +35,11 @@
       "next-monday": "Lundi prochain",
       "next-week": "La semaine prochaine",
       "next-month": "Le mois prochain"
-    }
+    },
+    "success": "{{v}} Tâche ajoutée avec succès :\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Projet** : {{project}}\n**Date d'échéance : {{date}}",
+    "success-no-project": "Boîte de réception (pas de projet)",
+    "success-no-date": "Pas de date d'échéance",
+    "creation-error": "{{x}} Une erreur est survenue lors de la création de la tâche dans Todoist (code d'erreur : {{errorCode}}).",
+    "projects-fetch-error": "{{x}} Une erreur est survenue lors de la récupération de vos projets Todoist (code d'erreur : {{errorCode}})."
   }
 }

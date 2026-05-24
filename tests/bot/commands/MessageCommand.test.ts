@@ -1,16 +1,13 @@
 import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import type { Locale, MessageContextMenuCommandInteraction } from "discord.js";
+import type { MessageContextMenuCommandInteraction } from "discord.js";
 import { MessageCommand } from "@bot/commands/MessageCommand";
-import {
-  ApplicationCommandType,
-  ApplicationIntegrationType,
-} from "discord.js";
+import { ApplicationCommandType, ApplicationIntegrationType, Locale } from "discord.js";
 
 class TestMessageCommand extends MessageCommand {
+  protected readonly translationName = "test-message";
   protected readonly data = {
-    name: "test-message",
     integration_types: [ApplicationIntegrationType.GuildInstall],
   };
 
@@ -25,7 +22,15 @@ describe("MessageCommand", () => {
 
   beforeEach(() => {
     // Arrange
-    const clientMock = {} as Tickly;
+    const clientMock = {
+      getTranslationHandler: () => ({
+        getDefaultLocale: () => Locale.EnglishUS,
+        translateCommand: jest.fn().mockReturnValue("Test Command"),
+        getCommandNames: jest.fn().mockReturnValue({
+          [Locale.EnglishUS]: "Test Message Command",
+        }),
+      }),
+    } as unknown as Tickly;
     command = new TestMessageCommand(
       clientMock,
       {} as TodoistApiClient,
@@ -35,18 +40,9 @@ describe("MessageCommand", () => {
 
   it("should have the Message type", () => {
     // Act
-    const result = (command as any).type;
-
-    // Assert
-    expect(result).toBe(ApplicationCommandType.Message);
-  });
-
-  it("should not include description fields in command data", () => {
-    // Act
     const result = command.getData();
 
     // Assert
-    expect(result.description).toBeUndefined();
-    expect((result as any).description_localizations).toBeUndefined();
+    expect(result.type).toBe(ApplicationCommandType.Message);
   });
 });

@@ -86,12 +86,10 @@
       "logoutSuccess": "{{v}} You have been logged out of your Todoist account successfully."
     },
     "add": {
-      "description": "➕ Add a task to your Todoist account (opens a modal dialog).",
-      "success": "{{v}} Task added successfully:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Project**: {{project}}\n**Due date:** {{date}}",
-      "success-no-project": "Inbox (no project)",
-      "success-no-date": "No due date",
-      "creation-error": "{{x}} An error occurred while creating the task in Todoist (error code: {{errorCode}}).",
-      "projects-fetch-error": "{{x}} An error occurred while fetching your Todoist projects (error code: {{errorCode}})."
+      "description": "➕ Add a task to your Todoist account (opens a modal dialog)."
     }
+  },
+  "add-from-message": {
+    "name": "Add Todoist task"
   }
 }

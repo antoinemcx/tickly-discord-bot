@@ -5,7 +5,7 @@ import type { ChatInputCommandInteraction, Locale } from "discord.js";
 import { SlashCommand, SlashCommandCategory } from "../SlashCommand";
 import Login from "./Login";
 import Logout from "./Logout";
-import TaskAdd from "./TaskAdd";
+import TaskAdd from "./task-creation/TaskAdd";
 
 export default class Todoist extends SlashCommand {
   readonly category = SlashCommandCategory.Todoist;

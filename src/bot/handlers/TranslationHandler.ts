@@ -139,6 +139,17 @@ export class TranslationHandler extends Handler {
   }
 
   /**
+   * Collects every available command name for a command across locales.
+   * Locales without a name are omitted from the returned object.
+   *
+   * @param command translation name of the command
+   * @returns an object keyed by locale with the translated name
+   */
+  public getCommandNames(command: string): LocalizationMap {
+    return this.getCommandLocalizations(command, "name");
+  }
+
+  /**
    * Collects every available command description for a command across locales.
    * Locales without a description are omitted from the returned object.
    *
@@ -146,20 +157,35 @@ export class TranslationHandler extends Handler {
    * @returns an object keyed by locale with the translated description
    */
   public getCommandDescriptions(command: string): LocalizationMap {
-    const descriptions: LocalizationMap = {};
+    return this.getCommandLocalizations(command, "description");
+  }
+
+  /**
+   * Collects a specific localized property for a command across all locales.
+   * Locales without the property are omitted from the returned object.
+   *
+   * @param command name of the command
+   * @param property the property key to retrieve (e.g. "name" or "description")
+   * @returns an object keyed by locale with the translated value
+   */
+  private getCommandLocalizations(
+    command: string,
+    property: string,
+  ): LocalizationMap {
+    const localizations: LocalizationMap = {};
 
     for (const [locale, files] of this.translations.entries()) {
-      const description = this.getNestedProperty(
+      const value = this.getNestedProperty(
         files.get("commands"),
-        `${command}.description`,
+        `${command}.${property}`,
       );
 
-      if (typeof description === "string" && description.trim().length > 0) {
-        descriptions[locale] = this.replaceParameters(description, {});
+      if (typeof value === "string" && value.trim().length > 0) {
+        localizations[locale] = this.replaceParameters(value, {});
       }
     }
 
-    return descriptions;
+    return localizations;
   }
 
   /**

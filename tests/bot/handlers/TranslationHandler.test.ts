@@ -19,6 +19,7 @@ const englishCommon = {
 };
 const englishCommands = {
   ping: {
+    name: "ping",
     description: "Displays the bot response time.",
     process: "{{x}} Calculating...",
     result: "Response time is {{time}}ms.",
@@ -26,6 +27,7 @@ const englishCommands = {
 };
 const frenchCommands = {
   ping: {
+    name: "ping",
     description: "Affiche le temps de réponse du bot.",
     process: "{{x}} Calcul...",
     result: "Temps de réponse est {{time}}ms.",
@@ -323,6 +325,66 @@ describe("TranslationHandler", () => {
       expect(result).toEqual({
         [Locale.EnglishUS]: "Displays the bot response time.",
       }); // no french description included
+    });
+  });
+
+  describe("getCommandNames", () => {
+    it("should return an empty object if command is not found", async () => {
+      // Arrange
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.getCommandNames("nonexistent");
+
+      // Assert
+      expect(result).toEqual({});
+    });
+
+    it("should return available command names", async () => {
+      // Arrange
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.getCommandNames("ping");
+
+      // Assert
+      expect(result).toEqual({
+        [Locale.EnglishUS]: "ping",
+        [Locale.French]: "ping",
+      });
+    });
+
+    it("should omit locales with no name for a command", async () => {
+      // Arrange
+      (readFileSync as jest.Mock).mockImplementation((path: string) => {
+        const parts = new Set(path.split(/[\\/]/));
+        const isEnglish = parts.has(Locale.EnglishUS);
+        const isCommandsFile = parts.has("commands.json");
+
+        if (isEnglish && isCommandsFile) {
+          return JSON.stringify(englishCommands);
+        } else if (!isEnglish && isCommandsFile) {
+          return JSON.stringify({
+            ping: {
+              description: "Affiche le temps de réponse du bot.",
+            },
+          });
+        }
+        return JSON.stringify({});
+      });
+
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.getCommandNames("ping");
+
+      // Assert
+      expect(result).toEqual({
+        [Locale.EnglishUS]: "ping",
+      }); // no french name included
     });
   });
 });

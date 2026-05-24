@@ -1,6 +1,6 @@
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { ModalSubmitInteraction } from "discord.js";
-import { TaskAddModal } from "@bot/commands/todoist/TaskAddModal";
+import { TaskAddModal } from "@bot/commands/todoist/task-creation/TaskAddModal";
 import { DueStringSelectionOptions } from "@services/todoist/TodoistApiClient";
 import { Locale } from "discord.js";
 

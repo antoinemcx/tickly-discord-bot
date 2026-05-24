@@ -86,12 +86,10 @@
       "logoutSuccess": "{{v}} Vous avez été déconnecté de votre compte Todoist avec succès."
     },
     "add": {
-      "description": "➕ Ajoute une tâche à votre compte Todoist (ouvre une fenêtre modale).",
-      "success": "{{v}} Tâche ajoutée avec succès :\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Projet** : {{project}}\n**Date d'échéance : {{date}}",
-      "success-no-project": "Boîte de réception (pas de projet)",
-      "success-no-date": "Pas de date d'échéance",
-      "creation-error": "{{x}} Une erreur est survenue lors de la création de la tâche dans Todoist (code d'erreur : {{errorCode}}).",
-      "projects-fetch-error": "{{x}} Une erreur est survenue lors de la récupération de vos projets Todoist (code d'erreur : {{errorCode}})."
+      "description": "➕ Ajoute une tâche à votre compte Todoist (ouvre une fenêtre modale)."
     }
+  },
+  "add-from-message": {
+    "name": "Ajouter une tâche Todoist"
   }
 }

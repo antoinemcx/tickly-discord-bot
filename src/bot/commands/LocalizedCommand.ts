@@ -25,6 +25,33 @@ export abstract class LocalizedCommand extends BaseCommand {
   }
 
   /**
+   * Builds the "name" and "name_localizations" fields for the
+   * command registration data, based on the translations available in the
+   * translation handler.
+   *
+   * The "name" field is set to the default locale translation, or an empty
+   * string if it is not found. The "name_localizations" field contains
+   * the translations for the other locales, if any.
+   *
+   * @returns an object containing the "name" and "name_localizations" fields
+   */
+  protected buildNameFields(): {
+    name: string;
+    name_localizations?: LocalizationMap;
+  } {
+    const localizations = this.client.getTranslationHandler().getCommandNames(
+      this.getTranslationCommandName(),
+    );
+    const { defaultValue, otherLocalizations }
+      = this.splitLocalizationsByDefault(localizations);
+
+    return {
+      name: defaultValue,
+      name_localizations: otherLocalizations,
+    };
+  }
+
+  /**
    * Builds the "description" and "description_localizations" fields for the
    * command registration data, based on the translations available in the
    * translation handler.
@@ -40,24 +67,45 @@ export abstract class LocalizedCommand extends BaseCommand {
     description: string;
     description_localizations?: LocalizationMap;
   } {
-    const translationHandler = this.client.getTranslationHandler();
-    const defaultLocale = translationHandler.getDefaultLocale();
-    const descriptions = translationHandler.getCommandDescriptions(
-      this.getTranslationCommandName(),
-    );
-    const defaultDescription = descriptions[defaultLocale] ?? "";
-    const descriptionLocalizations: LocalizationMap = {};
+    const localizations
+      = this.client.getTranslationHandler().getCommandDescriptions(
+        this.getTranslationCommandName(),
+      );
+    const { defaultValue, otherLocalizations }
+      = this.splitLocalizationsByDefault(localizations);
 
-    for (const [locale, localizedDescription] of Object.entries(descriptions)) {
+    return {
+      description: defaultValue,
+      description_localizations: otherLocalizations,
+    };
+  }
+
+  /**
+   * Splits a localization map into the default locale value and the remaining
+   * localizations. Returns undefined for otherLocalizations when empty.
+   *
+   * @param localizations the full localization map
+   * @returns the default value and remaining localizations (or undefined)
+   */
+  private splitLocalizationsByDefault(localizations: LocalizationMap): {
+    defaultValue: string;
+    otherLocalizations: LocalizationMap | undefined;
+  } {
+    const defaultLocale
+      = this.client.getTranslationHandler().getDefaultLocale();
+    const defaultValue = localizations[defaultLocale] ?? "";
+    const otherLocalizations: LocalizationMap = {};
+
+    for (const [locale, value] of Object.entries(localizations)) {
       if (locale !== defaultLocale) {
-        descriptionLocalizations[locale as Locale] = localizedDescription;
+        otherLocalizations[locale as Locale] = value;
       }
     }
 
     return {
-      description: defaultDescription,
-      description_localizations: Object.keys(descriptionLocalizations).length > 0
-        ? descriptionLocalizations
+      defaultValue,
+      otherLocalizations: Object.keys(otherLocalizations).length > 0
+        ? otherLocalizations
         : undefined,
     };
   }

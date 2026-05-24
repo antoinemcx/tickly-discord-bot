@@ -74,6 +74,34 @@ describe("BaseCommand", () => {
       // Assert
       expect(name).toBe("test");
     });
+
+    it("should return empty string if name is not defined", () => {
+      // Arrange
+      class NamelessCommand extends BaseCommand {
+        protected readonly type = ApplicationCommandType.ChatInput;
+        protected readonly data = {};
+
+        public async execute(
+          _interaction: BaseInteraction,
+          _language: Locale,
+        ): Promise<void> { /* empty body */ }
+
+        public getData(): CommandData & { type: APIApplicationCommand["type"] } {
+          return {} as CommandData & { type: APIApplicationCommand["type"] };
+        }
+      }
+      const namelessCommand = new NamelessCommand(
+        clientMock,
+        todoistClientMock,
+        repositoriesMock,
+      );
+
+      // Act
+      const name = namelessCommand.getName();
+
+      // Assert
+      expect(name).toBe("");
+    });
   });
 
   describe("hasUserPermission", () => {

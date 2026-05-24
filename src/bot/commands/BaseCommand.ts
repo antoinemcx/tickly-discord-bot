@@ -36,8 +36,9 @@ export type CommandData = Omit<
   "type" // handled separately in abstract subclasses
   | "id" | "application_id" | "guild_id"
   | "version" | "default_member_permissions"
-  | "description" | "options"
+  | "description" | "options" | "name"
 > & {
+  name?: APIApplicationCommand["name"]; // localized for context menu commands
   description?: APIApplicationCommand["description"];
   options?: LocalizedCommandOption[];
 };
@@ -83,7 +84,7 @@ export abstract class BaseCommand {
 
   /** @returns the command name used to index it in handler collections. */
   public getName(): string {
-    return this.data.name;
+    return this.data.name ?? "";
   }
 
   /**
