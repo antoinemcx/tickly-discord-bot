@@ -1,6 +1,6 @@
 import type { APIApplicationCommand } from "discord.js";
 import type { CommandData } from "./BaseCommand";
-import { ApplicationIntegrationType } from "discord.js";
+import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
 import { LocalizedCommand } from "./LocalizedCommand";
 
 /** Base class for all discord bots commands. */
@@ -24,6 +24,11 @@ export abstract class RegisterableBaseCommand extends LocalizedCommand {
       integration_types: this.data.integration_types ?? [
         ApplicationIntegrationType.GuildInstall,
         ApplicationIntegrationType.UserInstall,
+      ],
+      contexts: this.data.contexts ?? [
+        InteractionContextType.Guild,
+        InteractionContextType.BotDM,
+        InteractionContextType.PrivateChannel,
       ],
     };
   }

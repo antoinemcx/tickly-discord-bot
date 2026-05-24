@@ -7,7 +7,12 @@ import type {
   BaseInteraction,
 } from "discord.js";
 import { RegisterableBaseCommand } from "@bot/commands/RegisterableBaseCommand";
-import { ApplicationCommandType, ApplicationIntegrationType, Locale } from "discord.js";
+import {
+  ApplicationCommandType,
+  ApplicationIntegrationType,
+  InteractionContextType,
+  Locale,
+} from "discord.js";
 
 class TestCommand extends RegisterableBaseCommand {
   protected readonly type: APIApplicationCommand["type"]
@@ -65,6 +70,43 @@ describe("RegisterableBaseCommand", () => {
         description: "test description",
         type: ApplicationCommandType.ChatInput,
       }));
+    });
+
+    it("should include default integration types and contexts if not provided", () => {
+      // Arrange
+      class NoIntegrationCommand extends RegisterableBaseCommand {
+        protected readonly type: APIApplicationCommand["type"]
+          = ApplicationCommandType.ChatInput;
+
+        protected readonly data = {
+          name: "no-integration",
+          description: "No integration types or contexts",
+        };
+
+        public async execute(
+          _interaction: BaseInteraction,
+          _language: Locale,
+        ): Promise<void> { /* empty body */ }
+      }
+      const noIntegrationCommand = new NoIntegrationCommand(
+        clientMock,
+        todoistClientMock,
+        repositoriesMock,
+      );
+
+      // Act
+      const data = noIntegrationCommand.getData();
+
+      // Assert
+      expect(data.integration_types).toEqual([
+        ApplicationIntegrationType.GuildInstall,
+        ApplicationIntegrationType.UserInstall,
+      ]);
+      expect(data.contexts).toEqual([
+        InteractionContextType.Guild,
+        InteractionContextType.BotDM,
+        InteractionContextType.PrivateChannel,
+      ]);
     });
   });
 
