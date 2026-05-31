@@ -40,7 +40,7 @@
     "commandList": {
       "intro": {
         "title": "## Qu'est-ce que Tickly ?",
-        "features": "Avec ce bot, vous pouvez facilement :\n- **gérer vos tâches et projets Todoist** directement depuis Discord\n- **recevoir des rappels** pour vos tâches à venir ou manquées"
+        "features": "Avec ce bot, vous pouvez facilement :\n- **gérer vos tâches et projets Todoist** directement depuis Discord\n- [__BIENTÔT__] **recevoir des rappels** pour vos tâches à venir ou manquées"
       },
       "commands": {
         "title": "## Commandes",
@@ -62,7 +62,10 @@
       },
       "step3": {
         "title": "### 3. Ajoutez votre première tâche",
-        "body": "Vous pouvez désormais interagir avec le bot en utilisant les **commandes `/`** ou en **faisant un clic droit sur un message**. Ces commandes sont disponibles dans n'importe quel salon textuel – et en message privé si vous avez installé Tickly sur votre compte.\n\nPour ajouter votre première tâche, utilisez {{addTaskMention}} ou faites un clic droit sur un message et allez dans \"Applications\".\nLes deux méthodes ouvrent la même fenêtre, pré-remplie si un message était sélectionné :"
+        "body": "Vous pouvez désormais interagir avec le bot en utilisant les **commandes `/`** ou en **faisant un clic droit sur un message**. Ces commandes sont disponibles dans n'importe quel salon textuel – et en message privé si vous avez installé Tickly sur votre compte.\n\nPour ajouter votre première tâche, utilisez {{addTaskMention}} ou faites un clic droit sur un message et allez dans \"Applications\".\nLes deux méthodes ouvrent la même fenêtre, pré-remplie si un message était sélectionné :",
+        "addFromMessageImageDescription": "Création de tâche à partir d'un message en faisant un clic droit dessus.",
+        "naturalLanguageNote": "La commande d'ajout supporte également le [[traitement du langage naturel]]({{naturalLanguageLink}}), en tant que paramètre, pour créer des tâches plus rapidement sans ouvrir la fenêtre modale :",
+        "addNaturalLanguageImageDescription": "Création de tâche en utilisant la commande avec un contenu en langage naturel."
       }
     }
   },
@@ -86,7 +89,12 @@
       "logoutSuccess": "{{v}} Vous avez été déconnecté de votre compte Todoist avec succès."
     },
     "add": {
-      "description": "➕ Ajoute une tâche à votre compte Todoist (ouvre une fenêtre modale)."
+      "description": "➕ Ajoute une tâche à votre compte Todoist (ouvre une fenêtre modale).",
+      "options": {
+        "content": {
+          "description": "Tâche en langage naturel (sans modale), en utilisant le moteur de parsing de Todoist."
+        }
+      }
     }
   },
   "add-from-message": {

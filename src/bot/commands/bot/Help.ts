@@ -46,6 +46,8 @@ export default class Help extends SlashCommand {
 
   private static readonly ASSETS_FOLDER = join(__dirname, "..", "..", "assets");
   private static readonly TODOIST_LINK = "https://www.todoist.com";
+  private static readonly NATURAL_LANGUAGE_LINK
+    = "https://www.todoist.com/fr/help/articles/use-task-quick-add-in-todoist-va4Lhpzz#h_01J1DEY59AGACAT8JW998EPH74";
 
   constructor(
     client: Tickly,
@@ -277,10 +279,9 @@ export default class Help extends SlashCommand {
       .setLabel(this.translate(language, "buttons.backToCommands"))
       .setStyle(ButtonStyle.Primary);
 
-    const userInstallImage = new AttachmentBuilder(
-      readFileSync(join(Help.ASSETS_FOLDER, "user_install.png")),
-      { name: "user_install.png" },
-    );
+    const userInstallImage = this.getAssetAttachmentBuilder("user_install.png");
+    const addNaturalLanguageImage = this.getAssetAttachmentBuilder("add_natural_language.png");
+    const addFromMessageImage = this.getAssetAttachmentBuilder("add_from_message.png");
     const loginMention = await this.client.getCommandMention("todoist login");
     const addTaskMention = await this.client.getCommandMention("todoist add");
 
@@ -294,8 +295,7 @@ export default class Help extends SlashCommand {
     const step2Text = this.translate(language, "startingGuide.step2.title")
       + "\n" + this.translate(language, "startingGuide.step2.body", { loginMention });
     const step3Text = this.translate(language, "startingGuide.step3.title")
-      + "\n" + this.translate(language, "startingGuide.step3.body", { addTaskMention })
-      + "\n\n:soon:"; // TODO imageS : 1 image right click + 1 image opened modal
+      + "\n" + this.translate(language, "startingGuide.step3.body", { addTaskMention });
 
     return {
       flags: MessageFlags.IsComponentsV2,
@@ -320,13 +320,37 @@ export default class Help extends SlashCommand {
           .addSeparatorComponents(this.getBaseSeparator())
           .addTextDisplayComponents(textDisplay =>
             textDisplay.setContent(step3Text))
+          .addMediaGalleryComponents(mediaGallery =>
+            mediaGallery.addItems(
+              mediaGalleryItem =>
+                mediaGalleryItem
+                  .setDescription(this.translate(
+                    language,
+                    "startingGuide.step3.addFromMessageImageDescription",
+                  ))
+                  .setURL("attachment://add_from_message.png"),
+            ))
+          .addTextDisplayComponents(textDisplay =>
+            textDisplay.setContent(
+              this.translate(language, "startingGuide.step3.naturalLanguageNote", {
+                naturalLanguageLink: Help.NATURAL_LANGUAGE_LINK,
+              }),
+            ))
+          .addMediaGalleryComponents(mediaGallery =>
+            mediaGallery.addItems(mediaGalleryItem =>
+              mediaGalleryItem
+                .setDescription(this.translate(
+                  language,
+                  "startingGuide.step3.addNaturalLanguageImageDescription",
+                ))
+                .setURL("attachment://add_natural_language.png")))
           .addSeparatorComponents(this.getBaseSeparator())
           .addActionRowComponents(actionRow => actionRow.addComponents(linkButtons))
           .addActionRowComponents(
             actionRow => actionRow.addComponents(backToCommandsButton),
           ),
       ],
-      files: [userInstallImage],
+      files: [userInstallImage, addNaturalLanguageImage, addFromMessageImage],
     };
   }
 
@@ -358,6 +382,13 @@ export default class Help extends SlashCommand {
         .setStyle(ButtonStyle.Link)
         .setURL(config.links.github),
     ];
+  }
+
+  private getAssetAttachmentBuilder(fileName: string): AttachmentBuilder {
+    return new AttachmentBuilder(
+      readFileSync(join(Help.ASSETS_FOLDER, fileName)),
+      { name: fileName },
+    );
   }
 
   /**

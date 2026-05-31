@@ -25,3 +25,15 @@ After you approve access, Tickly encrypts and stores your Todoist access token i
 After it is installed, you can interact with the bot by using:
 - [**Slash commands**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): type `/` in any text channel or DM and select a command.
 - [**Message context menu**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): right-click on any message and select a command from the "Apps" section.
+
+## Adding your first task
+To add a task to Todoist, you have three options:
+1. Use the `/todoist add` slash command and fill in the form.
+2. Use the "Add to Todoist" message context menu command on any message.  
+   This will pre-fill the form with the message content.
+
+   ![Add from message](./add_from_message.png)
+3. Use the parameter `content` of the `/todoist add` command to use natural language input.  
+   For example, you can type `/todoist add content:Buy milk tomorrow at 5pm !!2 #MyProject`. See more [here](https://www.todoist.com/fr/help/articles/use-task-quick-add-in-todoist-va4Lhpzz#h_01J1DEY59AGACAT8JW998EPH74).
+
+   ![Add natural language](./add_natural_language.png)

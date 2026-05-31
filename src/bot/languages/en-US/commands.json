@@ -40,7 +40,7 @@
     "commandList": {
       "intro": {
         "title": "## What is Tickly?",
-        "features": "With this bot, you can easily :\n- **manage your Todoist tasks** and projects directly from Discord\n- **receive reminders** for upcoming or missed tasks"
+        "features": "With this bot, you can easily :\n- **manage your Todoist tasks** and projects directly from Discord\n- [__SOON__] **receive reminders** for upcoming or missed tasks"
       },
       "commands": {
         "title": "## Commands",
@@ -62,7 +62,10 @@
       },
       "step3": {
         "title": "### 3. Add your first task",
-        "body": "You can now interact with the bot by using **`/` commands** or **right-clicking on a message**. These commands are available in any text channel — and private message if you have installed Tickly on your account.\n\nTo add your first task, use {{addTaskMention}} or right-click a message and go to \"Apps\".\nBoth methods open the same window, pre-filled if a message was selected:"
+        "body": "You can now interact with the bot by using **`/` commands** or **right-clicking on a message**. These commands are available in any text channel — and private message if you have installed Tickly on your account.\n\nTo add your first task, use {{addTaskMention}} or right-click a message and go to \"Apps\".\nBoth methods open the same window, pre-filled if a message was selected:",
+        "addFromMessageImageDescription": "Task creation from message by right-clicking on it.",
+        "naturalLanguageNote": "The add command also supports [natural language processing]({{naturalLanguageLink}}), as a parameter, to create tasks more quickly without opening the modal:",
+        "addNaturalLanguageImageDescription": "Task creation by using the command with natural language content."
       }
     }
   },
@@ -86,7 +89,12 @@
       "logoutSuccess": "{{v}} You have been logged out of your Todoist account successfully."
     },
     "add": {
-      "description": "➕ Add a task to your Todoist account (opens a modal dialog)."
+      "description": "➕ Add a task to your Todoist account (opens a modal dialog).",
+      "options": {
+        "content": {
+          "description": "Task content in natural language (skips the modal), using the Todoist parsing engine."
+        }
+      }
     }
   },
   "add-from-message": {

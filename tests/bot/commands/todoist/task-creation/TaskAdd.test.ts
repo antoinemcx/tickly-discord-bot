@@ -67,6 +67,7 @@ describe("TaskAdd Command", () => {
       // Arrange
       const interaction = {
         user: { id: "123" },
+        options: { getString: jest.fn().mockReturnValue(null) },
         reply: jest.fn(),
       } as any;
       (todoistClientMock.getUserApi as jest.Mock)
@@ -87,6 +88,7 @@ describe("TaskAdd Command", () => {
       // Arrange
       const interaction = {
         user: { id: "123" },
+        options: { getString: jest.fn().mockReturnValue(null) },
         reply: jest.fn(),
       } as any;
       const apiMock = {} as TodoistApi;
@@ -107,6 +109,7 @@ describe("TaskAdd Command", () => {
       // Arrange
       const interaction = {
         user: { id: "123" },
+        options: { getString: jest.fn().mockReturnValue(null) },
         reply: jest.fn(),
       } as any;
       const apiMock = {} as TodoistApi;
@@ -125,6 +128,7 @@ describe("TaskAdd Command", () => {
       // Arrange
       const interaction = {
         user: { id: "123" },
+        options: { getString: jest.fn().mockReturnValue(null) },
         reply: jest.fn(),
       } as any;
       const apiMock = {} as TodoistApi;
@@ -149,6 +153,31 @@ describe("TaskAdd Command", () => {
         "123",
         modalData,
         language,
+        undefined,
+        apiMock,
+      );
+    });
+
+    it("should call quickAdd via addToTodoist when content option is provided", async () => {
+      // Arrange
+      const interaction = {
+        user: { id: "123" },
+        options: { getString: jest.fn().mockReturnValue("Buy milk tomorrow") },
+        reply: jest.fn(),
+      } as any;
+      const apiMock = {} as TodoistApi;
+      (todoistClientMock.getUserApi as jest.Mock).mockResolvedValue(apiMock);
+
+      // Act
+      await command.execute(interaction, language);
+
+      // Assert
+      expect(mockSendAndAwaitModalSubmit).not.toHaveBeenCalled();
+      expect(mockAddToTodoist).toHaveBeenCalledWith(
+        "123",
+        "Buy milk tomorrow",
+        language,
+        interaction,
         apiMock,
       );
     });
@@ -157,6 +186,7 @@ describe("TaskAdd Command", () => {
       // Arrange
       const interaction = {
         user: { id: "123" },
+        options: { getString: jest.fn().mockReturnValue(null) },
         reply: jest.fn(),
       } as any;
       const apiMock = {} as TodoistApi;

@@ -6,12 +6,12 @@
 ![Tickly banner](./docs/banner.png)
 
 ## 📋 Overview
-### Features [**NOT YET IMPLEMENTED**]
-* 📝 Create Todoist tasks via command or right-clicking a message
+### Features
+* 📝 Create Todoist tasks via [command or right-clicking a message](./docs/getting-started.md#adding-your-first-task)
 * 🔄 Automatically sync your Todoist tasks
-* 📊 View and summarize your incoming tasks
-* 🧰 Create custom in-bot filters for task display (for example by project, due date, etc.)
-* ⏰ Send reminders at due date, daily reminders, or reminders after a task stays incomplete for a defined duration
+* 📊 [**SOON**] View and summarize your incoming tasks
+* 🧰 [**SOON**] Create custom in-bot filters for task display (for example by project, due date, etc.)
+* ⏰ [**SOON**] Send reminders at due date, daily reminders, or reminders after a task stays incomplete for a defined duration
 
 ### How to use the bot
 Tickly can be installed in two ways:

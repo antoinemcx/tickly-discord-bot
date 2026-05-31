@@ -8,6 +8,10 @@ import { displayDetailedError, generateErrorCode } from "@src/utils/logger";
 import { MessageFlags } from "discord.js";
 import { TaskAddModal } from "./TaskAddModal";
 
+interface Repliable {
+  reply: (options: { content: string; flags: number }) => Promise<unknown>;
+}
+
 /**
  * Error thrown when the task-add flow is terminated with modal timeout,
  * cancellation or any fetching error already handled.
@@ -38,6 +42,7 @@ interface InteractionWithModal {
 export class TaskAddHandler {
   private modal: TaskAddModal | undefined;
   private projects: ProjectOption[] = [];
+  private projectsFetched = false;
 
   constructor(
     private readonly todoistClient: TodoistApiClient,
@@ -63,7 +68,21 @@ export class TaskAddHandler {
     language: Locale,
     prefill?: TaskAddModalPrefill,
   ): Promise<TaskAddModalData> {
-    this.projects = await this.fetchProjects(interaction, api, language);
+    try {
+      await this.loadProjects(api);
+    } catch (error) {
+      const errorCode = generateErrorCode();
+      displayDetailedError("Error fetching Todoist projects", error, errorCode);
+      await interaction.reply({
+        content: this.translationHandler.translateCommon(
+          language,
+          "add-task.projects-fetch-error",
+          { errorCode },
+        ),
+        flags: MessageFlags.Ephemeral,
+      });
+      throw new ModalCancelledError();
+    }
 
     this.modal = new TaskAddModal(
       this.projects,
@@ -83,39 +102,57 @@ export class TaskAddHandler {
   }
 
   /**
-   * Creates a Todoist task from the submitted modal data and replies to the
-   * user with a success or error message.
+   * Creates a Todoist task from the submitted modal data or a natural language
+   * string, and replies to the user with a success or error message.
    *
    * @param userId the Discord user ID
-   * @param data the submitted modal data
+   * @param data the submitted modal data, or a natural language string for quick add
    * @param language locale for reply messages
+   * @param interaction the interaction to reply to (required when data is a string)
    * @param api optional pre-fetched TodoistApi instance
    */
   public async addToTodoist(
     userId: string,
-    data: TaskAddModalData,
+    data: TaskAddModalData | string,
     language: Locale,
+    interaction?: Repliable,
     api?: TodoistApi,
   ): Promise<void> {
+    const repliable: Repliable = typeof data === "string"
+      ? interaction!
+      : data.submission;
+
+    if (api) {
+      try {
+        await this.loadProjects(api);
+      } catch {
+        // Non-critical: project name display is best-effort
+      }
+    }
+
     let task: Task | undefined;
     try {
-      task = await this.todoistClient.addTaskBySelectedDate(
-        userId,
-        data.dueDateString,
-        {
-          content: data.content,
-          description: data.description,
-          priority: data.priority,
-          projectId: data.project !== TaskAddModal.PROJECT_NONE_VALUE
-            ? data.project
-            : undefined,
-        },
-        api,
-      );
+      if (typeof data === "string") {
+        task = await this.todoistClient.quickAddTask(userId, { text: data }, api);
+      } else {
+        task = await this.todoistClient.addTaskBySelectedDate(
+          userId,
+          data.dueDateString,
+          {
+            content: data.content,
+            description: data.description,
+            priority: data.priority,
+            projectId: data.project !== TaskAddModal.PROJECT_NONE_VALUE
+              ? data.project
+              : undefined,
+          },
+          api,
+        );
+      }
     } catch (error) {
       const errorCode = generateErrorCode();
       displayDetailedError("Error creating Todoist task", error, errorCode);
-      await data.submission.reply({
+      await repliable.reply({
         content: this.translationHandler.translateCommon(
           language,
           "add-task.creation-error",
@@ -131,7 +168,7 @@ export class TaskAddHandler {
         ? (Tickly.dateStringToDiscordTimestamp(task.due.date) ?? task.due.string)
         : this.translationHandler.translateCommon(language, "add-task.success-no-date");
 
-      await data.submission.reply({
+      await repliable.reply({
         content: this.translationHandler.translateCommon(language, "add-task.success", {
           task: task.content.length > 80
             ? task.content.substring(0, 80) + "..."
@@ -147,39 +184,20 @@ export class TaskAddHandler {
   }
 
   /**
-   * Fetches the user's active projects from Todoist.
-   * If the API call fails, replies to the interaction with an error message
-   * and throws {@link ModalCancelledError} to terminate the flow.
+   * Fetches and caches the user's active projects from Todoist.
+   * Subsequent calls are no-ops if projects were already loaded.
    *
-   * @param interaction the interaction to reply to on error
    * @param api the authenticated Todoist API instance
-   * @param language locale for error messages
-   * @returns the filtered list of active projects
-   * @throws {ModalCancelledError} if the API call fails
+   * @throws if the API call fails (caller decides how to handle)
    */
-  private async fetchProjects(
-    interaction: InteractionWithModal,
-    api: TodoistApi,
-    language: Locale,
-  ): Promise<ProjectOption[]> {
-    try {
-      const { results } = await api.getProjects();
-      return results
-        .filter(project => !project.isDeleted && !project.isFrozen)
-        .map(project => ({ id: project.id, name: project.name }));
-    } catch (error) {
-      const errorCode = generateErrorCode();
-      displayDetailedError("Error fetching Todoist projects", error, errorCode);
-      await interaction.reply({
-        content: this.translationHandler.translateCommon(
-          language,
-          "add-task.projects-fetch-error",
-          { errorCode },
-        ),
-        flags: MessageFlags.Ephemeral,
-      });
-      throw new ModalCancelledError();
-    }
+  private async loadProjects(api: TodoistApi): Promise<void> {
+    if (this.projectsFetched)
+      return;
+    const { results } = await api.getProjects();
+    this.projects = results
+      .filter(project => !project.isDeleted && !project.isFrozen)
+      .map(project => ({ id: project.id, name: project.name }));
+    this.projectsFetched = true;
   }
 
   /**

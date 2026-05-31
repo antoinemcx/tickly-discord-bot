@@ -271,7 +271,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language, apiMock);
+      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
 
       // Assert
       expect(todoistClientMock.addTaskBySelectedDate).toHaveBeenCalledWith(
@@ -390,6 +390,197 @@ describe("TaskAddHandler", () => {
         language,
         "add-task.success-no-date",
       );
+    });
+
+    it("should call quickAddTask and reply with success when data is a string", async () => {
+      // Arrange
+      const interaction = { reply: jest.fn() } as any;
+      const createdTask: Partial<Task> = {
+        content: "Buy milk tomorrow",
+        url: "https://todoist.com/task/456",
+        projectId: "proj-1",
+        due: {
+          date: "2026-06-01",
+          string: "Jun 1",
+          isRecurring: false,
+          timezone: null,
+          datetime: null,
+        },
+      };
+      todoistClientMock.quickAddTask
+        = jest.fn().mockResolvedValue(createdTask);
+
+      // Act
+      await handler.addToTodoist("user-123", "Buy milk tomorrow", language, interaction);
+
+      // Assert
+      expect(todoistClientMock.quickAddTask).toHaveBeenCalledWith(
+        "user-123",
+        { text: "Buy milk tomorrow" },
+        undefined,
+      );
+      expect(interaction.reply).toHaveBeenCalledWith({
+        content: "add-task.success",
+        flags: MessageFlags.Ephemeral,
+      });
+    });
+
+    it("should pass api instance to quickAddTask when data is a string", async () => {
+      // Arrange
+      const interaction = { reply: jest.fn() } as any;
+      const apiMock = {} as TodoistApi;
+      const createdTask: Partial<Task> = {
+        content: "A quick task",
+        url: "https://todoist.com/task/789",
+        projectId: "proj-1",
+        due: null as any,
+      };
+      todoistClientMock.quickAddTask
+        = jest.fn().mockResolvedValue(createdTask);
+
+      // Act
+      await handler.addToTodoist("user-123", "A quick task", language, interaction, apiMock);
+
+      // Assert
+      expect(todoistClientMock.quickAddTask).toHaveBeenCalledWith(
+        "user-123",
+        { text: "A quick task" },
+        apiMock,
+      );
+    });
+
+    it("should reply with error when quickAddTask fails", async () => {
+      // Arrange
+      const interaction = { reply: jest.fn() } as any;
+      todoistClientMock.quickAddTask
+        = jest.fn().mockRejectedValue(new Error("API failure"));
+
+      // Act
+      await handler.addToTodoist("user-123", "Failing task", language, interaction);
+
+      // Assert
+      expect(interaction.reply).toHaveBeenCalledWith({
+        content: "add-task.creation-error",
+        flags: MessageFlags.Ephemeral,
+      });
+    });
+
+    it("should load projects and resolve project name when api is provided", async () => {
+      // Arrange
+      const submission = { reply: jest.fn() } as any;
+      const modalData: TaskAddModalData = {
+        content: "A task",
+        project: "proj-1",
+        submission,
+      };
+      const apiMock = {
+        getProjects: jest.fn().mockResolvedValue({
+          results: [
+            { id: "proj-1", name: "Work", isDeleted: false, isFrozen: false },
+          ],
+        }),
+      } as unknown as TodoistApi;
+      const createdTask: Partial<Task> = {
+        content: "A task",
+        url: "https://todoist.com/task/1",
+        projectId: "proj-1",
+        due: null as any,
+      };
+      todoistClientMock.addTaskBySelectedDate
+        = jest.fn().mockResolvedValue(createdTask);
+
+      (translationHandlerMock.translateCommon as jest.Mock).mockImplementation(
+        (_lang: Locale, key: string, params?: Record<string, string>) => {
+          if (key === "add-task.success" && params?.project) {
+            return params.project;
+          }
+          return key;
+        },
+      );
+
+      // Act
+      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
+
+      // Assert
+      expect(apiMock.getProjects).toHaveBeenCalled();
+      const replyContent = submission.reply.mock.calls[0][0].content;
+      expect(replyContent).toBe("Work");
+    });
+
+    it("should silently ignore project fetch failure in addToTodoist", async () => {
+      // Arrange
+      const submission = { reply: jest.fn() } as any;
+      const modalData: TaskAddModalData = {
+        content: "A task",
+        project: "proj-1",
+        submission,
+      };
+      const apiMock = {
+        getProjects: jest.fn().mockRejectedValue(new Error("Network error")),
+      } as unknown as TodoistApi;
+      const createdTask: Partial<Task> = {
+        content: "A task",
+        url: "https://todoist.com/task/1",
+        projectId: "proj-1",
+        due: null as any,
+      };
+      todoistClientMock.addTaskBySelectedDate
+        = jest.fn().mockResolvedValue(createdTask);
+
+      // Act
+      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
+
+      // Assert
+      expect(submission.reply).toHaveBeenCalledWith({
+        content: "add-task.success",
+        flags: MessageFlags.Ephemeral,
+      });
+    });
+
+    it("should not fetch projects again if already loaded", async () => {
+      // Arrange
+      const apiMock = {
+        getProjects: jest.fn().mockResolvedValue({
+          results: [
+            { id: "proj-1", name: "Work", isDeleted: false, isFrozen: false },
+          ],
+        }),
+      } as unknown as TodoistApi;
+
+      const mockBuild = jest.fn().mockReturnValue("modal");
+      const mockAwaitSubmit = jest.fn().mockResolvedValue({
+        content: "A task",
+        project: "proj-1",
+        submission: { reply: jest.fn() },
+      });
+      (TaskAddModal as jest.MockedClass<typeof TaskAddModal>)
+        .mockImplementation(
+          () => ({ build: mockBuild, awaitSubmit: mockAwaitSubmit }) as any,
+        );
+
+      const interaction = { showModal: jest.fn() } as any;
+      await handler.sendAndAwaitModalSubmit(interaction, apiMock, language);
+
+      const submission = { reply: jest.fn() } as any;
+      const modalData: TaskAddModalData = {
+        content: "A task",
+        project: "proj-1",
+        submission,
+      };
+      const createdTask: Partial<Task> = {
+        content: "A task",
+        url: "https://todoist.com/task/1",
+        projectId: "proj-1",
+        due: null as any,
+      };
+      todoistClientMock.addTaskBySelectedDate
+        = jest.fn().mockResolvedValue(createdTask);
+
+      // Act
+      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
+
+      // Assert – getProjects called only once (during sendAndAwaitModalSubmit)
+      expect(apiMock.getProjects).toHaveBeenCalledTimes(1);
     });
   });
 });

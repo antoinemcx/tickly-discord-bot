@@ -44,7 +44,7 @@ export default class TaskAddFromMessage extends MessageCommand {
           language,
           prefill,
         );
-        handler.addToTodoist(userId, data, language, api);
+        await handler.addToTodoist(userId, data, language, undefined, api);
       } catch (error) {
         if (!(error instanceof ModalCancelledError)) {
           throw error;

@@ -1,4 +1,4 @@
-import type { AddTaskArgs, Permission, Task } from "@doist/todoist-api-typescript";
+import type { AddTaskArgs, Permission, QuickAddTaskArgs, Task } from "@doist/todoist-api-typescript";
 import type { UserSessionManager } from "../../services/todoist/sessions/UserSessionManager";
 import {
   getAuthorizationUrl,
@@ -236,6 +236,24 @@ export class TodoistApiClient {
   public async addTask(userId: string, args: AddTaskArgs, api?: TodoistApi): Promise<Task> {
     const client = api ?? await this.getUserApi(userId);
     return client.addTask(args);
+  }
+
+  /**
+   * Creates a Todoist task for the given user from a natural language string.
+   * @param userId ID of the user to create the task for
+   * @param args the arguments for creating the task, excluding the content string
+   * @param api optional pre-fetched TodoistApi instance
+   * @returns the created task
+   * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TodoistRequestError} if the API request fails
+   */
+  public async quickAddTask(
+    userId: string,
+    args: QuickAddTaskArgs,
+    api?: TodoistApi,
+  ): Promise<Task> {
+    const client = api ?? await this.getUserApi(userId);
+    return client.quickAddTask(args);
   }
 
   /**

@@ -72,6 +72,7 @@ export class TaskAddModal {
    * @returns the ModalBuilder ready to be shown to the user
    */
   public build(): ModalBuilder {
+    const result = new ModalBuilder().setCustomId(this.customId);
     const titleInput = new TextInputBuilder()
       .setCustomId(TaskAddModal.FIELD_CONTENT)
       .setStyle(TextInputStyle.Short)
@@ -157,8 +158,7 @@ export class TaskAddModal {
       .setLabel(this.translate("due-date.label"))
       .setStringSelectMenuComponent(dueDateSelect);
 
-    return new ModalBuilder()
-      .setCustomId(this.customId)
+    result
       .setTitle(this.translate("modal-title"))
       .addLabelComponents(
         titleLabel,
@@ -167,6 +167,8 @@ export class TaskAddModal {
         priorityLabel,
         dueDateLabel,
       );
+
+    return result;
   }
 
   /**
