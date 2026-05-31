@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    container_name: tickly-bot
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DISCORD_CLIENT_TOKEN: ${DISCORD_CLIENT_TOKEN}
+      TODOIST_CLIENT_ID: ${TODOIST_CLIENT_ID}
+      TODOIST_CLIENT_SECRET: ${TODOIST_CLIENT_SECRET}
+      OAUTH_SERVICE_PORT: 3999
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    ports:
+      - "${OAUTH_SERVICE_PORT:-3999}:3999"
+    networks:
+      - tickly-network
+
+  db:
+    image: mariadb:11
+    container_name: tickly-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data_tickly:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 120s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - tickly-network
+
+volumes:
+  mysql_data_tickly:
+
+networks:
+  tickly-network:

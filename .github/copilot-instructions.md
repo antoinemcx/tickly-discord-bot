@@ -59,10 +59,12 @@ For detailed guidance on implementing, registering, and localizing Discord comma
 - Database migration tooling requires environment variables: DB_HOST, DB_USER, and DB_NAME (with optional DB_PASSWORD).
 - Todoist OAuth flows require TODOIST_CLIENT_ID and TODOIST_CLIENT_SECRET.
 - npm run db:drop is destructive; do not run it unless explicitly requested.
+- Use `docker compose up -d --build` (default, with Traefik) or `docker compose -f docker-compose.local.yml up -d --build` (without Traefik, no external network required).
 
 ## Existing Documentation
 - High-level project overview: [README.md](../README.md)
 - Runtime and config examples: [.env.example](../.env.example), [config.example.ts](../config.example.ts)
+- Docker Compose variants: [docker-compose.yml](../docker-compose.yml) (with Traefik), [docker-compose.local.yml](../docker-compose.local.yml) (local, no Traefik)
 - Getting started workflow: [docs/getting-started.md](../docs/getting-started.md)
 - Testing rules: [.github/instructions/testing.instructions.md](./instructions/testing.instructions.md)
 - Todoist integration rules: [.github/instructions/todoist-client.instructions.md](./instructions/todoist-client.instructions.md)

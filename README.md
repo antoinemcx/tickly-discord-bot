@@ -59,18 +59,34 @@ TODO docs/**.md file + "follow the "Getting Started" instructions to set up a lo
 2. Copy `config.example.ts` to a `config.ts` file and replace with your own values.
 `DB_HOST` must be set to `tickly-db` to work with the Docker setup.
 
-3. Build and start all services:
-   ```sh
-   docker compose up -d --build
-   ```
+3. Build an start all services
+   <details>
+     <summary>With <a href="https://traefik.io/">Traefik</a> reverse proxy</summary>
+     
+     ```sh
+     docker compose up -d --build
+     ```
+      
+     This starts:
+     - **tickly-bot**: the Discord bot and OAuth web service (exposed via [Traefik](https://traefik.io/) reverse proxy)
+     - **tickly-db**: a MariaDB instance with persistent storage (migrations are run automatically)
 
-This starts:
-- **tickly-bot**: the Discord bot and OAuth web service (exposed via [Traefik](https://traefik.io/) reverse proxy)
-- **tickly-db**: a MariaDB instance with persistent storage (migrations are run automatically)
+     ‎   
+     > ⚠️ For the OAuth callback service, [Traefik](https://traefik.io/) handles TLS termination with a Cloudflare certificate resolver.  
+     > Make sure the external `traefik-proxy` Docker network and your Traefik instance are already running before starting Tickly.
+   </details>
 
-> [!IMPORTANT]
-> For the OAuth callback service, [Traefik](https://traefik.io/) handles TLS termination with a Cloudflare certificate resolver.  
-> Make sure the external `traefik-proxy` Docker network and your Traefik instance are already running before starting Tickly.
+   <details>
+     <summary>Without reverse proxy</summary>
+        
+     ```sh
+     docker compose -f docker-compose.local.yml up -d --build
+     ```
+      
+     This starts:
+     - **tickly-bot**: the Discord bot and OAuth web service (on port `3999` or your configured port)
+     - **tickly-db**: a MariaDB instance with persistent storage (migrations are run automatically)
+   </details>
 
 #### Without Docker
 1. **Prerequisites**: Node.js (v22+) and a running MariaDB instance.
