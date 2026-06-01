@@ -11,7 +11,7 @@
 * 🔄 Automatically sync your Todoist tasks
 * 📊 [**SOON**] View and summarize your incoming tasks
 * 🧰 [**SOON**] Create custom in-bot filters for task display (for example by project, due date, etc.)
-* ⏰ [**SOON**] Send reminders at due date, daily reminders, or reminders after a task stays incomplete for a defined duration
+* ⏰ [**SOON**] Send reminders at due date, daily, or reminders after a task stays incomplete for a defined duration
 
 ### How to use the bot
 Tickly can be installed in two ways:
@@ -46,7 +46,8 @@ You can track upcoming features and development progress on the [project board](
 Latest updates are also announced on the [support Discord server](https://antoinemcx.fr/discord).
 
 ### Developer contribution
-TODO docs/**.md file + "follow the "Getting Started" instructions to set up a local development environment
+Contributions to the project are very welcome.  
+Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed contribution guidelines and workflow.
 
 <br>
 
@@ -114,7 +115,15 @@ TODO docs/**.md file + "follow the "Getting Started" instructions to set up a lo
 This starts the bot and the OAuth web service (default port `3999`) together.
 
 ### Development
-TODO Other npm scripts are available for development purposes. You can find more information about them in the TODO! file.
+Other npm scripts are available for development purposes:
+| Command | Description |
+|---------|-------------|
+| `npm run start` | Clean, build, and start the bot |
+| `npm test` | Run the test suite |
+| `npm run lint` | Lint the source files |
+| `npm run lint:fix` | Auto-fix lint issues |
+| `npm run db:generate` | Database changes must be reflected in `src/database/schema`.<br>Then, a migration script can be generated with this command. |
+| `npm run db:migrate` | Apply pending database migrations scripts |
 
 <br>
 
