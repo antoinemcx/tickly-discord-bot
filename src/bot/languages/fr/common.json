@@ -1,4 +1,5 @@
 {
+  "languageName": "Français",
   "interactionHandling": {
     "privateCommand": "{{x}} Cette commande est privée et réservée à mes développeurs.",
     "missingPermission": {

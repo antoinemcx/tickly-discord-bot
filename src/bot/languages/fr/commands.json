@@ -99,5 +99,15 @@
   },
   "add-from-message": {
     "name": "Ajouter une tâche Todoist"
+  },
+  "settings": {
+    "description": "🔧 Affiche et permet de modifier vos préférences utilisateur (langue, rappels, etc.).",
+    "fetchError": "{{x}} Une erreur est survenue lors de la récupération de vos paramètres généraux. Veuillez réessayer plus tard.",
+    "view": {
+      "generalSettings": "### Paramètres généraux",
+      "language": "Langue utilisée dans les réponses du bot :",
+      "defaultLanguage": "Langue par défaut",
+      "defaultLanguageDescription": "Locale Discord, ou anglais si non supportée."
+    }
   }
 }

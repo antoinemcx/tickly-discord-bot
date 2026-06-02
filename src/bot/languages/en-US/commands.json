@@ -99,5 +99,15 @@
   },
   "add-from-message": {
     "name": "Add Todoist task"
+  },
+  "settings": {
+    "description": "🔧 View and modify your user preferences (language, reminders, etc.).",
+    "fetchError": "{{x}} An error occurred while fetching your general settings. Please try again later.",
+    "view": {
+      "generalSettings": "### General settings",
+      "language": "Language used in bot responses:",
+      "defaultLanguage": "Default language",
+      "defaultLanguageDescription": "Discord locale, or English if not supported."
+    }
   }
 }

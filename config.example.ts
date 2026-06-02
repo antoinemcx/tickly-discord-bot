@@ -20,6 +20,10 @@ export default {
       4: "",
     },
     robot: "🤖",
+    languages: {
+      "en-US": "🇺🇸",
+      "fr": "🇫🇷",
+    },
   },
 
   defaultLocale: "en-US", // default language if no preference (see https://docs.discord.com/developers/reference#locales)
