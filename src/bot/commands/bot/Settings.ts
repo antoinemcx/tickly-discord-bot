@@ -20,7 +20,10 @@ import { SlashCommand, SlashCommandCategory } from "../core/SlashCommand";
 // TODO update user preferred language in database
 // TODO unit tests
 
-/** Displays current user preferences and allows modifications. */
+/**
+ * Displays current user preferences and allows modifications.
+ * Currently, updatable preferences only include the bot language.
+ */
 export default class Settings extends SlashCommand {
   readonly category = SlashCommandCategory.Bot;
   readonly data = {
@@ -144,13 +147,13 @@ export default class Settings extends SlashCommand {
 
     try {
       if (selectedValue === Settings.DEFAULT_LOCALE_VALUE) {
-        // TODO
-        //   await this.repositories.getUserRepository().clearUserPreferredLanguage(userId);
+        await this.repositories.getUserRepository()
+          .setUserPreferredLanguage(interaction.user.id, null);
         hasChanges = true;
       } else {
         newLocale = selectedValue as Locale;
-        // TODO
-        //   await this.repositories.getUserRepository().setUserPreferredLanguage(userId, newLocale);
+        await this.repositories.getUserRepository()
+          .setUserPreferredLanguage(interaction.user.id, newLocale);
         hasChanges = true;
       }
     } catch (error) {
@@ -161,13 +164,18 @@ export default class Settings extends SlashCommand {
     }
 
     if (hasChanges) {
+      const translationHandler = this.client.getTranslationHandler();
       await this.interactionReplyOrFollow(interaction, {
-        content: this.translate(
-          newLocale ?? previousLanguage,
-          newLocale
-            ? "update.preferredLanguage.success"
-            : "update.preferredLanguage.cleared",
-        ),
+        content: newLocale
+          ? this.translate(
+              newLocale,
+              "update.preferredLanguage.success",
+              { language: translationHandler.translateCommon(newLocale, "languageName") },
+            )
+          : this.translate(
+              previousLanguage,
+              "update.preferredLanguage.cleared",
+            ),
         flags: MessageFlags.Ephemeral,
       });
     }

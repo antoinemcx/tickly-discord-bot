@@ -108,6 +108,12 @@
       "language": "Langue utilisée dans les réponses du bot :",
       "defaultLanguage": "Langue par défaut",
       "defaultLanguageDescription": "Locale Discord, ou anglais si non supportée."
+    },
+    "update": {
+      "preferredLanguage": {
+        "success": "{{v}} Votre langue a été mise à jour vers {{language}}.",
+        "cleared": "{{v}} Votre langue a été réinitialisée.\nLa langue configurée sur votre compte Discord sera utilisée, ou l'anglais si elle n'est pas prise en charge."
+      }
     }
   }
 }
