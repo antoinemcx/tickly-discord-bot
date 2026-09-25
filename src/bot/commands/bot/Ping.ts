@@ -12,10 +12,11 @@ export default class Ping extends SlashCommand {
     interaction: ChatInputCommandInteraction,
     language: Locale,
   ): Promise<void> {
-    const message = await interaction.reply({
+    const start = performance.now();
+    await interaction.reply({
       content: this.translate(language, "process"),
     });
-    const clientPing = message.createdTimestamp - interaction.createdTimestamp;
+    const clientPing = Math.round(performance.now() - start);
 
     await interaction.editReply({
       content: "\\🏓 Pong!\n"
