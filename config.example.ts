@@ -4,6 +4,7 @@ export default {
   links: {
     supportServer: "https://antoinemcx.fr/discord",
     github: "https://github.com/antoinemcx/tickly-discord-bot",
+    roadmap: "https://github.com/users/antoinemcx/projects/3",
   },
 
   emotes: { // emotes used in the bot (emojis, unicode or discord emotes)

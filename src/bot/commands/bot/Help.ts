@@ -378,9 +378,9 @@ export default class Help extends SlashCommand {
         .setStyle(ButtonStyle.Link)
         .setURL(inviteLink),
       new ButtonBuilder()
-        .setLabel(this.translate(language, "buttons.source"))
+        .setLabel(this.translate(language, "buttons.roadmap"))
         .setStyle(ButtonStyle.Link)
-        .setURL(config.links.github),
+        .setURL(config.links.roadmap),
     ];
   }
 

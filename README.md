@@ -60,7 +60,7 @@ Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed cont
 2. Copy `config.example.ts` to a `config.ts` file and replace with your own values.
 `DB_HOST` must be set to `tickly-db` to work with the Docker setup.
 
-3. Build an start all services
+3. Build and start all services
    <details>
      <summary>With <a href="https://traefik.io/">Traefik</a> reverse proxy</summary>
      
