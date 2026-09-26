@@ -76,7 +76,7 @@ describe("Login Command", () => {
 
       // Assert
       expect(todoistClientMock.createOAuthAuthorizationUrl)
-        .toHaveBeenCalledWith(userId);
+        .toHaveBeenCalledWith(userId, language);
 
       const editArg = (interaction.editReply as jest.Mock).mock.calls[0][0];
       expect(editArg.content).toEqual(expect.stringContaining("instructions"));
@@ -110,7 +110,7 @@ describe("Login Command", () => {
 
       // Assert
       expect(todoistClientMock.createOAuthAuthorizationUrl)
-        .toHaveBeenCalledWith(userId);
+        .toHaveBeenCalledWith(userId, language);
 
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: expect.stringContaining("existingPendingSession"),

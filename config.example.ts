@@ -26,6 +26,13 @@ export default {
     },
   },
 
+  oauth: {
+    colors: {
+      background: "#fafaf9",
+      primary: "#fb2c36",
+    },
+  },
+
   defaultLocale: "en-US", // default language if no preference (see https://docs.discord.com/developers/reference#locales)
   mentionUserInReply: true,
 };

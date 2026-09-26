@@ -23,8 +23,9 @@
     - src/bot/events/*: Discord event handlers (GuildCreate, GuildDelete, ThreadCreate, …)
     - src/bot/languages/*: localization files organized as one folder per language
   - src/database/*: Drizzle database access, schema, and repositories
-  - src/services/oauth/*: OAuth HTTP service and route abstractions
-  - src/services/todoist/*: Todoist-specific OAuth/session/errors/client logic
+  - src/services/apiBuilder/*: generic reusable HTTP primitives (ApiRoute, ApiService, TranslationLoader) — shared across services
+  - src/services/oauth/*: OAuth result pages — OAuthApiService (extends ApiService), OAuthPageRenderer, locale JSON files, static assets
+  - src/services/todoist/*: Todoist-specific OAuth/session/errors/client logic; CallbackRoute lives in todoist/oauth/
   - src/utils/*: shared utilities not linked with business logic (for example logging)
 - Repositories should remain thin persistence adapters and keep domain conversion logic local (see src/database/repositories/UserSessionRepository.ts).
 - Treat src/services/todoist/TodoistApiClient.ts as the single Todoist SDK integration point used by bot commands.
@@ -45,7 +46,7 @@ For detailed guidance on implementing, registering, and localizing Discord comma
 
 ## Conventions
 - Mirror src/ structure inside tests/ and name test files *.test.ts.
-- Mock external services and IO boundaries in tests (database connection layers, API clients, route factories).
+- Mock external services and IO boundaries in tests (database connection layers, API clients, HTTP route handlers).
 - Use domain-specific errors for persistence and OAuth failures instead of throwing generic Error directly from domain or infrastructure boundaries.
 - Handle Discord and Todoist user IDs carefully where persistence expects bigint-backed values.
 - This bot supports Discord server installation and user installation contexts; keep command behavior consistent across slash commands and message context menu flows.

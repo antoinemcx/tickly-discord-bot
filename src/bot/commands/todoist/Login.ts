@@ -36,7 +36,7 @@ export default class Login extends SubCommand {
       }
 
       const authorizationUrl = await this.todoistClient
-        .createOAuthAuthorizationUrl(interaction.user.id);
+        .createOAuthAuthorizationUrl(interaction.user.id, language);
 
       const message = {
         content: this.translate(language, "instructions"),

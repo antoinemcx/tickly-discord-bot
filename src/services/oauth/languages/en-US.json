@@ -1,0 +1,19 @@
+{
+  "success": {
+    "title": "Todoist connected",
+    "description": "Your Todoist account is now linked to Discord. Redirecting you back...",
+    "button": "Return to Discord"
+  },
+  "error": {
+    "title": "Connection failed",
+    "button": "Return to Discord",
+    "reasons": {
+      "invalid_callback_query": "Something went wrong. Please try the connection again from Discord.",
+      "invalid_oauth_state": "Something went wrong. Please try the connection again from Discord.",
+      "expired_oauth_state": "The connection link has expired. Please try again from Discord.",
+      "token_exchange_failed": "Something went wrong with Todoist. Please try the connection again from Discord.",
+      "access_denied": "Access to your Todoist account has been denied or you canceled the action.",
+      "unknown_error": "Something went wrong. Please try the connection again from Discord."
+    }
+  }
+}

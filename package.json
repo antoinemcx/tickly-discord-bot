@@ -6,7 +6,7 @@
   "main": "build/src/index.js",
   "scripts": {
     "clean": "rimraf build/* --glob",
-    "build": "tsc --build && tsc-alias -p tsconfig.json && copyfiles -u 3 \"src/bot/assets/**/*\" build/src/bot/assets",
+    "build": "tsc --build && tsc-alias -p tsconfig.json && copyfiles -u 3 \"src/bot/assets/**/*\" build/src/bot/assets && copyfiles -u 4 \"src/services/oauth/assets/**/*\" build/src/services/oauth/assets",
     "start": "npm run clean && npm run build && node .",
     "start:nobuild": "node .",
     "test": "jest --silent",

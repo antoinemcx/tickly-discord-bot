@@ -1,0 +1,19 @@
+{
+  "success": {
+    "title": "Todoist connecté",
+    "description": "Votre compte Todoist est maintenant lié à Discord. Redirection en cours...",
+    "button": "Retourner sur Discord"
+  },
+  "error": {
+    "title": "Connexion échouée",
+    "button": "Retourner sur Discord",
+    "reasons": {
+      "invalid_callback_query": "Une erreur est survenue. Veuillez réessayer depuis Discord.",
+      "invalid_oauth_state": "Une erreur est survenue. Veuillez réessayer depuis Discord.",
+      "expired_oauth_state": "Le lien de connexion a expiré. Veuillez réessayer depuis Discord.",
+      "token_exchange_failed": "Une erreur est survenue avec Todoist. Veuillez réessayer depuis Discord.",
+      "access_denied": "L'accès à votre compte Todoist a été refusé ou vous avez annulé l'opération.",
+      "unknown_error": "Une erreur est survenue. Veuillez réessayer depuis Discord."
+    }
+  }
+}

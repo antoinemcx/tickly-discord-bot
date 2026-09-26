@@ -126,19 +126,24 @@ export class TodoistApiClient {
    * If the user already has an existing session, it is replaced by a new
    * session with pending status and the new OAuth state.
    *
-   * @params userId ID of the user to create the authorization URL for
+   * When a locale is provided it is appended to the state parameter in the
+   * authorization URL (format: `csrfState|locale`) so the callback route can
+   * render result pages in the user's language.
+   *
+   * @param userId ID of the user to create the authorization URL for
+   * @param locale optional locale code to embed in the authorization URL state (e.g. "fr")
    * @returns the full URL to redirect the user to for OAuth2 authorization
    * @throws {PersistenceError} if session persistence fails
    */
-  public async createOAuthAuthorizationUrl(userId: string): Promise<string> {
-    const state = getAuthStateParameter();
+  public async createOAuthAuthorizationUrl(userId: string, locale?: string): Promise<string> {
+    const csrfState = getAuthStateParameter();
     const existingSession = await this.sessionManager.getSession(userId);
     const expiresAt = new Date(Date.now() + this.oauthStateLifetimeMs);
 
     const pendingSession = new UserSession(
       userId,
       UserSessionStatus.Pending,
-      state,
+      csrfState,
       null,
       expiresAt,
     );
@@ -152,7 +157,7 @@ export class TodoistApiClient {
     return getAuthorizationUrl({
       clientId: this.clientId,
       permissions: this.permissions,
-      state,
+      state: locale ? `${csrfState}|${locale}` : csrfState,
     });
   }
 

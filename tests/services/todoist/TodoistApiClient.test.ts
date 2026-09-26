@@ -245,6 +245,47 @@ describe("TodoistApiClient", () => {
         TEST_USER_ID,
       )).rejects.toThrow(error);
     });
+
+    it("should append the user locale to the URL state", async () => {
+      // Arrange
+      const locale = "fr";
+      mockSessionManager.getSession = jest.fn().mockResolvedValue(undefined);
+      mockSessionManager.createSession = jest.fn().mockResolvedValue(undefined);
+
+      // Act
+      const url = await todoistApiClientMock.createOAuthAuthorizationUrl(
+        TEST_USER_ID,
+        locale,
+      );
+
+      // Assert
+      const urlState = new URL(url).searchParams.get("state") ?? "";
+      const storedState = (mockSessionManager.createSession as jest.Mock)
+        .mock
+        .calls[0][0]
+        .oauthState as string;
+      expect(urlState).toBe(`${storedState}|${locale}`);
+      expect(storedState).not.toContain("|");
+    });
+
+    it("should use the CSRF token as-is in the URL state when no locale is provided", async () => {
+      // Arrange
+      mockSessionManager.getSession = jest.fn().mockResolvedValue(undefined);
+      mockSessionManager.createSession = jest.fn().mockResolvedValue(undefined);
+
+      // Act
+      const url = await todoistApiClientMock.createOAuthAuthorizationUrl(
+        TEST_USER_ID,
+      );
+
+      // Assert
+      const urlState = new URL(url).searchParams.get("state") ?? "";
+      const storedState = (mockSessionManager.createSession as jest.Mock)
+        .mock
+        .calls[0][0]
+        .oauthState as string;
+      expect(urlState).toBe(storedState);
+    });
   });
 
   describe("exchangeOAuthCodeForAccessToken", () => {

@@ -35,8 +35,13 @@ src/
 │   ├── migrations/                       # generated migration scripts
 │   └── repositories/                     # RepositoryFactory + thin persistence adapters
 └── services/
-    ├── oauth/                            # generic HTTP route abstractions (OAuthApiService, routes)
-    └── todoist/                          # TodoistApiClient.ts, OAuth flow, sessions, errors
+    ├── apiBuilder/                       # generic reusable HTTP building blocks:
+    │   │                                 #   ApiRoute (abstract route), ApiService (abstract Express service),
+    │   │                                 #   TranslationLoader (JSON locale loader)
+    ├── oauth/                            # OAuth result page service: OAuthApiService (extends ApiService),
+    │   │                                 #   OAuthPageRenderer (HTML page generator),
+    │   │                                 #   languages/ (en-US, fr), assets/ (static files)
+    └── todoist/                          # TodoistApiClient.ts, OAuth flow (CallbackRoute), sessions, errors
 ```
 
 Tests mirror `src/` under `tests/` and are named `*.test.ts`.

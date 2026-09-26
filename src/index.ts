@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { CommandHandler } from "@bot/handlers/CommandHandler";
 import { EventHandler } from "@bot/handlers/EventHandler";
 import { TranslationHandler } from "@bot/handlers/TranslationHandler";
@@ -5,10 +6,10 @@ import { Tickly } from "@bot/Tickly";
 import { DrizzleDatabase } from "@database/DrizzleDatabase";
 import { runMigrations } from "@database/migrate";
 import { RepositoryFactory } from "@database/repositories/RepositoryFactory";
+import { TranslationLoader } from "@services/apiBuilder/TranslationLoader";
 import { OAuthApiService } from "@services/oauth/OAuthApiService";
-import {
-  TodoistOAuthRoutesFactory,
-} from "@services/todoist/oauth/TodoistOAuthRoutesFactory";
+import { OAuthPageRenderer } from "@services/oauth/OAuthPageRenderer";
+import { CallbackRoute } from "@services/todoist/oauth/CallbackRoute";
 import { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import config from "../config";
 import {
@@ -65,7 +66,11 @@ import "dotenv/config";
     { permissions: ["data:read_write"] },
   );
   const oauthApiService = new OAuthApiService(
-    new TodoistOAuthRoutesFactory(todoistClient),
+    new CallbackRoute(
+      todoistClient,
+      new OAuthPageRenderer(config.oauth.colors),
+      new TranslationLoader(join(__dirname, "services", "oauth", "languages")),
+    ),
   );
 
   displayInfo("Starting OAuth callback service...");

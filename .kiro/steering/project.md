@@ -1,6 +1,6 @@
 ---
 inclusion: always
 ---
-#[[file:AGENTS.md]]
+# [[file:AGENTS.md]]
 
-#[[file:.github/copilot-instructions.md]]
+# [[file:.github/copilot-instructions.md]]
