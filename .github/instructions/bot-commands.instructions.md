@@ -16,11 +16,11 @@ applyTo: ["src/bot/commands/**/*.ts", "src/bot/languages/**/*.json", "src/bot/ha
 - New commands must keep constructor injection compatible with this loader: constructor(client: Tickly, todoistClient: TodoistApiClient, repositories: RepositoryFactory).
 
 ## Command class responsibilities
-- src/bot/commands/BaseCommand.ts defines the shared runtime behavior for commands and subcommands, including translation access and option ordering helpers.
-- src/bot/commands/RegisterableBaseCommand.ts centralizes the metadata shared by registerable Discord application commands (slash, message context menu, user context menu).
-- src/bot/commands/SlashCommand.ts is responsible for slash-command description localization via TranslationHandler and for merging its SubCommand options into the final registration payload.
-- src/bot/commands/SubCommand.ts models a slash-command option of type subcommand and must keep its translation namespace aligned with its parent slash command.
-- src/bot/commands/MessageCommand.ts (and similarly UserCommand) must not include description fields because Discord context menu commands do not allow them.
+- src/bot/commands/core/BaseCommand.ts defines the shared runtime behavior for commands and subcommands, including translation access and option ordering helpers.
+- src/bot/commands/core/RegisterableBaseCommand.ts centralizes the metadata shared by registerable Discord application commands (slash, message context menu, user context menu).
+- src/bot/commands/core/SlashCommand.ts is responsible for slash-command description localization via TranslationHandler and for merging its SubCommand options into the final registration payload.
+- src/bot/commands/core/SubCommand.ts models a slash-command option of type subcommand and must keep its translation namespace aligned with its parent slash command.
+- src/bot/commands/core/MessageCommand.ts (and similarly UserCommand) must not include description fields because Discord context menu commands do not allow them.
 
 ## Localization workflow
 - src/bot/handlers/TranslationHandler.ts loads locale folders from src/bot/languages and reads JSON translation files into memory.

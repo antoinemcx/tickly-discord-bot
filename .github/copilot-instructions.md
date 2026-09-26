@@ -18,12 +18,13 @@
 ## Architecture
 - Keep boundaries clear:
   - src/bot/*: Discord bot commands, interactions, and integration entry points
+    - src/bot/commands/core/: base classes for all command types (BaseCommand, SlashCommand, SubCommand, ContextMenuCommand, …)
     - src/bot/commands/<category>/<CommandName>.ts: individual command implementations organized by category
-    - src/bot/commands/RegisterableBaseCommand.ts: shared base for Discord application commands that CommandHandler registers directly
+    - src/bot/events/*: Discord event handlers (GuildCreate, GuildDelete, ThreadCreate, …)
     - src/bot/languages/*: localization files organized as one folder per language
   - src/database/*: Drizzle database access, schema, and repositories
   - src/services/oauth/*: OAuth HTTP service and route abstractions
-  - src/services/todoist/*: Todoist-specific OAuth/session/client logic
+  - src/services/todoist/*: Todoist-specific OAuth/session/errors/client logic
   - src/utils/*: shared utilities not linked with business logic (for example logging)
 - Repositories should remain thin persistence adapters and keep domain conversion logic local (see src/database/repositories/UserSessionRepository.ts).
 - Treat src/services/todoist/TodoistApiClient.ts as the single Todoist SDK integration point used by bot commands.
@@ -61,7 +62,13 @@ For detailed guidance on implementing, registering, and localizing Discord comma
 - npm run db:drop is destructive; do not run it unless explicitly requested.
 - Use `docker compose up -d --build` (default, with Traefik) or `docker compose -f docker-compose.local.yml up -d --build` (without Traefik, no external network required).
 
+## Maintaining AI Documentation
+- When adding or updating AI guidance rules, write them here (copilot-instructions.md) or in the relevant `.github/instructions/*.instructions.md` file. Kiro picks them up automatically through its steering files via `#[[file:...]]` references — do not duplicate rules in `.kiro/steering/`.
+- When the project structure, stack, or key integration points change significantly, update `AGENTS.md` at the repo root to keep it accurate.
+- The `.kiro/steering/` files are pure redirections and should rarely need to change.
+
 ## Existing Documentation
+- High-level AI-facing overview (architecture map, critical rules): [AGENTS.md](../AGENTS.md)
 - High-level project overview: [README.md](../README.md)
 - Runtime and config examples: [.env.example](../.env.example), [config.example.ts](../config.example.ts)
 - Docker Compose variants: [docker-compose.yml](../docker-compose.yml) (with Traefik), [docker-compose.local.yml](../docker-compose.local.yml) (local, no Traefik)
