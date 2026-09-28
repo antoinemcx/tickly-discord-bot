@@ -58,7 +58,7 @@
       },
       "step2": {
         "title": "### 2. Sign in to your Todoist account",
-        "body": "Run {{loginMention}}, you will be redirected to Todoist OAuth2 login.\nAfter you approve access, Tickly encrypts and stores your Todoist access token in a session for future interactions."
+        "body": "Run {{loginMention}}, you will be redirected to Todoist OAuth2 login.\nAfter you approve access, Tickly encrypts and stores your Todoist access token in a session for future interactions.\nBy default, your session expires after 30 days of inactivity — you can change this in `/settings`."
       },
       "step3": {
         "title": "### 3. Add your first task",
@@ -107,12 +107,26 @@
       "generalSettings": "### General settings",
       "language": "Language used in bot responses:",
       "defaultLanguage": "Default language",
-      "defaultLanguageDescription": "Discord locale, or English if not supported."
+      "defaultLanguageDescription": "Discord locale, or English if not supported.",
+      "sessionDuration": "Session duration (inactivity expiration):"
+    },
+    "sessionDurationOptions": {
+      "default": "Default ({{days}} days)",
+      "defaultDescription": "Your session expires after {{days}} days of inactivity.",
+      "7days": "1 week",
+      "14days": "2 weeks",
+      "30days": "1 month",
+      "90days": "3 months",
+      "180days": "6 months"
     },
     "update": {
       "preferredLanguage": {
         "success": "{{v}} Your language has been updated to {{language}}.",
         "cleared": "{{v}} Your language has been cleared.\nThe locale you configured on your Discord account will now be used, or English if not supported."
+      },
+      "sessionRetention": {
+        "success": "{{v}} Your session duration has been updated to {{duration}}.",
+        "cleared": "{{v}} Your session duration has been reset to the default ({{days}} days)."
       }
     }
   }

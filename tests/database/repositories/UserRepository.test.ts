@@ -28,6 +28,18 @@ function createSelectWhereChain(result: unknown): any {
   };
 }
 
+function createSelectLeftJoinChain(result: unknown): any {
+  return {
+    from: jest.fn().mockReturnValue({
+      leftJoin: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnValue({
+          limit: jest.fn().mockResolvedValue(result),
+        }),
+      }),
+    }),
+  };
+}
+
 function createUpdateChain(): { set: jest.Mock; where: jest.Mock } {
   const where = jest.fn().mockResolvedValue(undefined);
   const set = jest.fn().mockReturnValue({ where });
@@ -55,6 +67,54 @@ beforeEach(() => {
 });
 
 describe("UserRepository", () => {
+  describe("getUserPreferences", () => {
+    it("should return language and retention when both are set", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectLeftJoinChain([{
+        languageId: 1,
+        languageCode: Locale.French,
+        languageName: "French",
+        sessionRetentionDays: 90,
+      }]));
+
+      // Act
+      const result = await repository.getUserPreferences("123");
+
+      // Assert
+      expect(result.language).toEqual({ id: 1, code: Locale.French, name: "French" });
+      expect(result.sessionRetentionDays).toBe(90);
+    });
+
+    it("should return undefined language when no language is set", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectLeftJoinChain([{
+        languageId: null,
+        languageCode: null,
+        languageName: null,
+        sessionRetentionDays: null,
+      }]));
+
+      // Act
+      const result = await repository.getUserPreferences("123");
+
+      // Assert
+      expect(result.language).toBeUndefined();
+      expect(result.sessionRetentionDays).toBeNull();
+    });
+
+    it("should return defaults when the user does not exist", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectLeftJoinChain([]));
+
+      // Act
+      const result = await repository.getUserPreferences("123");
+
+      // Assert
+      expect(result.language).toBeUndefined();
+      expect(result.sessionRetentionDays).toBeNull();
+    });
+  });
+
   describe("getUserPreferredLanguage", () => {
     it("should return the preferred language when one is configured", async () => {
       // Arrange

@@ -17,12 +17,9 @@ import {
 import { BaseCommand } from "../core/BaseCommand";
 import { SlashCommand, SlashCommandCategory } from "../core/SlashCommand";
 
-// TODO update user preferred language in database
-// TODO unit tests
-
 /**
  * Displays current user preferences and allows modifications.
- * Currently, updatable preferences only include the bot language.
+ * Updatable preferences: bot language, session duration.
  */
 export default class Settings extends SlashCommand {
   readonly category = SlashCommandCategory.Bot;
@@ -32,6 +29,23 @@ export default class Settings extends SlashCommand {
 
   private static readonly SET_LANGUAGE_ACTION = "set_language";
   private static readonly DEFAULT_LOCALE_VALUE = "default";
+
+  // TODO this setting won't be updatable with reminder systems
+  private static readonly SET_RETENTION_ACTION = "set_retention";
+  private static readonly DEFAULT_RETENTION_VALUE = "default";
+
+  /** Available session retention options */
+  private static readonly RETENTION_OPTIONS: ReadonlyArray<{
+    value: string;
+    days: number | null;
+  }> = [
+    { value: "default", days: null },
+    { value: "7", days: 7 },
+    { value: "14", days: 14 },
+    { value: "30", days: 30 },
+    { value: "90", days: 90 },
+    { value: "180", days: 180 },
+  ];
 
   constructor(
     client: Tickly,
@@ -51,6 +65,18 @@ export default class Settings extends SlashCommand {
         }
       },
     );
+
+    this.onMessageComponent(
+      Settings.SET_RETENTION_ACTION,
+      async (interaction, language) => {
+        if (interaction.isStringSelectMenu()) {
+          await this.updateSessionRetention(
+            interaction as StringSelectMenuInteraction,
+            language,
+          );
+        }
+      },
+    );
   }
 
   public async execute(
@@ -60,17 +86,22 @@ export default class Settings extends SlashCommand {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      /* Gather current settings */
-      const preferredLanguage = await this.repositories.getUserRepository()
-        .getUserPreferredLanguage(interaction.user.id);
+      const preferences = await this.repositories.getUserRepository()
+        .getUserPreferences(interaction.user.id);
+
       const preferredLocale: Locale | undefined
-        = preferredLanguage?.code
+        = preferences.language?.code
           && this.client.getTranslationHandler()
-            .isSupportedLocale(preferredLanguage.code)
-          ? preferredLanguage.code
+            .isSupportedLocale(preferences.language.code)
+          ? preferences.language.code
           : undefined;
 
-      await this.displaySettings(interaction, language, preferredLocale);
+      await this.displaySettings(
+        interaction,
+        language,
+        preferredLocale,
+        preferences.sessionRetentionDays,
+      );
     } catch (error) {
       displayDetailedError(
         `Failed to retrieve user settings for user ${interaction.user.id}`,
@@ -87,8 +118,10 @@ export default class Settings extends SlashCommand {
     interaction: ChatInputCommandInteraction,
     language: Locale,
     preferredLocale: Locale | undefined,
+    retentionDays: number | null,
   ): Promise<void> {
     const languageSelect = this.buildLanguageSelect(language, preferredLocale);
+    const retentionSelect = this.buildRetentionSelect(language, retentionDays);
 
     const container = new ContainerBuilder()
       .setAccentColor(BaseCommand.EMBED_COLOR)
@@ -97,7 +130,12 @@ export default class Settings extends SlashCommand {
         + "\n" + this.translate(language, "view.language"),
       ))
       .addActionRowComponents(actionRow =>
-        actionRow.addComponents(languageSelect));
+        actionRow.addComponents(languageSelect))
+      .addTextDisplayComponents(textDisplay => textDisplay.setContent(
+        this.translate(language, "view.sessionDuration"),
+      ))
+      .addActionRowComponents(actionRow =>
+        actionRow.addComponents(retentionSelect));
 
     await interaction.editReply({
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -127,6 +165,43 @@ export default class Settings extends SlashCommand {
             .setValue(locale)
             .setDefault(preferredLocale === locale)
             .setEmoji(emojis[locale as keyof typeof emojis] ?? undefined)),
+      );
+  }
+
+  private buildRetentionSelect(
+    language: Locale,
+    currentRetentionDays: number | null,
+  ): StringSelectMenuBuilder {
+    const defaultDays = String(this.client.getConfig().defaultSessionRetentionDays);
+
+    return new StringSelectMenuBuilder()
+      .setCustomId(this.buildComponentId(Settings.SET_RETENTION_ACTION))
+      .addOptions(
+        Settings.RETENTION_OPTIONS.map(({ value, days }) => {
+          const isDefault = value === Settings.DEFAULT_RETENTION_VALUE;
+          const labelKey = isDefault
+            ? "sessionDurationOptions.default"
+            : `sessionDurationOptions.${days}days`;
+          const option = new StringSelectMenuOptionBuilder()
+            .setLabel(this.translate(
+              language,
+              labelKey,
+              isDefault ? { days: defaultDays } : {},
+            ))
+            .setValue(value)
+            .setDefault(currentRetentionDays === days);
+
+          if (isDefault) {
+            option.setDescription(
+              this.translate(
+                language,
+                "sessionDurationOptions.defaultDescription",
+                { days: defaultDays },
+              ),
+            );
+          }
+          return option;
+        }),
       );
   }
 
@@ -176,6 +251,45 @@ export default class Settings extends SlashCommand {
               previousLanguage,
               "update.preferredLanguage.cleared",
             ),
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+  }
+
+  /**
+   * Updates the user's session retention preference and sends a confirmation.
+   *
+   * @param interaction the interaction from the retention select menu
+   * @param language the current response language
+   */
+  private async updateSessionRetention(
+    interaction: StringSelectMenuInteraction,
+    language: Locale,
+  ): Promise<void> {
+    const selectedValue = interaction.values[0];
+    const isDefault = selectedValue === Settings.DEFAULT_RETENTION_VALUE;
+    const days = isDefault ? null : Number(selectedValue);
+    const defaultDays = String(this.client.getConfig().defaultSessionRetentionDays);
+    let hasChanges = false;
+
+    try {
+      await this.repositories.getUserRepository()
+        .setUserSessionRetentionDays(interaction.user.id, days);
+      hasChanges = true;
+    } catch (error) {
+      displayDetailedError(
+        `Failed to update session retention for user ${interaction.user.id}`,
+        error,
+      );
+    }
+
+    if (hasChanges) {
+      await this.interactionReplyOrFollow(interaction, {
+        content: isDefault
+          ? this.translate(language, "update.sessionRetention.cleared", { days: defaultDays })
+          : this.translate(language, "update.sessionRetention.success", {
+              duration: this.translate(language, `sessionDurationOptions.${days}days`),
+            }),
         flags: MessageFlags.Ephemeral,
       });
     }

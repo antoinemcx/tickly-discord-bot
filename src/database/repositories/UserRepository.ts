@@ -5,9 +5,46 @@ import { languagesTable, usersTable } from "@database/schema/user.schema";
 import { eq } from "drizzle-orm";
 import { BaseRepository } from "./BaseRepository";
 
+export interface UserPreferences {
+  language: Language | undefined;
+  sessionRetentionDays: number | null;
+}
+
 export class UserRepository extends BaseRepository {
   public constructor(database: DrizzleDatabase) {
     super(database);
+  }
+
+  /**
+   * Retrieves all preferences for a Discord user in a single query.
+   * Returns safe defaults (undefined / null) when the user has no row or
+   * no preference set.
+   *
+   * @param userId Discord user ID
+   * @returns an object with the user's language and session retention preference
+   */
+  public async getUserPreferences(userId: string): Promise<UserPreferences> {
+    const [row] = await this.db.getConnection()
+      .select({
+        languageId: languagesTable.id,
+        languageCode: languagesTable.code,
+        languageName: languagesTable.name,
+        sessionRetentionDays: usersTable.sessionRetentionDays,
+      })
+      .from(usersTable)
+      .leftJoin(languagesTable, eq(usersTable.preferredLanguageId, languagesTable.id))
+      .where(eq(usersTable.id, BigInt(userId)))
+      .limit(1);
+
+    const language: Language | undefined
+      = row?.languageId !== null && row?.languageId !== undefined
+        ? { id: row.languageId, code: row.languageCode!, name: row.languageName! }
+        : undefined;
+
+    return {
+      language,
+      sessionRetentionDays: row?.sessionRetentionDays ?? null,
+    };
   }
 
   /**

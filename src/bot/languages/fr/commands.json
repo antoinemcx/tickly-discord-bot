@@ -58,7 +58,7 @@
       },
       "step2": {
         "title": "### 2. Connexion à votre compte Todoist",
-        "body": "Exécutez {{loginMention}}, vous serez redirigé vers la connexion OAuth2 de Todoist.\nAprès avoir approuvé l'accès, Tickly chiffre et stocke votre jeton d'accès Todoist dans une session pour les interactions futures."
+        "body": "Exécutez {{loginMention}}, vous serez redirigé vers la connexion OAuth2 de Todoist.\nAprès avoir approuvé l'accès, Tickly chiffre et stocke votre jeton d'accès Todoist dans une session pour les interactions futures.\nPar défaut, votre session expire après 30 jours d'inactivité — vous pouvez modifier cela dans `/settings`."
       },
       "step3": {
         "title": "### 3. Ajoutez votre première tâche",
@@ -107,12 +107,26 @@
       "generalSettings": "### Paramètres généraux",
       "language": "Langue utilisée dans les réponses du bot :",
       "defaultLanguage": "Langue par défaut",
-      "defaultLanguageDescription": "Locale Discord, ou anglais si non supportée."
+      "defaultLanguageDescription": "Locale Discord, ou anglais si non supportée.",
+      "sessionDuration": "Durée de session (expiration par inactivité) :"
+    },
+    "sessionDurationOptions": {
+      "default": "Par défaut ({{days}} jours)",
+      "defaultDescription": "Votre session expire après {{days}} jours d'inactivité.",
+      "7days": "1 semaine",
+      "14days": "2 semaines",
+      "30days": "1 mois",
+      "90days": "3 mois",
+      "180days": "6 mois"
     },
     "update": {
       "preferredLanguage": {
         "success": "{{v}} Votre langue a été mise à jour vers {{language}}.",
         "cleared": "{{v}} Votre langue a été réinitialisée.\nLa langue configurée sur votre compte Discord sera utilisée, ou l'anglais si elle n'est pas prise en charge."
+      },
+      "sessionRetention": {
+        "success": "{{v}} La durée de votre session a été mise à jour : {{duration}}.",
+        "cleared": "{{v}} La durée de session a été réinitialisée au défaut ({{days}} jours)."
       }
     }
   }

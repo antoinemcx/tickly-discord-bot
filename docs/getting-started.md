@@ -18,7 +18,8 @@ If you are new to the bot, follow these simple steps:
 1. Install Tickly on your user account or on your server.
 2. Open any chat where Tickly is available, type `/`, and run `/todoist login`.
 3. You will be redirected to Todoist OAuth2 login.  
-After you approve access, Tickly encrypts and stores your Todoist access token in a session for future interactions.
+After you approve access, Tickly encrypts and stores your Todoist access token in a session for future interactions.  
+By default, your session expires after 30 days of inactivity — you can change this in `/settings`.
 4. Back in Discord, run `/help` to see the commands list and a start guide.
 
 ## Interacting with the bot
