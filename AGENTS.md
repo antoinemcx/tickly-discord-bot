@@ -91,4 +91,4 @@ For code style or domain-specific rules, update `.github/copilot-instructions.md
 | Testing conventions | [.github/instructions/testing.instructions.md](.github/instructions/testing.instructions.md) |
 | Todoist integration rules | [.github/instructions/todoist-client.instructions.md](.github/instructions/todoist-client.instructions.md) |
 | Runtime config examples | [.env.example](.env.example), [config.example.ts](config.example.ts) |
-| User-facing docs | [README.md](README.md), [docs/getting-started.md](docs/getting-started.md) |
+| User-facing docs | [README.md](README.md), [docs/en-US/getting-started.md](docs/en-US/getting-started.md) |

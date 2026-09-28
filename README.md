@@ -7,7 +7,7 @@
 
 ## 📋 Overview
 ### Features
-* 📝 Create Todoist tasks via [command or right-clicking a message](./docs/getting-started.md#adding-your-first-task)
+* 📝 Create Todoist tasks via [command or right-clicking a message](./docs/en-US/getting-started.md#adding-your-first-task)
 * 🔄 Automatically sync your Todoist tasks
 * 📊 [**SOON**] View and summarize your incoming tasks
 * 🧰 [**SOON**] Create custom in-bot filters for task display (for example by project, due date, etc.)
@@ -23,7 +23,7 @@ After it is installed, you can interact with the bot by using:
 - [**Message context menu**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): right-click on any message and select a command from the "Apps" section.
 
 > New to Tickly?  
-> Follow the instructions in [docs/getting-started.md](./docs/getting-started.md) to install the bot, log into Todoist and start interacting with it.
+> Follow the instructions in [docs/en-US/getting-started.md](./docs/en-US/getting-started.md) to install the bot, log into Todoist and start interacting with it.
 
 <br><br>
 

@@ -8,7 +8,7 @@ We recommand installing Tickly **on your user account**, as a user install, for 
 It allows you to use the bot from anywhere in Discord : in DMs or in any server, even if they didn't add it.  
 Some commands may be available only with a user installation.
 
-![User install button](../src/bot/assets/user_install.png)
+![User install button](../../src/bot/assets/user_install.png)
 
 > Nevertheless, please note that some servers can disallow user-installed apps (called "external apps" in Discord permissions).  
 > The bot would thus not work in those servers and you might need the server to install it as a guild install instead.
@@ -18,7 +18,7 @@ If you are new to the bot, follow these simple steps:
 1. Install Tickly on your user account or on your server.
 2. Open any chat where Tickly is available, type `/`, and run `/todoist login`.
 3. You will be redirected to Todoist OAuth2 login.  
-After you approve access, Tickly encrypts and stores your Todoist access token in a session for future interactions.  
+After you approve access, Tickly stores your Todoist access token in a session for future interactions.  
 By default, your session expires after 30 days of inactivity — you can change this in `/settings`.
 4. Back in Discord, run `/help` to see the commands list and a start guide.
 
@@ -33,8 +33,8 @@ To add a task to Todoist, you have three options:
 2. Use the "Add to Todoist" message context menu command on any message.  
    This will pre-fill the form with the message content.
 
-   ![Add from message](./add_from_message.png)
+   ![Add from message](../add_from_message.png)
 3. Use the parameter `content` of the `/todoist add` command to use natural language input.  
    For example, you can type `/todoist add content:Buy milk tomorrow at 5pm !!2 #MyProject`. See more [here](https://www.todoist.com/fr/help/articles/use-task-quick-add-in-todoist-va4Lhpzz#h_01J1DEY59AGACAT8JW998EPH74).
 
-   ![Add natural language](./add_natural_language.png)
+   ![Add natural language](../add_natural_language.png)
