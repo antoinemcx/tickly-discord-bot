@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { CommandHandler } from "@bot/handlers/CommandHandler";
 import { EventHandler } from "@bot/handlers/EventHandler";
 import { TranslationHandler } from "@bot/handlers/TranslationHandler";
+import { SessionPruneTask } from "@bot/tasks/SessionPruneTask";
 import { Tickly } from "@bot/Tickly";
 import { DrizzleDatabase } from "@database/DrizzleDatabase";
 import { runMigrations } from "@database/migrate";
@@ -102,4 +103,9 @@ import "dotenv/config";
   );
 
   await bot.start();
+
+  /* Start background tasks */
+  if (config.enableDailyPrune) {
+    new SessionPruneTask(todoistClient).start();
+  }
 })();

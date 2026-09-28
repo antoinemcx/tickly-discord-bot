@@ -24,6 +24,7 @@
     "express": "^5.2.1",
     "moment": "^2.30.1",
     "mysql2": "^3.10.1",
+    "node-cron": "^4.6.0",
     "tsx": "^4.15.7"
   },
   "devDependencies": {

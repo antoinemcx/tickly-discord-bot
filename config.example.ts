@@ -37,6 +37,7 @@ export default {
   mentionUserInReply: true,
   defaultLocale: "en-US", // default language if no preference (see https://docs.discord.com/developers/reference#locales)
   defaultSessionRetentionDays: 30, // default retention period for user sessions (in days)
+  enableDailyPrune: true, // true to enable the daily session prune task
 };
 
 // Made with ❤️ by antoinemcx (https://github.com/antoinemcx)
