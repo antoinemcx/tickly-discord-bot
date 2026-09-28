@@ -66,13 +66,15 @@ export class TranslationLoader {
 
   private lookup(locale: string, key: string): string | undefined {
     const dict = this.translations.get(locale);
-    if (!dict) return undefined;
+    if (!dict)
+      return undefined;
 
     const parts = key.split(".");
     let current: unknown = dict;
 
     for (const part of parts) {
-      if (current == null || typeof current !== "object") return undefined;
+      if (current == null || typeof current !== "object")
+        return undefined;
       current = (current as Record<string, unknown>)[part];
     }
 

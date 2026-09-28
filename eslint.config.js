@@ -8,6 +8,10 @@ export default antfu(
       semi: true,
       quotes: "double",
     },
+    ignores: [
+      ".kiro/**",
+      ".github/instructions/**",
+    ],
   },
   {
     files: ["**/*.{ts,tsx,js,jsx}"],

@@ -7,7 +7,9 @@ function mockRoute(path: string, method: ApiRoute["method"]): ApiRoute {
   return {
     path,
     method,
-    handle: jest.fn((_req: express.Request, res: express.Response) => { res.send("ok"); }),
+    handle: jest.fn((_req: express.Request, res: express.Response) => {
+      res.send("ok");
+    }),
   } as unknown as ApiRoute;
 }
 
@@ -123,7 +125,8 @@ describe("OAuthApiService", () => {
       const errorMessage = "Failed to start server";
       jest.spyOn(customApp, "listen").mockImplementation(() => ({
         on: (event: string, handler: (error: Error) => void) => {
-          if (event === "error") setTimeout(() => handler(new Error(errorMessage)), 0);
+          if (event === "error")
+            setTimeout(() => handler(new Error(errorMessage)), 0);
           return undefined;
         },
       } as unknown as Server));

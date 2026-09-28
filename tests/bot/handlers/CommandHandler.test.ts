@@ -140,7 +140,7 @@ describe("CommandHandler", () => {
         if (current === "commands") {
           return ["bot"];
         } else if (current === "nested") {
-          return [String.raw`..\Ping.ts`];
+          return ["../Ping.ts"];
         } else if (current === "bot") {
           return ["nested"];
         }
@@ -171,7 +171,7 @@ describe("CommandHandler", () => {
         if (current === "commands") {
           return ["bot", "core", "BaseCommand.ts", "not-found.ts"];
         } else if (current === "bot") {
-          return [String.raw`..\core\BaseCommand.ts`, "Ping.ts"];
+          return ["../core/BaseCommand.ts", "Ping.ts"];
         }
         return [];
       });

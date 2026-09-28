@@ -25,7 +25,11 @@ describe("Help Command", () => {
       getSlashCommands: jest.fn().mockReturnValue(new Map()),
       getConfig: jest.fn().mockReturnValue({
         ownerIds: [],
-        links: { github: "https://github.com", supportServer: "https://discord.gg" },
+        links: {
+          github: "https://github.com",
+          supportServer: "https://discord.gg",
+          roadmap: "https://example.com/roadmap",
+        },
       }),
       getInviteLink: jest.fn().mockReturnValue("https://discord.com/invite"),
     } as unknown as Tickly;
