@@ -32,7 +32,7 @@ services:
     volumes:
       - mysql_data_tickly:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
       interval: 120s
       timeout: 5s
       retries: 5
