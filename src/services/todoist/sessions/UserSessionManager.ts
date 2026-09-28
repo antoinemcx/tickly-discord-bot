@@ -52,8 +52,21 @@ export interface UserSessionManager {
   deleteSession(userId: string): Promise<void>;
 
   /**
-   * Removes expired sessions or expired pending OAuth states.
-   * @returns a promise resolving when expired sessions are pruned
+   * Records that a session was just used, resetting its inactivity
+   * timer. Should be called whenever a user's access token is retrieved
+   * for active use.
+   *
+   * @params userId user ID of the session to touch
+   * @returns a promise resolving when the session is updated
+   * @throws {PersistenceError} if the update fails due to persistence errors
+   */
+  touchSession(userId: string): Promise<void>;
+
+  /**
+   * Removes expired OAuth pending sessions and inactive completed sessions
+   * that have exceeded their configured retention period.
+   *
+   * @returns a promise resolving when expired/inactive sessions are pruned
    * @throws {PersistenceError} if the pruning operation fails
    *         due to persistence errors
    */

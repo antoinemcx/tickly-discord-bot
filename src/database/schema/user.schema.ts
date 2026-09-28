@@ -25,6 +25,7 @@ export const usersTable = mysqlTable("users", {
   id: bigint("id", { mode: "bigint" }).primaryKey(), // Discord user ID
   preferredLanguageId: int("preferred_language_id")
     .references(() => languagesTable.id),
+  sessionRetentionDays: int("session_retention_days"), // null = use default
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 export type User = typeof usersTable.$inferSelect;
@@ -44,6 +45,7 @@ export const userSessionsTable = mysqlTable("user_sessions", {
   accessToken: text("access_token"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at"),
+  lastUsedAt: timestamp("last_used_at").notNull().defaultNow(),
 });
 
 export type UserSession = typeof userSessionsTable.$inferSelect;

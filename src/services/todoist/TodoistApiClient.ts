@@ -6,6 +6,7 @@ import {
   getAuthToken,
   TodoistApi,
 } from "@doist/todoist-api-typescript";
+import { displayDetailedError } from "@src/utils/logger";
 import { UserSession, UserSessionStatus } from "../../services/todoist/sessions/UserSession";
 import { OAuthError } from "./errors/OAuthError";
 
@@ -225,8 +226,21 @@ export class TodoistApiClient {
    */
   private async getUserAccessToken(userId: string): Promise<string | undefined> {
     // TODO fetch access token from Redis cache first
-    const token = (await this.getSessionByUserId(userId))?.accessToken;
-    return token && token.length > 0 ? token : undefined;
+    const session = await this.getSessionByUserId(userId);
+    const token = session?.accessToken;
+
+    if (token && token.length > 0) {
+      try {
+        await this.sessionManager.touchSession(userId);
+      } catch (error) {
+        displayDetailedError(
+          `Failed to update last_used_at for user session '${userId}'.`,
+          error,
+        );
+      }
+      return token;
+    }
+    return undefined;
   }
 
   /**

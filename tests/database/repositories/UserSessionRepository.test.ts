@@ -3,6 +3,8 @@ import { UserSessionRepository } from "@database/repositories/UserSessionReposit
 import { PersistenceError } from "@services/todoist/errors/PersistenceError";
 import { UserSession, UserSessionStatus } from "@services/todoist/sessions/UserSession";
 
+const DEFAULT_RETENTION_DAYS = 30;
+
 let sessionManager: UserSessionRepository;
 let databaseMock: jest.Mocked<DrizzleDatabase>;
 let connectionMock: any;
@@ -17,22 +19,39 @@ function createSelectChain(result: unknown): any {
   };
 }
 
+function createSelectJoinChain(result: unknown): any {
+  return {
+    from: jest.fn().mockReturnValue({
+      innerJoin: jest.fn().mockReturnValue({
+        where: jest.fn().mockResolvedValue(result),
+      }),
+    }),
+  };
+}
+
+function createUpdateChain(): { set: jest.Mock } {
+  const where = jest.fn().mockResolvedValue(undefined);
+  const set = jest.fn().mockReturnValue({ where });
+  return { set };
+}
+
 beforeEach(() => {
   connectionMock = {
-    select: jest.fn(),
+    select: jest.fn().mockReturnValue(createSelectJoinChain([])),
     insert: jest.fn().mockReturnValue({
       values: jest.fn().mockResolvedValue(undefined),
     }),
     delete: jest.fn().mockReturnValue({
       where: jest.fn().mockResolvedValue(undefined),
     }),
+    update: jest.fn().mockReturnValue(createUpdateChain()),
   };
 
   databaseMock = {
     getConnection: jest.fn().mockReturnValue(connectionMock),
   } as any;
 
-  sessionManager = new UserSessionRepository(databaseMock);
+  sessionManager = new UserSessionRepository(databaseMock, DEFAULT_RETENTION_DAYS);
 });
 
 describe("UserSessionRepository", () => {
@@ -47,6 +66,7 @@ describe("UserSessionRepository", () => {
           oauthState: "oauth-state",
           accessToken: null,
           expiresAt: new Date("2026-01-01T00:00:00.000Z"),
+          lastUsedAt: new Date("2026-01-01T00:00:00.000Z"),
         },
       ]));
 
@@ -95,6 +115,7 @@ describe("UserSessionRepository", () => {
           oauthState: "oauth-state-2",
           accessToken: "token",
           expiresAt: null,
+          lastUsedAt: new Date("2026-01-01T00:00:00.000Z"),
         },
       ]));
 
@@ -129,6 +150,27 @@ describe("UserSessionRepository", () => {
       // Assert
       expect(connectionMock.delete).toHaveBeenCalled();
       expect(connectionMock.insert).toHaveBeenCalled();
+    });
+
+    it("should set lastUsedAt on the inserted entity", async () => {
+      // Arrange
+      const session = new UserSession(
+        "123",
+        UserSessionStatus.Pending,
+        "oauth-state",
+        null,
+        null,
+      );
+      const insertValues = connectionMock.insert().values as jest.Mock;
+      connectionMock.insert.mockReturnValue({ values: insertValues });
+
+      // Act
+      await sessionManager.createSession(session);
+
+      // Assert
+      expect(insertValues).toHaveBeenCalledWith(
+        expect.objectContaining({ lastUsedAt: expect.any(Date) }),
+      );
     });
 
     it("should wrap db errors in PersistenceError", async () => {
@@ -214,13 +256,93 @@ describe("UserSessionRepository", () => {
     });
   });
 
+  describe("touchSession", () => {
+    it("should update last_used_at for the given userId", async () => {
+      // Arrange
+      const updateChain = createUpdateChain();
+      connectionMock.update.mockReturnValue(updateChain);
+
+      // Act
+      await sessionManager.touchSession("123");
+
+      // Assert
+      expect(connectionMock.update).toHaveBeenCalled();
+      expect(updateChain.set).toHaveBeenCalledWith(
+        expect.objectContaining({ lastUsedAt: expect.any(Date) }),
+      );
+    });
+
+    it("should throw PersistenceError for invalid userId format", async () => {
+      // Act
+      const result = sessionManager.touchSession("not-a-number");
+
+      // Assert
+      await expect(result).rejects.toBeInstanceOf(PersistenceError);
+    });
+
+    it("should throw PersistenceError for db errors", async () => {
+      // Arrange
+      connectionMock.update.mockReturnValue({
+        set: jest.fn().mockReturnValue({
+          where: jest.fn().mockRejectedValue(new Error("DB update failed")),
+        }),
+      });
+
+      // Act
+      const result = sessionManager.touchSession("123");
+
+      // Assert
+      await expect(result).rejects.toBeInstanceOf(PersistenceError);
+    });
+  });
+
   describe("pruneExpiredSessions", () => {
-    it("should delete expired sessions", async () => {
+    it("should prune expired OAuth sessions", async () => {
       // Act
       await sessionManager.pruneExpiredSessions();
 
       // Assert
       expect(connectionMock.delete).toHaveBeenCalled();
+    });
+
+    it("should query inactive completed sessions joined with users", async () => {
+      // Act
+      await sessionManager.pruneExpiredSessions();
+
+      // Assert
+      expect(connectionMock.select).toHaveBeenCalled();
+    });
+
+    it("should delete inactive sessions when found", async () => {
+      // Arrange
+      const expiredLastUsedAt = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+      connectionMock.select.mockReturnValue(
+        createSelectJoinChain([
+          { userId: 42n, lastUsedAt: expiredLastUsedAt, retentionDays: null },
+        ]),
+      );
+
+      // Act
+      await sessionManager.pruneExpiredSessions();
+
+      // Assert
+      expect(connectionMock.delete).toHaveBeenCalledTimes(2);
+    });
+
+    it("should not issue a second delete when no sessions are inactive", async () => {
+      // Arrange
+      const recentLastUsedAt = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+      connectionMock.select.mockReturnValue(
+        createSelectJoinChain([
+          { userId: 42n, lastUsedAt: recentLastUsedAt, retentionDays: null },
+        ]),
+      );
+
+      // Act
+      await sessionManager.pruneExpiredSessions();
+
+      // Assert
+      expect(connectionMock.delete).toHaveBeenCalledTimes(1);
     });
 
     it("should throw PersistenceError for db errors", async () => {

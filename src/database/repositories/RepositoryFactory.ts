@@ -2,6 +2,7 @@ import type { DrizzleDatabase } from "@database/DrizzleDatabase";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
 import { UserRepository } from "@database/repositories/UserRepository";
 import { UserSessionRepository } from "@database/repositories/UserSessionRepository";
+import config from "../../../config";
 
 /**
  * Central access point for all repository instances used by Tickly.
@@ -28,7 +29,10 @@ export class RepositoryFactory {
 
   /** @returns the user session repository instance. */
   public getUserSessionRepository(): UserSessionRepository {
-    this.userSessionRepository ??= new UserSessionRepository(this.database);
+    this.userSessionRepository ??= new UserSessionRepository(
+      this.database,
+      config.defaultSessionRetentionDays,
+    );
     return this.userSessionRepository;
   }
 }

@@ -26,6 +26,14 @@ export class InMemoryUserSessionManager implements UserSessionManager {
     this.sessionsByUserId.delete(userId);
   }
 
+  /**
+   * No-op in the in-memory implementation: last_used_at tracking is handled
+   * at the database repository level and is not applicable here.
+   */
+  public async touchSession(_userId: string): Promise<void> {
+    // no-op: last_used_at is a DB-level concern
+  }
+
   public async pruneExpiredSessions(): Promise<void> {
     const now = Date.now();
 

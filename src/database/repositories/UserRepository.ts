@@ -88,6 +88,43 @@ export class UserRepository extends BaseRepository {
       .where(eq(usersTable.id, BigInt(userId)));
   }
 
+  /**
+   * Retrieves the session inactivity retention configured for a Discord user.
+   *
+   * @param userId Discord user ID
+   * @returns the configured retention in days, or null when no preference is set
+   */
+  public async getUserSessionRetentionDays(userId: string): Promise<number | null> {
+    const [user] = await this.db.getConnection()
+      .select({ sessionRetentionDays: usersTable.sessionRetentionDays })
+      .from(usersTable)
+      .where(eq(usersTable.id, BigInt(userId)))
+      .limit(1);
+
+    return user?.sessionRetentionDays ?? null;
+  }
+
+  /**
+   * Sets the session inactivity retention for a Discord user.
+   * Pass `null` to clear the preference (default from config will be used).
+   *
+   * @param userId Discord user ID
+   * @param days positive integer number of days, or null to clear
+   */
+  public async setUserSessionRetentionDays(
+    userId: string,
+    days: number | null,
+  ): Promise<void> {
+    if (days !== null) {
+      await this.ensureUserExists(userId);
+    }
+
+    await this.db.getConnection()
+      .update(usersTable)
+      .set({ sessionRetentionDays: days })
+      .where(eq(usersTable.id, BigInt(userId)));
+  }
+
   private async ensureUserExists(userId: string): Promise<void> {
     await this.db.getConnection()
       .insert(usersTable)

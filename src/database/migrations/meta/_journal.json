@@ -8,6 +8,13 @@
       "when": 1776020460521,
       "tag": "0000_secret_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1790602040356,
+      "tag": "0001_nostalgic_wrecker",
+      "breakpoints": true
     }
   ]
 }

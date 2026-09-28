@@ -33,6 +33,7 @@ const mockSessionManager: UserSessionManager = {
   updateSession: jest.fn(),
   deleteSession: jest.fn(),
   pruneExpiredSessions: jest.fn(),
+  touchSession: jest.fn().mockResolvedValue(undefined),
 };
 let todoistApiClientMock: TodoistApiClient;
 
@@ -399,6 +400,7 @@ describe("TodoistApiClient", () => {
         userId: TEST_USER_ID,
         accessToken: TEST_ACCESS_TOKEN,
       });
+      mockSessionManager.touchSession = jest.fn().mockResolvedValue(undefined);
 
       // Act
       const apiInstance = await todoistApiClientMock.getUserApi(TEST_USER_ID);
@@ -407,6 +409,65 @@ describe("TodoistApiClient", () => {
       expect(mockSessionManager.getSession).toHaveBeenCalledWith(TEST_USER_ID);
       expect(apiInstance).toBeInstanceOf(TodoistApi);
       expect((apiInstance as any).authToken).toEqual(TEST_ACCESS_TOKEN);
+    });
+
+    it("should touch the session when a valid token is found", async () => {
+      // Arrange
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+      mockSessionManager.touchSession = jest.fn().mockResolvedValue(undefined);
+
+      // Act
+      await todoistApiClientMock.getUserApi(TEST_USER_ID);
+
+      // Assert
+      expect(mockSessionManager.touchSession).toHaveBeenCalledWith(TEST_USER_ID);
+    });
+
+    it("should not touch the session when no session is found", async () => {
+      // Arrange
+      mockSessionManager.getSession = jest.fn().mockResolvedValue(undefined);
+      mockSessionManager.touchSession = jest.fn();
+
+      // Act & Assert
+      await expect(
+        todoistApiClientMock.getUserApi(TEST_USER_ID),
+      ).rejects.toThrow(/No Todoist access token found for user/);
+      expect(mockSessionManager.touchSession).not.toHaveBeenCalled();
+    });
+
+    it("should not touch the session when the session has no access token", async () => {
+      // Arrange
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: "",
+      });
+      mockSessionManager.touchSession = jest.fn();
+
+      // Act & Assert
+      await expect(
+        todoistApiClientMock.getUserApi(TEST_USER_ID),
+      ).rejects.toThrow(/No Todoist access token found for user/);
+      expect(mockSessionManager.touchSession).not.toHaveBeenCalled();
+    });
+
+    it("should still return the API instance when touchSession fails", async () => {
+      // Arrange
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+      mockSessionManager.touchSession = jest.fn().mockRejectedValue(
+        new Error("DB connection lost"),
+      );
+
+      // Act
+      const apiInstance = await todoistApiClientMock.getUserApi(TEST_USER_ID);
+
+      // Assert
+      expect(apiInstance).toBeInstanceOf(TodoistApi);
     });
 
     it("should throw if no session is found for the user", async () => {

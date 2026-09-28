@@ -123,4 +123,23 @@ describe("InMemoryUserSessionManager", () => {
       expect(prunedSession).toBeUndefined();
     });
   });
+
+  describe("touchSession", () => {
+    it("should resolve without modifying the stored session", async () => {
+      // Arrange
+      await sessionManager.createSession(sessionMock);
+
+      // Act
+      await sessionManager.touchSession("user1");
+
+      // Assert
+      const session = await sessionManager.getSession("user1");
+      expect(session).toEqual(sessionMock);
+    });
+
+    it("should resolve even when no session exists for the userId", async () => {
+      // Act & Assert
+      await expect(sessionManager.touchSession("nonexistent")).resolves.toBeUndefined();
+    });
+  });
 });

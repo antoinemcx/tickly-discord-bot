@@ -34,8 +34,9 @@ export default {
     },
   },
 
-  defaultLocale: "en-US", // default language if no preference (see https://docs.discord.com/developers/reference#locales)
   mentionUserInReply: true,
+  defaultLocale: "en-US", // default language if no preference (see https://docs.discord.com/developers/reference#locales)
+  defaultSessionRetentionDays: 30, // default retention period for user sessions (in days)
 };
 
 // Made with ❤️ by antoinemcx (https://github.com/antoinemcx)

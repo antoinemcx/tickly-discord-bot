@@ -147,4 +147,74 @@ describe("UserRepository", () => {
       ).rejects.toThrow("Language not found for locale: fr");
     });
   });
+
+  describe("getUserSessionRetentionDays", () => {
+    it("should return the configured retention days when set", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectWhereChain([
+        { sessionRetentionDays: 90 },
+      ]));
+
+      // Act
+      const result = await repository.getUserSessionRetentionDays("123");
+
+      // Assert
+      expect(result).toBe(90);
+    });
+
+    it("should return null when no preference is set", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectWhereChain([
+        { sessionRetentionDays: null },
+      ]));
+
+      // Act
+      const result = await repository.getUserSessionRetentionDays("123");
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it("should return null when user does not exist", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectWhereChain([]));
+
+      // Act
+      const result = await repository.getUserSessionRetentionDays("123");
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("setUserSessionRetentionDays", () => {
+    it("should ensure user exists then set retention days", async () => {
+      // Arrange
+      const insertChain = createInsertChain();
+      connectionMock.insert = jest.fn().mockReturnValue(insertChain);
+      const updateChain = createUpdateChain();
+      connectionMock.update = jest.fn().mockReturnValue(updateChain);
+
+      // Act
+      await repository.setUserSessionRetentionDays("123", 90);
+
+      // Assert
+      expect(connectionMock.insert).toHaveBeenCalled();
+      expect(insertChain.values).toHaveBeenCalledWith({ id: BigInt("123") });
+      expect(updateChain.set).toHaveBeenCalledWith({ sessionRetentionDays: 90 });
+    });
+
+    it("should set retention days to null without creating the user", async () => {
+      // Arrange
+      const updateChain = createUpdateChain();
+      connectionMock.update = jest.fn().mockReturnValue(updateChain);
+
+      // Act
+      await repository.setUserSessionRetentionDays("123", null);
+
+      // Assert
+      expect(connectionMock.insert).not.toHaveBeenCalled();
+      expect(updateChain.set).toHaveBeenCalledWith({ sessionRetentionDays: null });
+    });
+  });
 });
