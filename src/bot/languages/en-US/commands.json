@@ -95,6 +95,41 @@
           "description": "Task content in natural language (skips the modal), using the Todoist parsing engine."
         }
       }
+    },
+    "upcoming": {
+      "description": "📋 View your upcoming and overdue Todoist tasks.",
+      "options": {
+        "period": {
+          "description": "Initial filter tab.",
+          "choices": {
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "week": "This week",
+            "upcoming": "Upcoming"
+          }
+        }
+      },
+      "title": "Upcoming Tasks",
+      "taskCount": "{{count}} active task(s)",
+      "taskCountMax": "{{count}}+ active tasks",
+      "page": "Page {{current}}/{{total}}",
+      "noTasks": "{{i}} You have no active tasks. Use {{addCommand}} to create one!",
+      "noTasksForFilter": "{{i}} No tasks for this period.",
+      "fetchError": "{{x}} An error occurred while fetching your tasks. Please try again.",
+      "sections": {
+        "overdue": "Overdue",
+        "today": "Today"
+      },
+      "filters": {
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "week": "This week",
+        "upcoming": "Upcoming"
+      },
+      "buttons": {
+        "prev": "← Previous",
+        "next": "Next →"
+      }
     }
   },
   "add-from-message": {

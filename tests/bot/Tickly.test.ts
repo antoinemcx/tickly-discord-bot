@@ -403,5 +403,47 @@ describe("Tickly", () => {
         expect(result).toEqual(["Administrator", "ManageMessages"]);
       });
     });
+
+    describe("escapeMarkdownLinkText", () => {
+      it("should strip inline Markdown link syntax and keep link text", () => {
+        // Act
+        const result = Tickly.escapeMarkdownLinkText("[amcx.fr](https://amcx.fr)");
+
+        // Assert
+        expect(result).toBe("amcx.fr");
+      });
+
+      it("should escape asterisks, underscores and backticks", () => {
+        // Act
+        const result = Tickly.escapeMarkdownLinkText("**bold** _italic_ `code`");
+
+        // Assert
+        expect(result).toBe("\\*\\*bold\\*\\* \\_italic\\_ \\`code\\`");
+      });
+
+      it("should escape square brackets that are not part of a link", () => {
+        // Act
+        const result = Tickly.escapeMarkdownLinkText("task [label]");
+
+        // Assert
+        expect(result).toBe("task \\[label\\]");
+      });
+
+      it("should escape backslashes before other characters", () => {
+        // Act
+        const result = Tickly.escapeMarkdownLinkText("path\\to\\file");
+
+        // Assert
+        expect(result).toBe("path\\\\to\\\\file");
+      });
+
+      it("should return plain text unchanged", () => {
+        // Act
+        const result = Tickly.escapeMarkdownLinkText("Buy groceries");
+
+        // Assert
+        expect(result).toBe("Buy groceries");
+      });
+    });
   });
 });

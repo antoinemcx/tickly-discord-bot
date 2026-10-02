@@ -213,6 +213,29 @@ export class Tickly extends Client {
   }
 
   /**
+   * Strips inline Markdown link syntax from content and escapes Discord markdown
+   * characters for safe use as masked link text inside Components v2 TextDisplay.
+   *
+   * Backslash escapes are not honored inside masked link text by Discord's
+   * TextDisplay renderer, so `[text](url)` patterns must be stripped first
+   * (link text is kept, URL is discarded) before escaping the remaining chars.
+   *
+   * @param content raw text to escape
+   * @returns content safe to embed inside `[content](url)` in a TextDisplay
+   */
+  public static escapeMarkdownLinkText(content: string): string {
+    const stripped = content.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1");
+    return stripped
+      .replace(/\\/g, "\\\\")
+      .replace(/\*/g, "\\*")
+      .replace(/_/g, "\\_")
+      .replace(/`/g, "\\`")
+      .replace(/\[/g, "\\[")
+      .replace(/\]/g, "\\]")
+      .replace(/~/g, "\\~");
+  }
+
+  /**
    * Formats a date string into a Discord timestamp with the short date/time style.
    * @param dateString the date string to parse (e.g. "2026-05-21")
    * @param displayTime whether to include the time in the output (defaults to false)

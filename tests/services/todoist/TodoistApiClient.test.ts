@@ -1,5 +1,6 @@
 import type {
   AuthTokenResponse,
+  Task,
 } from "@doist/todoist-api-typescript";
 import type { UserSessionManager } from "@services/todoist/sessions/UserSessionManager";
 import {
@@ -810,5 +811,162 @@ describe("TodoistApiClient", () => {
       expect(result).toEqual(createdTask);
       expect(getUserApiSpy).not.toHaveBeenCalled();
     });
+  });
+
+  describe("getActiveTasks", () => {
+    it("should return all tasks when the response has a single page", async () => {
+      // Arrange
+      const tasks = [{ id: "1", content: "Task A" }, { id: "2", content: "Task B" }];
+      const getTasksMock = jest.fn().mockResolvedValue({ results: tasks, nextCursor: null });
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({ getTasks: getTasksMock });
+
+      // Act
+      const result = await todoistApiClientMock.getActiveTasks(TEST_USER_ID);
+
+      // Assert
+      expect(getTasksMock).toHaveBeenCalledTimes(1);
+      expect(getTasksMock).toHaveBeenCalledWith({ cursor: null, limit: 200 });
+      expect(result).toEqual(tasks);
+    });
+
+    it("should accumulate results across multiple pages using cursor pagination", async () => {
+      // Arrange
+      const page1 = [{ id: "1", content: "Task A" }];
+      const page2 = [{ id: "2", content: "Task B" }];
+      const getTasksMock = jest.fn()
+        .mockResolvedValueOnce({ results: page1, nextCursor: "cursor-abc" })
+        .mockResolvedValueOnce({ results: page2, nextCursor: null });
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({ getTasks: getTasksMock });
+
+      // Act
+      const result = await todoistApiClientMock.getActiveTasks(TEST_USER_ID);
+
+      // Assert
+      expect(getTasksMock).toHaveBeenCalledTimes(2);
+      expect(getTasksMock).toHaveBeenNthCalledWith(1, { cursor: null, limit: 200 });
+      expect(getTasksMock).toHaveBeenNthCalledWith(2, { cursor: "cursor-abc", limit: 200 });
+      expect(result).toEqual([...page1, ...page2]);
+    });
+
+    it("should return an empty array when there are no tasks", async () => {
+      // Arrange
+      const getTasksMock = jest.fn().mockResolvedValue({ results: [], nextCursor: null });
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({ getTasks: getTasksMock });
+
+      // Act
+      const result = await todoistApiClientMock.getActiveTasks(TEST_USER_ID);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it("should use the provided api instance instead of fetching one", async () => {
+      // Arrange
+      const getTasksMock = jest.fn().mockResolvedValue({ results: [], nextCursor: null });
+      const providedApi = {
+        getTasks: getTasksMock,
+      } as unknown as import("@doist/todoist-api-typescript").TodoistApi;
+      const getUserApiSpy = jest.spyOn(todoistApiClientMock, "getUserApi");
+
+      // Act
+      await todoistApiClientMock.getActiveTasks(TEST_USER_ID, providedApi);
+
+      // Assert
+      expect(getUserApiSpy).not.toHaveBeenCalled();
+      expect(getTasksMock).toHaveBeenCalled();
+    });
+
+    it("should throw if the API call fails", async () => {
+      // Arrange
+      const error = new Error("Network error");
+      const getTasksMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({ getTasks: getTasksMock });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.getActiveTasks(TEST_USER_ID)).rejects.toThrow(error);
+    });
+  });
+});
+
+describe("getTaskDueDate", () => {
+  it("should return null when the task has no due date", () => {
+    // Act
+    const result = TodoistApiClient.getTaskDueDate({ due: null } as unknown as Task);
+
+    // Assert
+    expect(result).toBeNull();
+  });
+
+  it("should return a local Date at midnight for a plain date string", () => {
+    // Arrange
+    const task = { due: { date: "2024-11-15" } } as unknown as Task;
+
+    // Act
+    const result = TodoistApiClient.getTaskDueDate(task)!;
+
+    // Assert
+    expect(result.getFullYear()).toBe(2024);
+    expect(result.getMonth()).toBe(10); // 0-indexed November
+    expect(result.getDate()).toBe(15);
+    expect(result.getHours()).toBe(0);
+    expect(result.getMinutes()).toBe(0);
+  });
+
+  it("should normalize a datetime string to just the date portion", () => {
+    // Arrange
+    const task = { due: { date: "2024-11-15T09:00:00+01:00" } } as unknown as Task;
+
+    // Act
+    const result = TodoistApiClient.getTaskDueDate(task)!;
+
+    // Assert
+    expect(result.getFullYear()).toBe(2024);
+    expect(result.getDate()).toBe(15);
+    expect(result.getHours()).toBe(0);
+  });
+});
+
+describe("getTaskTimestamp", () => {
+  it("should return MAX_SAFE_INTEGER when the task has no due date", () => {
+    // Act
+    const result = TodoistApiClient.getTaskTimestamp({ due: null } as unknown as Task);
+
+    // Assert
+    expect(result).toBe(Number.MAX_SAFE_INTEGER);
+  });
+
+  it("should return the Unix timestamp for a datetime task", () => {
+    // Arrange
+    const src = "2024-11-15T09:00:00Z";
+    const task = { due: { datetime: src, date: "2024-11-15" } } as unknown as Task;
+
+    // Act
+    const result = TodoistApiClient.getTaskTimestamp(task);
+
+    // Assert
+    expect(result).toBe(new Date(src).getTime());
+  });
+
+  it("should shift a date-only task to 23:59:59 when endOfDayForDateOnly is true", () => {
+    // Arrange
+    const task = { due: { date: "2024-11-15", datetime: null } } as unknown as Task;
+    const midnight = new Date("2024-11-15").getTime();
+
+    // Act
+    const result = TodoistApiClient.getTaskTimestamp(task, true);
+
+    // Assert
+    expect(result).toBe(midnight + 86399000);
+  });
+
+  it("should use midnight for a date-only task when endOfDayForDateOnly is false", () => {
+    // Arrange
+    const task = { due: { date: "2024-11-15", datetime: null } } as unknown as Task;
+
+    // Act
+    const result = TodoistApiClient.getTaskTimestamp(task, false);
+
+    // Assert
+    expect(result).toBe(new Date("2024-11-15").getTime());
   });
 });

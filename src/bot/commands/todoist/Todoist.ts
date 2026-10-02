@@ -6,6 +6,7 @@ import { SlashCommand, SlashCommandCategory } from "../core/SlashCommand";
 import Login from "./Login";
 import Logout from "./Logout";
 import TaskAdd from "./task-creation/TaskAdd";
+import Upcoming from "./Upcoming";
 
 export default class Todoist extends SlashCommand {
   readonly category = SlashCommandCategory.Todoist;
@@ -35,6 +36,13 @@ export default class Todoist extends SlashCommand {
         this.category,
       ),
       new TaskAdd(
+        client,
+        todoistClient,
+        repositories,
+        this.data.name,
+        this.category,
+      ),
+      new Upcoming(
         client,
         todoistClient,
         repositories,

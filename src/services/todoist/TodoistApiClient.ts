@@ -1,4 +1,10 @@
-import type { AddTaskArgs, Permission, QuickAddTaskArgs, Task } from "@doist/todoist-api-typescript";
+import type {
+  AddTaskArgs,
+  GetTasksResponse,
+  Permission,
+  QuickAddTaskArgs,
+  Task,
+} from "@doist/todoist-api-typescript";
 import type { UserSessionManager } from "../../services/todoist/sessions/UserSessionManager";
 import {
   getAuthorizationUrl,
@@ -244,6 +250,30 @@ export class TodoistApiClient {
   }
 
   /**
+   * Fetches all active (non-completed) tasks for the given user,
+   * automatically handling cursor-based pagination internally.
+   *
+   * @param userId ID of the user to fetch tasks for
+   * @param api optional pre-fetched TodoistApi instance
+   * @returns array of all active tasks across all pages
+   * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TodoistRequestError} if the API request fails
+   */
+  public async getActiveTasks(userId: string, api?: TodoistApi): Promise<Task[]> {
+    const client = api ?? await this.getUserApi(userId);
+    const tasks: Task[] = [];
+    let cursor: string | null = null;
+
+    do {
+      const response: GetTasksResponse = await client.getTasks({ cursor, limit: 200 });
+      tasks.push(...response.results);
+      cursor = response.nextCursor;
+    } while (cursor !== null);
+
+    return tasks;
+  }
+
+  /**
    * Creates a Todoist task for the given user.
    * @param userId ID of the user to create the task for
    * @param args the arguments for creating the task
@@ -324,5 +354,45 @@ export class TodoistApiClient {
         break;
     }
     return date.toISOString().slice(0, 10);
+  }
+
+  /**
+   * Returns the task's due date as a local-timezone `Date` at midnight (00:00:00).
+   * Todoist's `due.date` may include time information ("YYYY-MM-DDTHH:MM:SS+HH:MM"),
+   * so only the first ten characters are used to build the date.
+   *
+   * @param task the Todoist task to read
+   * @returns a Date at local midnight, or null when the task has no due date
+   */
+  public static getTaskDueDate(task: Task): Date | null {
+    if (!task.due?.date)
+      return null;
+    const [year, month, day] = task.due.date.slice(0, 10).split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  /**
+   * Returns a Unix timestamp (ms) for a task's due date or datetime.
+   * Suitable for sorting tasks chronologically.
+   *
+   * @param task the Todoist task to read
+   * @param endOfDayForDateOnly when `true`, date-only tasks receive a timestamp
+   *   shifted to 23:59:59 of their due day so they sort after timed tasks on
+   *   the same calendar date
+   * @returns the Unix timestamp in milliseconds, or `Number.MAX_SAFE_INTEGER`
+   *   when the task has no due date or the date cannot be parsed
+   */
+  public static getTaskTimestamp(task: Task, endOfDayForDateOnly = false): number {
+    const src = task.due?.datetime ?? task.due?.date;
+    if (!src) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    const ts = new Date(src).getTime();
+    if (Number.isNaN(ts)) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+
+    const hasTime = !!task.due?.datetime || (task.due?.date?.includes("T") ?? false);
+    return hasTime || !endOfDayForDateOnly ? ts : ts + 86399000;
   }
 }

@@ -1,7 +1,7 @@
 ---
 description: "Use when writing, updating, or reviewing tests. Enforces the test structure, AAA pattern, naming conventions, and rerun-on-failure workflow."
 name: "Testing Guidelines"
-applyTo: ["tests/**/*.ts"]
+applyTo: "tests/**/*.ts"
 ---
 # Testing Guidelines
 
@@ -9,7 +9,8 @@ applyTo: ["tests/**/*.ts"]
 - Put shared setup and mocks in `beforeEach` and/or `beforeAll` inside the class-level `describe`.
 - Use one `describe` block per public method or behavior.
 - Method-level `describe` blocks may contain nested `describe` blocks when the method has multiple scenarios, or they may contain `it` blocks directly.
-- Structure each test with `Arrange`, `Act`, and `Assert` sections.
+- Structure each test with `Arrange`, `Act`, and `Assert` sections using the labels `// Arrange`, `// Act`, `// Assert`. Do not add descriptive text after the label (write `// Assert`, not `// Assert — checks the reply`).
+- Do NOT use separator comments between `describe` blocks (e.g. `// ── Section ───`).
 - Name `it` blocks with `should ...` and optionally `when ...` to describe the expected behavior.
 - Mock external services and IO boundaries instead of calling them directly.
 - Do not mock logger utilities and do not assert console/log output in tests; focus on business behavior and returned values.
