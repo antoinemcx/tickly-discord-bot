@@ -62,7 +62,7 @@ For detailed guidance on implementing, registering, and localizing Discord comma
 - Todoist OAuth flows require TODOIST_CLIENT_ID and TODOIST_CLIENT_SECRET.
 - npm run db:drop is destructive; do not run it unless explicitly requested.
 - Use `docker compose up -d --build` (default, with Traefik) or `docker compose -f docker-compose.local.yml up -d --build` (without Traefik, no external network required).
-- **Privacy policy maintenance**: any time a new field is added to the database schema (e.g. `src/database/schema/`), or an existing field is removed or changes its purpose, update the "Data We Collect" table in both `docs/en-US/privacy-policy.md` and `docs/fr/privacy-policy.md` to keep them accurate.
+- **Privacy policy maintenance**: any time a new field is added to the database schema (e.g. `src/database/schema/`), or an existing field is removed or changes its purpose, update the "Data We Collect" table in `docs/en-US/privacy-policy.md`, `docs/fr/privacy-policy.md`, and `docs/pl/privacy-policy.md` to keep them accurate.
 
 ## Maintaining AI Documentation
 - When adding or updating AI guidance rules, write them here (copilot-instructions.md) or in the relevant `.github/instructions/*.instructions.md` file. Kiro picks them up automatically through its steering files via `#[[file:...]]` references — do not duplicate rules in `.kiro/steering/`.

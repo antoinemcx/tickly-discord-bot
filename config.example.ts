@@ -24,6 +24,7 @@ export default {
     languages: {
       "en-US": "🇺🇸",
       "fr": "🇫🇷",
+      "pl": "🇵🇱",
     },
   },
 

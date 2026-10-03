@@ -1,0 +1,46 @@
+{
+  "languageName": "Polski (PL)",
+  "interactionHandling": {
+    "privateCommand": "{{x}} Ta komenda jest prywatna i dostępna tylko dla moich deweloperów.",
+    "missingPermission": {
+      "user": "{{x}} Brakuje Ci uprawnień (wymagane: {{required}})",
+      "bot": "{{x}} Brakuje mi uprawnień (wymagane: {{required}})"
+    },
+    "executionError": "{{x}} Wystąpił nieznany błąd podczas wykonywania komendy (kod: {{errorCode}}).",
+    "unkownCommand": "{{x}} Nieznana komenda."
+  },
+  "session": {
+    "invalid": "{{x}} Nie jesteś zalogowany do konta Todoist lub Twoja sesja wygasła.\n> Zaloguj się ponownie za pomocą komendy {{loginCommand}}."
+  },
+  "add-task": {
+    "modal-title": "Dodaj zadanie do Todoist",
+    "title": "Tytuł zadania",
+    "title-placeholder": "np. Kupić warzywa",
+    "description": "Opis zadania",
+    "description-placeholder": "Dodatkowe szczegóły (opcjonalnie)",
+    "project": "Projekt",
+    "project-none": "Skrzynka",
+    "priorities": {
+      "label": "Priorytet",
+      "none": "Brak",
+      "1": "Priorytet 1 (Pilny)",
+      "2": "Priorytet 2",
+      "3": "Priorytet 3",
+      "4": "Priorytet 4 (Zwykły)"
+    },
+    "due-date": {
+      "label": "Termin wykonania",
+      "none": "Brak terminu",
+      "today": "Dziś",
+      "tomorrow": "Jutro",
+      "next-monday": "Najbliższy poniedziałek",
+      "next-week": "Przyszły tydzień",
+      "next-month": "Przyszły miesiąc"
+    },
+    "success": "{{v}} Zadanie dodane pomyślnie:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Projekt:** {{project}}\n**Termin wykonania:** {{date}}",
+    "success-no-project": "Skrzynka (brak projektu)",
+    "success-no-date": "Brak terminu",
+    "creation-error": "{{x}} Wystąpił błąd podczas tworzenia zadania w Todoist (kod błędu: {{errorCode}}).",
+    "projects-fetch-error": "{{x}} Wystąpił błąd podczas pobierania Twoich projektów z Todoist (kod błędu: {{errorCode}})."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "success": {
+    "title": "Połączono z Todoist",
+    "description": "Twoje konto Todoist zostało połączone z Discordem. Przekierowywanie do Discorda...",
+    "button": "Powrót do Discorda"
+  },
+  "error": {
+    "title": "Połączenie nie powiodło się",
+    "button": "Powrót do Discorda",
+    "reasons": {
+      "invalid_callback_query": "Coś poszło nie tak. Spróbuj połączyć konta ponownie z poziomu Discorda.",
+      "invalid_oauth_state": "Coś poszło nie tak. Spróbuj połączyć konta ponownie z poziomu Discorda.",
+      "expired_oauth_state": "Link autoryzacyjny wygasł. Spróbuj ponownie z poziomu Discorda.",
+      "token_exchange_failed": "Wystąpił błąd po stronie Todoist. Spróbuj ponownie z poziomu Discorda.",
+      "access_denied": "Dostęp do Twojego konta Todoist został odrzucony lub operacja została anulowana.",
+      "unknown_error": "Coś poszło nie tak. Spróbuj połączyć konta ponownie z poziomu Discorda."
+    }
+  }
+}
