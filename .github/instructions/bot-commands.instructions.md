@@ -26,7 +26,7 @@ applyTo: ["src/bot/commands/**/*.ts", "src/bot/languages/**/*.json", "src/bot/ha
 - src/bot/handlers/TranslationHandler.ts loads locale folders from src/bot/languages and reads JSON translation files into memory.
 - Locale resolution in interaction handling follows this order: user preference from repositories → interaction locale → default locale fallback.
 - Command text belongs in src/bot/languages/<locale>/commands.json and shared text in src/bot/languages/<locale>/common.json.
-- Any new or changed translation key must be synchronized across every locale folder (currently en-US and fr).
+- Any new or changed translation key must be synchronized across every locale folder (currently en-US, fr, and pl).
 - Placeholders in translation strings use {{parameterName}} syntax and are replaced at runtime.
 
 ## Repository usage from bot code
@@ -37,7 +37,7 @@ applyTo: ["src/bot/commands/**/*.ts", "src/bot/languages/**/*.json", "src/bot/ha
 - Add or update command implementation in src/bot/commands/<category>/.
 - Keep command metadata aligned with command type constraints: slash commands can have descriptions and nested subcommands; context menu commands cannot have descriptions.
 - Use RegisterableBaseCommand only for commands that CommandHandler should register with Discord; do not treat SubCommand as a standalone registerable command.
-- Add translation keys in both src/bot/languages/en-US and src/bot/languages/fr.
+- Add translation keys in src/bot/languages/en-US, src/bot/languages/fr, and src/bot/languages/pl.
 - If user preference or session data is needed, integrate through RepositoryFactory repositories rather than ad-hoc database access.
 - Verify command registration behavior after startup changes by checking logs for loaded command count.
 

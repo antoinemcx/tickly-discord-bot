@@ -28,7 +28,7 @@ src/
 │   │   ├── bot/                          # utility commands: Help, Ping, Settings
 │   │   └── todoist/                      # Todoist commands: Login, Logout, task-creation/
 │   ├── events/                           # Discord event handlers (GuildCreate, GuildDelete, ThreadCreate)
-│   └── languages/                        # i18n JSON files — en-US/ and fr/ must stay in sync
+│   └── languages/                        # i18n JSON files — en-US/, fr/, and pl/ must stay in sync
 ├── database/
 │   ├── DrizzleDatabase.ts
 │   ├── schema/                           # Drizzle table definitions
@@ -40,7 +40,7 @@ src/
     │   │                                 #   TranslationLoader (JSON locale loader)
     ├── oauth/                            # OAuth result page service: OAuthApiService (extends ApiService),
     │   │                                 #   OAuthPageRenderer (HTML page generator),
-    │   │                                 #   languages/ (en-US, fr), assets/ (static files)
+    │   │                                 #   languages/ (en-US, fr, pl), assets/ (static files)
     └── todoist/                          # TodoistApiClient.ts, OAuth flow (CallbackRoute), sessions, errors
 ```
 

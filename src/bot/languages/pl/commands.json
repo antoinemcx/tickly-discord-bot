@@ -1,0 +1,133 @@
+{
+  "help": {
+    "description": "❓ Wyświetla informacje o bocie i jego komendach.",
+    "options": {
+      "command": {
+        "description": "Nazwa komendy, dla której chcesz uzyskać pomoc."
+      },
+      "ephemeral": {
+        "description": "Jeśli włączone, odpowiedź będzie widoczna tylko dla Ciebie."
+      }
+    },
+    "errors": {
+      "unknownCommand": "{{x}} Komenda `{{command}}` nie istnieje.",
+      "unknownSubcommand": "{{x}} Podkomenda `{{subcommand}}` nie istnieje dla komendy `{{command}}`.",
+      "adminOnlyCommand": "{{x}} Komenda `{{command}}` jest zarezerwowana dla administratorów."
+    },
+    "fields": {
+      "category": "Kategoria",
+      "description": "Opis",
+      "requiredPermissions": "Wymagane uprawnienia",
+      "subcommands": "Podkomendy"
+    },
+    "subCommandsHelpTip": "Aby uzyskać więcej informacji o konkretnej podkomendzie, użyj `/help {{command}} <subcommand>`.",
+    "userPermissions": "Użytkownik: {{permissions}}",
+    "botPermissions": "Tickly: {{permissions}}",
+    "noRequiredPermissions": "Uprawnienia nie są wymagane.",
+    "buttons": {
+      "support": "Serwer wsparcia",
+      "invite": "Dodaj bota",
+      "roadmap": "Plan rozwoju",
+      "backToCommands": "Powrót do komend",
+      "guide": "Rozpocznij przewodnik"
+    },
+    "categories": {
+      "Bot": "{{robot}} Bot",
+      "Todoist": "{{todoistSmall}} Todoist",
+      "Other": "Inne"
+    },
+    "botDescription": "Tickly jest nieoficjalną integracją [Todoist]({{todoistLink}}) dla Discorda o [otwartym kodzie źródłowym]({{githubLink}}).",
+    "commandList": {
+      "intro": {
+        "title": "## Czym jest Tickly?",
+        "features": "Dzięki temu botu możesz z łatwością:\n- **zarządzać swoimi zadaniami i projektami na Todoist** bezpośrednio przez Discorda\n- [__NIEDŁUGO__] **otrzymywać przypomnienia** dla nadchodzących lub przegapionych zadań"
+      },
+      "commands": {
+        "title": "## Komendy",
+        "tip": "> {{i}} Wpisz `/help [command]`, aby uzyskać więcej informacji o danej komendzie."
+      },
+      "startGuidePrompt": "> **Potrzebujesz szybkiego wprowadzenia?** Kliknij przycisk poniżej."
+    },
+    "startingGuide": {
+      "title": "## Pierwsze kroki",
+      "step1": {
+        "title": "### 1. Instalacja",
+        "body": "Boty Discord mogą zostać dodane jako **instalacja na serwerze** (na konkretnym serwerze) lub **instalacja użytkownika**.\n\nTickly obsługuje obie metody, ale **rekomendujemy dodanie go do twojego konta**, aby móc go używać w dowolnym miejscu na Discordzie, w tym na wszystkich serwerach i w wiadomościach prywatnych.\nAby to zrobić, kliknij [przycisk \"Dodaj Bota\"]({{inviteLink}}), a następnie wybierz \"Dodaj do Moich aplikacji\":",
+        "imageDescription": "Kliknij \"Dodaj do\" aby zainstalować bota na twoim koncie: \"Dodaj do Moich aplikacji\"",
+        "note": "> Pamiętaj, że niektóre serwery mogą wyłączyć aplikacje zainstalowane przez użytkownika (\"zewnętrzne\"), co oznacza, że bot musi być dodany bezpośrednio na tych serwerach."
+      },
+      "step2": {
+        "title": "### 2. Zaloguj się do swojego konta Todoist",
+        "body": "Uruchom {{loginMention}}, zostaniesz przekierowany do logowania OAuth2 Todoist.\nPo zatwierdzeniu dostępu, Tickly szyfruje i przechowuje token dostępu Todoist w sesji dla przyszłych interakcji.\nDomyślnie, twoja sesja wygasa po 30 dniach nieaktywności — możesz to zmienić w `/settings`."
+      },
+      "step3": {
+        "title": "### 3. Dodaj swoje pierwsze zadanie",
+        "body": "Możesz teraz wchodzić w interakcję z botem za pomocą **komend `/`** lub **klikając wiadomość prawym przyciskiem myszy**. Te komendy są dostępne na każdym kanale tekstowym — i w wiadomościach prywatnych, jeśli zainstalowany jest Tickly na twoim koncie.\n\nAby dodać swoje pierwsze zadanie, użyj {{addTaskMention}} albo kliknij wiadomość prawym przyciskiem myszy i wybierz \"Aplikacje\".\nObydwie metody otwierają to samo okno, wstępnie wypełnione jeżeli wybrano wiadomość:",
+        "addFromMessageImageDescription": "Tworzenie zadania klikając wiadomość prawym przyciskiem myszy.",
+        "naturalLanguageNote": "Komenda dodawania wspiera również [inteligentne rozpoznawanie]({{naturalLanguageLink}}) jako parametr, aby tworzyć zadania szybciej bez otwierania formularza:",
+        "addNaturalLanguageImageDescription": "Tworzenie zadania z wykorzystaniem komendy z inteligentnym rozpoznawaniem."
+      }
+    }
+  },
+  "ping": {
+    "description": "Wyświetla czas odpowiedzi bota.",
+    "process": "Mierzenie pingu..."
+  },
+  "todoist": {
+    "description": "Zarządzaj swoimi zadaniami i projektami Todoist.",
+    "login": {
+      "description": "🎉 Zaloguj się do swojego konta Todoist.",
+      "alreadyLoggedIn": "{{x}} Jesteś już zalogowany do swojego konta Todoist.\nUżyj {{helpCommand}} aby dowiedzieć się jak korzystać z Tickly.",
+      "existingPendingSession": "{{i}} Masz już rozpoczętą sesję logowania, która nie została dokończona.\nNowy link uwierzytelniający zostanie wysłany w kolejnej wiadomości, a poprzedni jest już nieaktywny.",
+      "instructions": "**Kliknij link poniżej, aby się zalogować.**\nZostaniesz przekierowany do bezpiecznej strony logowania Todoist, gdzie pojawi się prośba o autoryzację Tickly do Twojego konta.",
+      "link": "Link logowania"
+    },
+    "logout": {
+      "description": "⛔ Wyloguj się z konta Todoist.",
+      "noSession": "{{x}} Nie jesteś zalogowany do konta Todoist.\n> Może chciałbyś się zalogować? Użyj {{loginCommand}} aby to zrobić.",
+      "logoutError": "{{x}} Wystąpił błąd podczas wylogowywania z konta Todoist. Proszę spróbować ponownie później.",
+      "logoutSuccess": "{{v}} Zostałeś pomyślnie wylogowany z konta Todoist."
+    },
+    "add": {
+      "description": "➕ Dodaj zadanie do swojego konta Todoist (otwiera formularz).",
+      "options": {
+        "content": {
+          "description": "Treść zadania z inteligentnym rozpoznawaniem (pomija formularz), z wykorzystaniem silnika Todoist."
+        }
+      }
+    }
+  },
+  "add-from-message": {
+    "name": "Dodaj zadanie Todoist"
+  },
+  "settings": {
+    "description": "🔧 Wyświetlaj i modyfikuj twoje preferencje użytkownika (język, przypomnienia, itp.).",
+    "fetchError": "{{x}} Wystąpił błąd podczas pobierania Twoich ustawień ogólnych. Proszę spróbować ponownie później.",
+    "view": {
+      "generalSettings": "### Ustawienia ogólne",
+      "language": "Język używany w odpowiedziach bota:",
+      "defaultLanguage": "Domyślny język",
+      "defaultLanguageDescription": "Język Twojego konta Discord lub angielski, jeśli nie jest obsługiwany.",
+      "sessionDuration": "Czas trwania sesji (wygaśnięcie przy nieaktywności):"
+    },
+    "sessionDurationOptions": {
+      "default": "Domyślny ({{days}} dni)",
+      "defaultDescription": "Twoja sesja wygasa po {{days}} dniach nieaktywności.",
+      "7days": "1 tydzień",
+      "14days": "2 tygodnie",
+      "30days": "1 miesiąc",
+      "90days": "3 miesiące",
+      "180days": "6 miesięcy"
+    },
+    "update": {
+      "preferredLanguage": {
+        "success": "{{v}} Twój język został zaktualizowany na {{language}}.",
+        "cleared": "{{v}} Twój język został zresetowany.\nOd teraz będzie używany język Twojego konta Discord lub angielski, jeśli ten nie jest obsługiwany."
+      },
+      "sessionRetention": {
+        "success": "{{v}} Twój czas trwania sesji został zmieniony na {{duration}}.",
+        "cleared": "{{v}} Twój czas trwania sesji został zresetowany do ustawień domyślnych ({{days}} dni)."
+      }
+    }
+  }
+}

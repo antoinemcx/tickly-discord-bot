@@ -244,7 +244,7 @@ describe("DrizzleDatabase", () => {
       // Assert
       await expect(result).resolves.not.toThrow();
       expect(connectionMock.transaction).toHaveBeenCalledTimes(1);
-      expect(transactionMock.insert).toHaveBeenCalledTimes(2);
+      expect(transactionMock.insert).toHaveBeenCalledTimes(3);
     });
 
     it("should add at least one language within the transaction", async () => {

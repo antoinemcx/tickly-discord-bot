@@ -153,6 +153,7 @@ export class DrizzleDatabase {
     const seedLanguages: readonly Language[] = [
       { id: 1, code: Locale.EnglishUS, name: "English" },
       { id: 2, code: Locale.French, name: "French" },
+      { id: 3, code: Locale.Polish, name: "Polish" },
     ];
 
     try {
