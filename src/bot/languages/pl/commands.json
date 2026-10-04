@@ -95,6 +95,41 @@
           "description": "Treść zadania z inteligentnym rozpoznawaniem (pomija formularz), z wykorzystaniem silnika Todoist."
         }
       }
+    },
+    "upcoming": {
+      "description": "📋 Wyświetla Twoje nadchodzące i przeterminowane zadania Todoist.",
+      "options": {
+        "period": {
+          "description": "Początkowa zakładka filtra.",
+          "choices": {
+            "today": "Dziś",
+            "tomorrow": "Jutro",
+            "week": "Ten tydzień",
+            "upcoming": "Nadchodzące"
+          }
+        }
+      },
+      "title": "Nadchodzące zadania",
+      "taskCount": "{{count}} aktywne zadanie(-a)",
+      "taskCountMax": "{{count}}+ aktywnych zadań",
+      "page": "Strona {{current}}/{{total}}",
+      "noTasks": "{{i}} Nie masz żadnych aktywnych zadań. Użyj {{addCommand}}, aby je stworzyć!",
+      "noTasksForFilter": "{{i}} Brak zadań w tym okresie.",
+      "fetchError": "{{x}} Wystąpił błąd podczas pobierania Twoich zadań. Spróbuj ponownie.",
+      "sections": {
+        "overdue": "Przeterminowane",
+        "today": "Dziś"
+      },
+      "filters": {
+        "today": "Dziś",
+        "tomorrow": "Jutro",
+        "week": "Ten tydzień",
+        "upcoming": "Nadchodzące"
+      },
+      "buttons": {
+        "prev": "← Poprzednia",
+        "next": "Następna →"
+      }
     }
   },
   "add-from-message": {
