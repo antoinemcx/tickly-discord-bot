@@ -1,5 +1,5 @@
 {
-  "languageName": "Polski (PL)",
+  "languageName": "Polski",
   "interactionHandling": {
     "privateCommand": "{{x}} Ta komenda jest prywatna i dostępna tylko dla moich deweloperów.",
     "missingPermission": {

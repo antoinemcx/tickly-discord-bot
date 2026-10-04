@@ -6,6 +6,9 @@
 ![Tickly banner](./docs/banner.png)
 
 ## 📋 Overview
+
+The bot is available in several languages: **English**, **French**, and **Polish**.
+
 ### Features
 * 📝 Create Todoist tasks via [command or right-clicking a message](./docs/en-US/getting-started.md#adding-your-first-task)
 * 🔄 Automatically sync your Todoist tasks
@@ -23,7 +26,7 @@ After it is installed, you can interact with the bot by using:
 - [**Message context menu**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): right-click on any message and select a command from the "Apps" section.
 
 > New to Tickly?  
-> Follow the instructions in [docs/en-US/getting-started.md](./docs/en-US/getting-started.md) to install the bot, log into Todoist and start interacting with it.
+> Follow the instructions in [docs/en-US/getting-started.md](./docs/en-US/getting-started.md), or the one in your language, to install the bot, log into Todoist and start interacting with it.
 
 <br><br>
 
