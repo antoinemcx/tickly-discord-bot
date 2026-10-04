@@ -12,7 +12,7 @@ The bot is available in several languages: **English**, **French**, and **Polish
 ### Features
 * 📝 Create Todoist tasks via [command or right-clicking a message](./docs/en-US/getting-started.md#adding-your-first-task)
 * 🔄 Automatically sync your Todoist tasks
-* 📊 [**SOON**] View and summarize your incoming tasks
+* 📊 View your upcoming and overdue tasks with `/todoist upcoming`
 * 🧰 [**SOON**] Create custom in-bot filters for task display (for example by project, due date, etc.)
 * ⏰ [**SOON**] Send reminders at due date, daily, or reminders after a task stays incomplete for a defined duration
 

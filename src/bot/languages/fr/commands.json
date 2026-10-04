@@ -95,6 +95,41 @@
           "description": "Tâche en langage naturel (sans modale), en utilisant le moteur de parsing de Todoist."
         }
       }
+    },
+    "upcoming": {
+      "description": "📋 Voir vos tâches à venir et en retard.",
+      "options": {
+        "period": {
+          "description": "Onglet de filtre initial.",
+          "choices": {
+            "today": "Aujourd'hui",
+            "tomorrow": "Demain",
+            "week": "Cette semaine",
+            "upcoming": "Prochainement"
+          }
+        }
+      },
+      "title": "Tâches à venir",
+      "taskCount": "{{count}} tâche(s) active(s)",
+      "taskCountMax": "{{count}}+ tâches actives",
+      "page": "Page {{current}}/{{total}}",
+      "noTasks": "{{i}} Vous n'avez aucune tâche active. Utilisez {{addCommand}} pour en créer une !",
+      "noTasksForFilter": "{{i}} Aucune tâche pour cette période.",
+      "fetchError": "{{x}} Une erreur est survenue lors de la récupération de vos tâches. Veuillez réessayer.",
+      "sections": {
+        "overdue": "En retard",
+        "today": "Aujourd'hui"
+      },
+      "filters": {
+        "today": "Aujourd'hui",
+        "tomorrow": "Demain",
+        "week": "Cette semaine",
+        "upcoming": "Prochainement"
+      },
+      "buttons": {
+        "prev": "← Précédent",
+        "next": "Suivant →"
+      }
     }
   },
   "add-from-message": {

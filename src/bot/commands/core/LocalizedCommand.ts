@@ -111,6 +111,50 @@ export abstract class LocalizedCommand extends BaseCommand {
   }
 
   /**
+   * Builds an array of localized choices for a command option.
+   *
+   * Names are read from "options.<optionName>.choices.<value>" in the command's
+   * translation file, falling back to the raw value string when the key is missing.
+   *
+   * @param optionName the name of the option that holds these choices
+   * @param values the possible choice values
+   * @returns localized choice objects ready for Discord API registration
+   */
+  protected buildOptionChoices(
+    optionName: string,
+    values: readonly string[],
+  ): Array<{ name: string; name_localizations?: LocalizationMap; value: string }> {
+    const handler = this.client.getTranslationHandler();
+    const defaultLocale = handler.getDefaultLocale();
+
+    return values.map((value) => {
+      const name_localizations: LocalizationMap = {};
+      let name = value;
+
+      for (const locale of handler.getLocales()) {
+        const label = handler.translateCommand(
+          locale,
+          this.getTranslationCommandName(),
+          `options.${optionName}.choices.${value}`,
+        );
+        const isMissing = label.startsWith(TranslationHandler.MISSING_TRANSLATION_MESSAGE);
+
+        if (!isMissing && locale === defaultLocale) {
+          name = label;
+        } else if (!isMissing) {
+          name_localizations[locale] = label;
+        }
+      }
+
+      return {
+        name,
+        ...(Object.keys(name_localizations).length > 0 ? { name_localizations } : {}),
+        value,
+      };
+    });
+  }
+
+  /**
    * Builds the translated description fields for a command option.
    *
    * The default locale description is used as the main description, while
@@ -160,6 +204,9 @@ export abstract class LocalizedCommand extends BaseCommand {
 
   /**
    * Localizes the given command options and recursively handles nested options.
+   * Handles description localization and, when an option carries a choices
+   * array, replaces choice names with translations from
+   * "options.<optionName>.choices.<value>" keys.
    *
    * @param options the options to localize
    * @returns the localized options, or undefined if the input was undefined
@@ -179,6 +226,13 @@ export abstract class LocalizedCommand extends BaseCommand {
 
       if (option.options) {
         localizedOption.options = this.localizeOptions(option.options);
+      }
+
+      /* Auto-localize choices when the option declares a choices array */
+      const rawChoices = (option as unknown as { choices?: Array<{ value: string }> }).choices;
+      if (rawChoices?.length) {
+        (localizedOption as unknown as { choices: unknown }).choices
+          = this.buildOptionChoices(option.name, rawChoices.map(c => c.value));
       }
 
       return localizedOption;

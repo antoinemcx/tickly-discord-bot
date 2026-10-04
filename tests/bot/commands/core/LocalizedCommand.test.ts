@@ -260,6 +260,71 @@ describe("LocalizedCommand", () => {
     });
   });
 
+  describe("buildOptionChoices", () => {
+    beforeEach(() => {
+      translationHandlerMock.getLocales = jest.fn()
+        .mockReturnValue([defaultLocale, "fr" as Locale]);
+      translationHandlerMock.translateCommand = jest.fn().mockImplementation(
+        (locale: Locale, _cmd: string, key: string) => {
+          const translations: Record<string, Partial<Record<Locale, string>>> = {
+            "options.period.choices.today": { [defaultLocale]: "Today", fr: "Aujourd'hui" },
+            "options.period.choices.upcoming": { [defaultLocale]: "Upcoming", fr: "Prochainement" },
+          };
+          return translations[key]?.[locale] ?? `Missing translation for ${key}`;
+        },
+      );
+    });
+
+    it("should return choices with default locale name and name_localizations", () => {
+      // Act
+      const result = (command as any).buildOptionChoices("period", ["today", "upcoming"]);
+
+      // Assert
+      expect(result).toEqual([
+        { name: "Today", name_localizations: { fr: "Aujourd'hui" }, value: "today" },
+        { name: "Upcoming", name_localizations: { fr: "Prochainement" }, value: "upcoming" },
+      ]);
+    });
+
+    it("should fall back to the raw value when the translation is missing", () => {
+      // Arrange
+      translationHandlerMock.translateCommand = jest.fn().mockReturnValue(
+        "Missing translation for options.period.choices.unknown",
+      );
+
+      // Act
+      const result = (command as any).buildOptionChoices("period", ["unknown"]);
+
+      // Assert
+      expect(result[0].name).toBe("unknown");
+      expect(result[0].value).toBe("unknown");
+    });
+
+    it("should omit name_localizations when only the default locale has translations", () => {
+      // Arrange
+      translationHandlerMock.getLocales = jest.fn().mockReturnValue([defaultLocale]);
+
+      // Act
+      const result = (command as any).buildOptionChoices("period", ["today"]);
+
+      // Assert
+      expect(result[0].name).toBe("Today");
+      expect(result[0].name_localizations).toBeUndefined();
+    });
+
+    it("should use the correct translation key format", () => {
+      // Act
+      (command as any).buildOptionChoices("filter", ["active"]);
+
+      // Assert
+      expect(translationHandlerMock.translateCommand).toHaveBeenCalledWith(
+        expect.any(String),
+        "test",
+        "options.filter.choices.active",
+      );
+    });
+  });
+
   describe("localizeOptions", () => {
     it("should localize nested options and keep required ones first", () => {
       // Arrange
@@ -352,6 +417,63 @@ describe("LocalizedCommand", () => {
           },
         })],
       }));
+    });
+
+    it("should auto-localize choices on options that declare a choices array", () => {
+      // Arrange
+      const locales: Locale[] = [defaultLocale, "fr" as Locale];
+      translationHandlerMock.getLocales = jest.fn().mockReturnValue(locales);
+      translationHandlerMock.translateCommand = jest.fn().mockImplementation(
+        (locale: Locale, _cmd: string, key: string) => {
+          const map: Record<string, Partial<Record<Locale, string>>> = {
+            "options.status.description": { [defaultLocale]: "Status" },
+            "options.status.choices.active": { [defaultLocale]: "Active", fr: "Actif" },
+            "options.status.choices.archived": { [defaultLocale]: "Archived", fr: "Archivé" },
+          };
+          return map[key]?.[locale] ?? `Missing translation for ${key}`;
+        },
+      );
+
+      const options = [{
+        name: "status",
+        type: ApplicationCommandOptionType.String,
+        required: false,
+        choices: [
+          { name: "active", value: "active" },
+          { name: "archived", value: "archived" },
+        ],
+      }] as unknown as APIApplicationCommandOption[];
+
+      // Act
+      const result = (command as any).localizeOptions(options);
+
+      // Assert
+      const statusOption = result?.[0] as any;
+      expect(statusOption.choices).toEqual([
+        { name: "Active", name_localizations: { fr: "Actif" }, value: "active" },
+        { name: "Archived", name_localizations: { fr: "Archivé" }, value: "archived" },
+      ]);
+    });
+
+    it("should leave options without choices unchanged", () => {
+      // Arrange
+      const locales: Locale[] = [defaultLocale];
+      translationHandlerMock.getLocales = jest.fn().mockReturnValue(locales);
+      translationHandlerMock.translateCommand = jest.fn().mockReturnValue(
+        `Missing translation for key`,
+      );
+
+      const options = [{
+        name: "content",
+        type: ApplicationCommandOptionType.String,
+        required: false,
+      }] as APIApplicationCommandOption[];
+
+      // Act
+      const result = (command as any).localizeOptions(options);
+
+      // Assert
+      expect((result?.[0] as any).choices).toBeUndefined();
     });
   });
 
