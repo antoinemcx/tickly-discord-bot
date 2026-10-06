@@ -50,49 +50,37 @@ describe("Help Command", () => {
       expect(handlers.has("help:back_to_commands")).toBe(true);
     });
 
-    it("should edit the message when the interaction is not ephemeral", async () => {
+    it("should update the component message without relying on the channel cache when showing the guide", async () => {
       // Arrange
       const handlers = command.getMessageComponentHandlers();
       const interaction = {
         user: { id: "123" },
-        message: {
-          flags: { has: jest.fn().mockReturnValue(false) },
-          edit: jest.fn().mockResolvedValue(undefined),
-        },
-        reply: jest.fn(),
-        editReply: jest.fn(),
-        replied: false,
-        deferred: false,
+        message: { edit: jest.fn() },
+        update: jest.fn().mockResolvedValue(undefined),
       } as any;
 
       // Act
       await handlers.get("help:start_guide")!(interaction, language);
 
       // Assert
-      expect(interaction.message.edit).toHaveBeenCalled();
-      expect(interaction.reply).not.toHaveBeenCalled();
+      expect(interaction.update).toHaveBeenCalledTimes(1);
+      expect(interaction.message.edit).not.toHaveBeenCalled();
     });
 
-    it("should reply to the interaction when the message is ephemeral", async () => {
+    it("should update the component message when going back to the command list", async () => {
       // Arrange
       const handlers = command.getMessageComponentHandlers();
       const interaction = {
         user: { id: "123" },
-        message: {
-          flags: { has: jest.fn().mockReturnValue(true) },
-          edit: jest.fn(),
-        },
-        reply: jest.fn().mockResolvedValue(undefined),
-        editReply: jest.fn(),
-        replied: false,
-        deferred: false,
+        message: { edit: jest.fn() },
+        update: jest.fn().mockResolvedValue(undefined),
       } as any;
 
       // Act
       await handlers.get("help:back_to_commands")!(interaction, language);
 
       // Assert
-      expect(interaction.reply).toHaveBeenCalled();
+      expect(interaction.update).toHaveBeenCalledTimes(1);
       expect(interaction.message.edit).not.toHaveBeenCalled();
     });
   });

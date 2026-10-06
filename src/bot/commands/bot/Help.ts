@@ -3,9 +3,8 @@ import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type {
   ChatInputCommandInteraction,
   InteractionEditReplyOptions,
-  InteractionReplyOptions,
+  InteractionUpdateOptions,
   Locale,
-  MessageComponentInteraction,
   PermissionResolvable,
 } from "discord.js";
 import type { SubCommand } from "../core/SubCommand";
@@ -57,15 +56,16 @@ export default class Help extends SlashCommand {
     super(client, todoistClient, repositories);
 
     this.onMessageComponent(Help.START_GUIDE_ACTION, async (interaction, language) => {
-      await this.interactionEditOrReply(
-        interaction,
-        await this.getStartingGuideResponse(language),
+      await interaction.update(
+        await this.getStartingGuideResponse(language) as InteractionUpdateOptions,
       );
     });
     this.onMessageComponent(Help.BACK_TO_COMMANDS_ACTION, async (interaction, language) => {
-      await this.interactionEditOrReply(
-        interaction,
-        await this.getCommandListResponse(language, interaction.user.id),
+      await interaction.update(
+        await this.getCommandListResponse(
+          language,
+          interaction.user.id,
+        ) as InteractionUpdateOptions,
       );
     });
   }
@@ -87,36 +87,6 @@ export default class Help extends SlashCommand {
       interaction.editReply(
         await this.getCommandListResponse(language, interaction.user.id),
       );
-    }
-  }
-
-  /**
-   * Edits the interaction initial response if possible.
-   * An ephemeral interaction can for example not be edited, so we must
-   * reply instead in that case.
-   *
-   * @param interaction the interaction to reply or edit the response to
-   * @param response the response to send to the user
-   * @returns a promise that resolves when the response has been sent
-   */
-  private async interactionEditOrReply(
-    interaction: MessageComponentInteraction,
-    response: InteractionEditReplyOptions,
-  ): Promise<void> {
-    const isEphemeral = interaction.message.flags.has(MessageFlags.Ephemeral);
-
-    if (isEphemeral && !interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        ...response as unknown as InteractionReplyOptions,
-        flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-      });
-    } else if (isEphemeral) {
-      await interaction.editReply({
-        ...response,
-        flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2,
-      });
-    } else {
-      await interaction.message.edit(response);
     }
   }
 
