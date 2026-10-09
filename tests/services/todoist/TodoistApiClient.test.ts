@@ -886,6 +886,96 @@ describe("TodoistApiClient", () => {
       await expect(todoistApiClientMock.getActiveTasks(TEST_USER_ID)).rejects.toThrow(error);
     });
   });
+
+  describe("closeTask", () => {
+    it("should close a task for the user", async () => {
+      // Arrange
+      const taskId = "task-123";
+      const closeTaskMock = jest.fn().mockResolvedValue(undefined);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        closeTask: closeTaskMock,
+      });
+
+      // Act
+      await todoistApiClientMock.closeTask(TEST_USER_ID, taskId);
+
+      // Assert
+      expect(todoistApiClientMock.getUserApi).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(closeTaskMock).toHaveBeenCalledWith(taskId);
+    });
+
+    it("should throw if getUserApi fails", async () => {
+      // Arrange
+      const taskId = "task-123";
+      const error = new Error("No session");
+      todoistApiClientMock.getUserApi = jest.fn().mockRejectedValue(error);
+
+      // Act & Assert
+      await expect(todoistApiClientMock.closeTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(error);
+    });
+
+    it("should throw if the API call fails", async () => {
+      // Arrange
+      const taskId = "task-123";
+      const error = new Error("API error");
+      const closeTaskMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        closeTask: closeTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.closeTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(error);
+    });
+  });
+
+  describe("deleteTask", () => {
+    it("should delete a task for the user", async () => {
+      // Arrange
+      const taskId = "task-456";
+      const deleteTaskMock = jest.fn().mockResolvedValue(undefined);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        deleteTask: deleteTaskMock,
+      });
+
+      // Act
+      await todoistApiClientMock.deleteTask(TEST_USER_ID, taskId);
+
+      // Assert
+      expect(todoistApiClientMock.getUserApi).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(deleteTaskMock).toHaveBeenCalledWith(taskId);
+    });
+
+    it("should throw if getUserApi fails", async () => {
+      // Arrange
+      const taskId = "task-456";
+      const error = new Error("No session");
+      todoistApiClientMock.getUserApi = jest.fn().mockRejectedValue(error);
+
+      // Act & Assert
+      await expect(todoistApiClientMock.deleteTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(error);
+    });
+
+    it("should throw if the API call fails", async () => {
+      // Arrange
+      const taskId = "task-456";
+      const error = new Error("API error");
+      const deleteTaskMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        deleteTask: deleteTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.deleteTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(error);
+    });
+  });
 });
 
 describe("getTaskDueDate", () => {

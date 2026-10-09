@@ -372,6 +372,34 @@ export class TodoistApiClient {
   }
 
   /**
+   * Closes (completes) a Todoist task for the given user.
+   * @param userId ID of the user to close the task for
+   * @param taskId ID of the task to close
+   * @param api optional pre-fetched TodoistApi instance
+   * @returns true if the task was successfully closed
+   * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TodoistRequestError} if the API request fails
+   */
+  public async closeTask(userId: string, taskId: string, api?: TodoistApi): Promise<boolean> {
+    const client = api ?? await this.getUserApi(userId);
+    return client.closeTask(taskId);
+  }
+
+  /**
+   * Deletes a Todoist task for the given user.
+   * @param userId ID of the user to delete the task for
+   * @param taskId ID of the task to delete
+   * @param api optional pre-fetched TodoistApi instance
+   * @returns true if the task was successfully deleted
+   * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TodoistRequestError} if the API request fails
+   */
+  public async deleteTask(userId: string, taskId: string, api?: TodoistApi): Promise<boolean> {
+    const client = api ?? await this.getUserApi(userId);
+    return client.deleteTask(taskId);
+  }
+
+  /**
    * Returns a Unix timestamp (ms) for a task's due date or datetime.
    * Suitable for sorting tasks chronologically.
    *

@@ -1,9 +1,11 @@
 import type { TaskAddModalData } from "@bot/commands/todoist/task-creation/TaskAddModal";
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
+import type { Tickly } from "@bot/Tickly";
 import type { Task, TodoistApi } from "@doist/todoist-api-typescript";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import { ModalCancelledError, TaskAddHandler } from "@bot/commands/todoist/task-creation/TaskAddHandler";
 import { TaskAddModal } from "@bot/commands/todoist/task-creation/TaskAddModal";
+import { OAuthError } from "@services/todoist/errors/OAuthError";
 import { Locale, MessageFlags } from "discord.js";
 
 jest.mock("@bot/commands/todoist/task-creation/TaskAddModal");
@@ -14,6 +16,7 @@ jest.mock("@src/utils/logger", () => ({
 
 describe("TaskAddHandler", () => {
   const language = Locale.EnglishUS;
+  const mockComponentIdBuilder = (action: string) => `test:command:${action}`;
   let todoistClientMock: TodoistApiClient;
   let translationHandlerMock: TranslationHandler;
   let handler: TaskAddHandler;
@@ -233,7 +236,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder);
 
       // Assert
       expect(todoistClientMock.addTaskBySelectedDate).toHaveBeenCalledWith(
@@ -247,10 +250,13 @@ describe("TaskAddHandler", () => {
         },
         undefined,
       );
-      expect(submission.reply).toHaveBeenCalledWith({
-        content: "add-task.success",
-        flags: MessageFlags.Ephemeral,
-      });
+      expect(submission.reply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.any(String),
+          components: expect.any(Array),
+          flags: MessageFlags.Ephemeral,
+        }),
+      );
     });
 
     it("should pass api instance to addTaskBySelectedDate", async () => {
@@ -271,7 +277,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder, undefined, apiMock);
 
       // Assert
       expect(todoistClientMock.addTaskBySelectedDate).toHaveBeenCalledWith(
@@ -300,7 +306,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder);
 
       // Assert
       expect(todoistClientMock.addTaskBySelectedDate).toHaveBeenCalledWith(
@@ -322,7 +328,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockRejectedValue(new Error("API failure"));
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder);
 
       // Assert
       expect(submission.reply).toHaveBeenCalledWith({
@@ -348,9 +354,11 @@ describe("TaskAddHandler", () => {
       todoistClientMock.addTaskBySelectedDate
         = jest.fn().mockResolvedValue(createdTask);
 
+      let capturedTaskParam: string | undefined;
       (translationHandlerMock.translateCommon as jest.Mock).mockImplementation(
         (_lang: Locale, key: string, params?: Record<string, string>) => {
           if (key === "add-task.success" && params?.task) {
+            capturedTaskParam = params.task;
             return params.task;
           }
           return key;
@@ -358,12 +366,12 @@ describe("TaskAddHandler", () => {
       );
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder);
 
-      // Assert
-      const replyContent = submission.reply.mock.calls[0][0].content;
-      expect(replyContent.length).toBeLessThanOrEqual(83); // 80 + "..."
-      expect(replyContent.endsWith("...")).toBe(true);
+      // Assert - verify the task param passed to translateCommon is truncated
+      expect(capturedTaskParam).toBeDefined();
+      expect(capturedTaskParam!.length).toBeLessThanOrEqual(83); // 80 + "..."
+      expect(capturedTaskParam!.endsWith("...")).toBe(true);
     });
 
     it("should use success-no-date translation when task has no due date", async () => {
@@ -383,7 +391,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder);
 
       // Assert
       expect(translationHandlerMock.translateCommon).toHaveBeenCalledWith(
@@ -411,7 +419,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", "Buy milk tomorrow", language, interaction);
+      await handler.addToTodoist("user-123", "Buy milk tomorrow", language, mockComponentIdBuilder, interaction);
 
       // Assert
       expect(todoistClientMock.quickAddTask).toHaveBeenCalledWith(
@@ -419,10 +427,13 @@ describe("TaskAddHandler", () => {
         { text: "Buy milk tomorrow" },
         undefined,
       );
-      expect(interaction.reply).toHaveBeenCalledWith({
-        content: "add-task.success",
-        flags: MessageFlags.Ephemeral,
-      });
+      expect(interaction.reply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.any(String),
+          components: expect.any(Array),
+          flags: MessageFlags.Ephemeral,
+        }),
+      );
     });
 
     it("should pass api instance to quickAddTask when data is a string", async () => {
@@ -439,7 +450,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", "A quick task", language, interaction, apiMock);
+      await handler.addToTodoist("user-123", "A quick task", language, mockComponentIdBuilder, interaction, apiMock);
 
       // Assert
       expect(todoistClientMock.quickAddTask).toHaveBeenCalledWith(
@@ -456,7 +467,7 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockRejectedValue(new Error("API failure"));
 
       // Act
-      await handler.addToTodoist("user-123", "Failing task", language, interaction);
+      await handler.addToTodoist("user-123", "Failing task", language, mockComponentIdBuilder, interaction);
 
       // Assert
       expect(interaction.reply).toHaveBeenCalledWith({
@@ -499,12 +510,15 @@ describe("TaskAddHandler", () => {
       );
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder, undefined, apiMock);
 
       // Assert
       expect(apiMock.getProjects).toHaveBeenCalled();
-      const replyContent = submission.reply.mock.calls[0][0].content;
-      expect(replyContent).toBe("Work");
+      expect(translationHandlerMock.translateCommon).toHaveBeenCalledWith(
+        language,
+        "add-task.success",
+        expect.objectContaining({ project: "Work" }),
+      );
     });
 
     it("should silently ignore project fetch failure in addToTodoist", async () => {
@@ -528,13 +542,16 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder, undefined, apiMock);
 
       // Assert
-      expect(submission.reply).toHaveBeenCalledWith({
-        content: "add-task.success",
-        flags: MessageFlags.Ephemeral,
-      });
+      expect(submission.reply).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: expect.any(String),
+          components: expect.any(Array),
+          flags: MessageFlags.Ephemeral,
+        }),
+      );
     });
 
     it("should not fetch projects again if already loaded", async () => {
@@ -577,10 +594,242 @@ describe("TaskAddHandler", () => {
         = jest.fn().mockResolvedValue(createdTask);
 
       // Act
-      await handler.addToTodoist("user-123", modalData, language, undefined, apiMock);
+      await handler.addToTodoist("user-123", modalData, language, mockComponentIdBuilder, undefined, apiMock);
 
       // Assert – getProjects called only once (during sendAndAwaitModalSubmit)
       expect(apiMock.getProjects).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("handleTaskAction", () => {
+    let todoistClientMock: TodoistApiClient;
+    let clientMock: Tickly;
+
+    beforeEach(() => {
+      todoistClientMock = {
+        closeTask: jest.fn().mockResolvedValue(undefined),
+        deleteTask: jest.fn().mockResolvedValue(undefined),
+      } as unknown as TodoistApiClient;
+
+      clientMock = {
+        getTranslationHandler: jest.fn().mockReturnValue({
+          translateCommon: jest.fn().mockImplementation(
+            (_lang: Locale, key: string) => key,
+          ),
+        }),
+        getCommandMention: jest.fn().mockResolvedValue("/todoist login"),
+      } as unknown as Tickly;
+    });
+
+    it("should reply with error when action value is invalid", async () => {
+      // Arrange
+      const interaction = {
+        values: ["invalid"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(interaction.reply).toHaveBeenCalledWith({
+        content: "interactionHandling.executionError",
+        flags: MessageFlags.Ephemeral,
+      });
+      expect(interaction.deferReply).not.toHaveBeenCalled();
+    });
+
+    it("should complete task successfully", async () => {
+      // Arrange
+      const interaction = {
+        values: ["complete:task-123:Buy milk"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
+      expect(todoistClientMock.closeTask).toHaveBeenCalledWith("user-123", "task-123");
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: "add-task.actions.complete.success",
+      });
+    });
+
+    it("should delete task successfully", async () => {
+      // Arrange
+      const interaction = {
+        values: ["delete:task-456:Important task"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(interaction.deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
+      expect(todoistClientMock.deleteTask).toHaveBeenCalledWith("user-123", "task-456");
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: "add-task.actions.delete.success",
+      });
+    });
+
+    it("should show session error when OAuthError is thrown on complete", async () => {
+      // Arrange
+      const interaction = {
+        values: ["complete:task-123:Buy milk"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+      (todoistClientMock.closeTask as jest.Mock)
+        .mockRejectedValue(new OAuthError("Session expired"));
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(clientMock.getCommandMention).toHaveBeenCalledWith("todoist login");
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: "session.invalid",
+      });
+    });
+
+    it("should show session error when OAuthError is thrown on delete", async () => {
+      // Arrange
+      const interaction = {
+        values: ["delete:task-456:Task"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+      (todoistClientMock.deleteTask as jest.Mock)
+        .mockRejectedValue(new OAuthError("Session expired"));
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(clientMock.getCommandMention).toHaveBeenCalledWith("todoist login");
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: "session.invalid",
+      });
+    });
+
+    it("should show complete error with error code on API failure", async () => {
+      // Arrange
+      const interaction = {
+        values: ["complete:task-123:Buy milk"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+      (todoistClientMock.closeTask as jest.Mock)
+        .mockRejectedValue(new Error("API error"));
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: "add-task.actions.complete.error",
+      });
+    });
+
+    it("should show delete error with error code on API failure", async () => {
+      // Arrange
+      const interaction = {
+        values: ["delete:task-456:Task"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+      (todoistClientMock.deleteTask as jest.Mock)
+        .mockRejectedValue(new Error("API error"));
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(interaction.editReply).toHaveBeenCalledWith({
+        content: "add-task.actions.delete.error",
+      });
+    });
+
+    it("should handle task name with colons correctly", async () => {
+      // Arrange
+      const interaction = {
+        values: ["complete:task-789:Task: with: colons"],
+        user: { id: "user-123" },
+        reply: jest.fn(),
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      };
+
+      // Act
+      await TaskAddHandler.handleTaskAction(
+        interaction,
+        Locale.EnglishUS,
+        todoistClientMock,
+        clientMock,
+      );
+
+      // Assert
+      expect(todoistClientMock.closeTask).toHaveBeenCalledWith("user-123", "task-789");
+      expect(clientMock.getTranslationHandler().translateCommon).toHaveBeenCalledWith(
+        Locale.EnglishUS,
+        "add-task.actions.complete.success",
+        { task: "Task: with: colons" },
+      );
     });
   });
 });

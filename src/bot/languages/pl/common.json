@@ -41,6 +41,19 @@
     "success-no-project": "Skrzynka (brak projektu)",
     "success-no-date": "Brak terminu",
     "creation-error": "{{x}} Wystąpił błąd podczas tworzenia zadania w Todoist (kod błędu: {{errorCode}}).",
-    "projects-fetch-error": "{{x}} Wystąpił błąd podczas pobierania Twoich projektów z Todoist (kod błędu: {{errorCode}})."
+    "projects-fetch-error": "{{x}} Wystąpił błąd podczas pobierania Twoich projektów z Todoist (kod błędu: {{errorCode}}).",
+    "actions": {
+      "placeholder": "Więcej akcji",
+      "complete": {
+        "label": "Ukończ zadanie",
+        "success": "{{v}} Zadanie \"{{task}}\" oznaczono jako ukończone.",
+        "error": "{{x}} Nie udało się ukończyć zadania (kod błędu: {{errorCode}})."
+      },
+      "delete": {
+        "label": "Usuń zadanie",
+        "success": "{{v}} Zadanie \"{{task}}\" zostało usunięte.",
+        "error": "{{x}} Nie udało się usunąć zadania (kod błędu: {{errorCode}})."
+      }
+    }
   }
 }

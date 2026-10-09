@@ -55,6 +55,56 @@ describe("TaskAdd Command", () => {
     );
   });
 
+  describe("constructor", () => {
+    it("should register the actions component handler", () => {
+      // Act
+      const handlers = command.getMessageComponentHandlers();
+
+      // Assert
+      expect(handlers.has(`todoist:add:${TaskAddHandler.ACTIONS_COMPONENT_ID}`)).toBe(true);
+    });
+
+    it("should delegate to TaskAddHandler.handleTaskAction for select menu interactions", async () => {
+      // Arrange
+      const handlers = command.getMessageComponentHandlers();
+      const componentId = `todoist:add:${TaskAddHandler.ACTIONS_COMPONENT_ID}`;
+      const handler = handlers.get(componentId)!;
+      const interaction = {
+        isStringSelectMenu: () => true,
+        values: ["complete:task-123:Buy milk"],
+        user: { id: "user-123" },
+      } as any;
+      (TaskAddHandler.handleTaskAction as jest.Mock).mockResolvedValue(undefined);
+
+      // Act
+      await handler(interaction, language);
+
+      // Assert
+      expect(TaskAddHandler.handleTaskAction).toHaveBeenCalledWith(
+        interaction,
+        language,
+        todoistClientMock,
+        clientMock,
+      );
+    });
+
+    it("should not call handleTaskAction for non-select-menu interactions", async () => {
+      // Arrange
+      const handlers = command.getMessageComponentHandlers();
+      const componentId = `todoist:add:${TaskAddHandler.ACTIONS_COMPONENT_ID}`;
+      const handler = handlers.get(componentId)!;
+      const interaction = {
+        isStringSelectMenu: () => false,
+      } as any;
+
+      // Act
+      await handler(interaction, language);
+
+      // Assert
+      expect(TaskAddHandler.handleTaskAction).not.toHaveBeenCalled();
+    });
+  });
+
   it("should have the correct name", () => {
     // Act
     const result = command.getName();
@@ -153,6 +203,7 @@ describe("TaskAdd Command", () => {
         "123",
         modalData,
         language,
+        expect.any(Function),
         undefined,
         apiMock,
       );
@@ -177,6 +228,7 @@ describe("TaskAdd Command", () => {
         "123",
         "Buy milk tomorrow",
         language,
+        expect.any(Function),
         interaction,
         apiMock,
       );

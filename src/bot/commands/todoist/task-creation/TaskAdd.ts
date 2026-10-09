@@ -1,5 +1,9 @@
+import type { Tickly } from "@bot/Tickly";
+import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApi } from "@doist/todoist-api-typescript";
+import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { ChatInputCommandInteraction, Locale } from "discord.js";
+import type { SlashCommandCategory } from "../../core/SlashCommand";
 import { ApplicationCommandOptionType, MessageFlags } from "discord.js";
 import { SubCommand } from "../../core/SubCommand";
 import { ModalCancelledError, TaskAddHandler } from "./TaskAddHandler";
@@ -14,6 +18,30 @@ export default class TaskAdd extends SubCommand {
       required: false,
     }],
   };
+
+  constructor(
+    client: Tickly,
+    todoistClient: TodoistApiClient,
+    repositories: RepositoryFactory,
+    parentCommandName: string,
+    parentCommandCategory?: SlashCommandCategory,
+  ) {
+    super(client, todoistClient, repositories, parentCommandName, parentCommandCategory);
+
+    this.onMessageComponent(
+      TaskAddHandler.ACTIONS_COMPONENT_ID,
+      async (interaction, language) => {
+        if (interaction.isStringSelectMenu()) {
+          await TaskAddHandler.handleTaskAction(
+            interaction,
+            language,
+            this.todoistClient,
+            this.client,
+          );
+        }
+      },
+    );
+  }
 
   public async execute(
     interaction: ChatInputCommandInteraction,
@@ -41,9 +69,17 @@ export default class TaskAdd extends SubCommand {
         this.client.getTranslationHandler(),
         this.client.getConfig().emotes.priorities,
       );
+      const componentIdBuilder = (action: string) => this.buildComponentId(action);
 
       if (content) {
-        await handler.addToTodoist(userId, content, language, interaction, api);
+        await handler.addToTodoist(
+          userId,
+          content,
+          language,
+          componentIdBuilder,
+          interaction,
+          api,
+        );
       } else {
         try {
           const data = await handler.sendAndAwaitModalSubmit(
@@ -51,7 +87,14 @@ export default class TaskAdd extends SubCommand {
             api,
             language,
           );
-          await handler.addToTodoist(userId, data, language, undefined, api);
+          await handler.addToTodoist(
+            userId,
+            data,
+            language,
+            componentIdBuilder,
+            undefined,
+            api,
+          );
         } catch (error) {
           if (!(error instanceof ModalCancelledError)) {
             throw error;

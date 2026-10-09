@@ -41,6 +41,19 @@
     "success-no-project": "Boîte de réception (pas de projet)",
     "success-no-date": "Pas de date d'échéance",
     "creation-error": "{{x}} Une erreur est survenue lors de la création de la tâche dans Todoist (code d'erreur : {{errorCode}}).",
-    "projects-fetch-error": "{{x}} Une erreur est survenue lors de la récupération de vos projets Todoist (code d'erreur : {{errorCode}})."
+    "projects-fetch-error": "{{x}} Une erreur est survenue lors de la récupération de vos projets Todoist (code d'erreur : {{errorCode}}).",
+    "actions": {
+      "placeholder": "Plus d'actions",
+      "complete": {
+        "label": "Terminer la tâche",
+        "success": "{{v}} Tâche \"{{task}}\" marquée comme terminée.",
+        "error": "{{x}} Impossible de terminer la tâche (code d'erreur : {{errorCode}})."
+      },
+      "delete": {
+        "label": "Supprimer la tâche",
+        "success": "{{v}} La tâche \"{{task}}\" a été supprimée.",
+        "error": "{{x}} Impossible de supprimer la tâche (code d'erreur : {{errorCode}})."
+      }
+    }
   }
 }

@@ -41,6 +41,19 @@
     "success-no-project": "Inbox (no project)",
     "success-no-date": "No due date",
     "creation-error": "{{x}} An error occurred while creating the task in Todoist (error code: {{errorCode}}).",
-    "projects-fetch-error": "{{x}} An error occurred while fetching your Todoist projects (error code: {{errorCode}})."
+    "projects-fetch-error": "{{x}} An error occurred while fetching your Todoist projects (error code: {{errorCode}}).",
+    "actions": {
+      "placeholder": "More actions",
+      "complete": {
+        "label": "Complete task",
+        "success": "{{v}} Task \"{{task}}\" marked as complete.",
+        "error": "{{x}} Failed to complete the task (error code: {{errorCode}})."
+      },
+      "delete": {
+        "label": "Delete task",
+        "success": "{{v}} Task \"{{task}}\" has been deleted.",
+        "error": "{{x}} Failed to delete the task (error code: {{errorCode}})."
+      }
+    }
   }
 }

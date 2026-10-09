@@ -1,4 +1,7 @@
+import type { Tickly } from "@bot/Tickly";
+import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApi } from "@doist/todoist-api-typescript";
+import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { Locale, MessageContextMenuCommandInteraction } from "discord.js";
 import type { TaskAddModalPrefill } from "./TaskAddModal";
 import { MessageFlags } from "discord.js";
@@ -9,6 +12,28 @@ import { ModalCancelledError, TaskAddHandler } from "./TaskAddHandler";
 export default class TaskAddFromMessage extends MessageCommand {
   readonly translationName = "add-from-message";
   readonly data = {};
+
+  constructor(
+    client: Tickly,
+    todoistClient: TodoistApiClient,
+    repositories: RepositoryFactory,
+  ) {
+    super(client, todoistClient, repositories);
+
+    this.onMessageComponent(
+      TaskAddHandler.ACTIONS_COMPONENT_ID,
+      async (interaction, language) => {
+        if (interaction.isStringSelectMenu()) {
+          await TaskAddHandler.handleTaskAction(
+            interaction,
+            language,
+            this.todoistClient,
+            this.client,
+          );
+        }
+      },
+    );
+  }
 
   public async execute(
     interaction: MessageContextMenuCommandInteraction,
@@ -35,6 +60,7 @@ export default class TaskAddFromMessage extends MessageCommand {
         this.client.getTranslationHandler(),
         this.client.getConfig().emotes.priorities,
       );
+      const componentIdBuilder = (action: string) => this.buildComponentId(action);
 
       try {
         const prefill = this.buildPrefill(interaction);
@@ -44,7 +70,14 @@ export default class TaskAddFromMessage extends MessageCommand {
           language,
           prefill,
         );
-        await handler.addToTodoist(userId, data, language, undefined, api);
+        await handler.addToTodoist(
+          userId,
+          data,
+          language,
+          componentIdBuilder,
+          undefined,
+          api,
+        );
       } catch (error) {
         if (!(error instanceof ModalCancelledError)) {
           throw error;

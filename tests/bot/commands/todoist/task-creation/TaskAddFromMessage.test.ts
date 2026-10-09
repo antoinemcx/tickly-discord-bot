@@ -54,6 +54,56 @@ describe("TaskAddFromMessage Command", () => {
     );
   });
 
+  describe("constructor", () => {
+    it("should register the actions component handler", () => {
+      // Act
+      const handlers = command.getMessageComponentHandlers();
+
+      // Assert
+      expect(handlers.has(`add-from-message:${TaskAddHandler.ACTIONS_COMPONENT_ID}`)).toBe(true);
+    });
+
+    it("should delegate to TaskAddHandler.handleTaskAction for select menu interactions", async () => {
+      // Arrange
+      const handlers = command.getMessageComponentHandlers();
+      const componentId = `add-from-message:${TaskAddHandler.ACTIONS_COMPONENT_ID}`;
+      const handler = handlers.get(componentId)!;
+      const interaction = {
+        isStringSelectMenu: () => true,
+        values: ["complete:task-123:Buy milk"],
+        user: { id: "user-123" },
+      } as any;
+      (TaskAddHandler.handleTaskAction as jest.Mock).mockResolvedValue(undefined);
+
+      // Act
+      await handler(interaction, language);
+
+      // Assert
+      expect(TaskAddHandler.handleTaskAction).toHaveBeenCalledWith(
+        interaction,
+        language,
+        todoistClientMock,
+        clientMock,
+      );
+    });
+
+    it("should not call handleTaskAction for non-select-menu interactions", async () => {
+      // Arrange
+      const handlers = command.getMessageComponentHandlers();
+      const componentId = `add-from-message:${TaskAddHandler.ACTIONS_COMPONENT_ID}`;
+      const handler = handlers.get(componentId)!;
+      const interaction = {
+        isStringSelectMenu: () => false,
+      } as any;
+
+      // Act
+      await handler(interaction, language);
+
+      // Assert
+      expect(TaskAddHandler.handleTaskAction).not.toHaveBeenCalled();
+    });
+  });
+
   describe("execute", () => {
     it("should reply with session error when getUserApi throws", async () => {
       // Arrange
@@ -125,6 +175,7 @@ describe("TaskAddFromMessage Command", () => {
         "123",
         modalData,
         language,
+        expect.any(Function),
         undefined,
         apiMock,
       );
