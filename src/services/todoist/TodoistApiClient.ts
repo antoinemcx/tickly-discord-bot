@@ -4,6 +4,7 @@ import type {
   Permission,
   QuickAddTaskArgs,
   Task,
+  UpdateTaskArgs,
 } from "@doist/todoist-api-typescript";
 import type { UserSessionManager } from "../../services/todoist/sessions/UserSessionManager";
 import {
@@ -11,10 +12,12 @@ import {
   getAuthStateParameter,
   getAuthToken,
   TodoistApi,
+  TodoistRequestError,
 } from "@doist/todoist-api-typescript";
 import { displayDetailedError } from "@src/utils/logger";
 import { UserSession, UserSessionStatus } from "../../services/todoist/sessions/UserSession";
 import { OAuthError } from "./errors/OAuthError";
+import { TaskNotFoundError } from "./errors/TaskNotFoundError";
 
 /** Options for configuring the Todoist processes. */
 export interface TodoistClientOptions {
@@ -280,11 +283,19 @@ export class TodoistApiClient {
    * @param api optional pre-fetched TodoistApi instance
    * @returns the created task
    * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TaskNotFoundError} if a parent task (parentId) does not exist
    * @throws {TodoistRequestError} if the API request fails
    */
   public async addTask(userId: string, args: AddTaskArgs, api?: TodoistApi): Promise<Task> {
     const client = api ?? await this.getUserApi(userId);
-    return client.addTask(args);
+    try {
+      return await client.addTask(args);
+    } catch (error) {
+      if (args.parentId) {
+        throw TodoistApiClient.mapApiError(error, args.parentId);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -378,11 +389,16 @@ export class TodoistApiClient {
    * @param api optional pre-fetched TodoistApi instance
    * @returns true if the task was successfully closed
    * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TaskNotFoundError} if the task does not exist
    * @throws {TodoistRequestError} if the API request fails
    */
   public async closeTask(userId: string, taskId: string, api?: TodoistApi): Promise<boolean> {
     const client = api ?? await this.getUserApi(userId);
-    return client.closeTask(taskId);
+    try {
+      return await client.closeTask(taskId);
+    } catch (error) {
+      throw TodoistApiClient.mapApiError(error, taskId);
+    }
   }
 
   /**
@@ -392,11 +408,60 @@ export class TodoistApiClient {
    * @param api optional pre-fetched TodoistApi instance
    * @returns true if the task was successfully deleted
    * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TaskNotFoundError} if the task does not exist
    * @throws {TodoistRequestError} if the API request fails
    */
   public async deleteTask(userId: string, taskId: string, api?: TodoistApi): Promise<boolean> {
     const client = api ?? await this.getUserApi(userId);
-    return client.deleteTask(taskId);
+    try {
+      return await client.deleteTask(taskId);
+    } catch (error) {
+      throw TodoistApiClient.mapApiError(error, taskId);
+    }
+  }
+
+  /**
+   * Fetches a single Todoist task by its ID for the given user.
+   * @param userId ID of the user to fetch the task for
+   * @param taskId ID of the task to fetch
+   * @param api optional pre-fetched TodoistApi instance
+   * @returns the requested task
+   * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TaskNotFoundError} if the task does not exist
+   * @throws {TodoistRequestError} if the API request fails
+   */
+  public async getTask(userId: string, taskId: string, api?: TodoistApi): Promise<Task> {
+    const client = api ?? await this.getUserApi(userId);
+    try {
+      return await client.getTask(taskId);
+    } catch (error) {
+      throw TodoistApiClient.mapApiError(error, taskId);
+    }
+  }
+
+  /**
+   * Updates a Todoist task for the given user.
+   * @param userId ID of the user to update the task for
+   * @param taskId ID of the task to update
+   * @param args the arguments for updating the task
+   * @param api optional pre-fetched TodoistApi instance
+   * @returns the updated task
+   * @throws {OAuthError} if no valid access token is found for the user
+   * @throws {TaskNotFoundError} if the task does not exist
+   * @throws {TodoistRequestError} if the API request fails
+   */
+  public async updateTask(
+    userId: string,
+    taskId: string,
+    args: UpdateTaskArgs,
+    api?: TodoistApi,
+  ): Promise<Task> {
+    const client = api ?? await this.getUserApi(userId);
+    try {
+      return await client.updateTask(taskId, args);
+    } catch (error) {
+      throw TodoistApiClient.mapApiError(error, taskId);
+    }
   }
 
   /**
@@ -422,5 +487,18 @@ export class TodoistApiClient {
 
     const hasTime = !!task.due?.datetime || (task.due?.date?.includes("T") ?? false);
     return hasTime || !endOfDayForDateOnly ? ts : ts + 86399000;
+  }
+
+  /**
+   * Maps known Todoist API errors to domain-specific error types.
+   * - HTTP 404 : TaskNotFoundError
+   *
+   * Re-throws the original error if it doesn't match any known pattern.
+   */
+  private static mapApiError(error: unknown, taskId: string): Error {
+    if (error instanceof TodoistRequestError && error.httpStatusCode === 404) {
+      return new TaskNotFoundError(taskId);
+    }
+    return error instanceof Error ? error : new Error(String(error));
   }
 }

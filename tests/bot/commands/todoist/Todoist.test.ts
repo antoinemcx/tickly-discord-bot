@@ -8,8 +8,17 @@ describe("Todoist", () => {
 
   beforeEach(() => {
     // Arrange
+    const clientMock = {
+      getTranslationHandler: jest.fn().mockReturnValue({
+        translateCommon: jest.fn(),
+      }),
+      getConfig: jest.fn().mockReturnValue({
+        emotes: { priorities: { 1: "p1", 2: "p2", 3: "p3", 4: "p4" } },
+      }),
+    } as unknown as Tickly;
+
     command = new Todoist(
-      {} as Tickly,
+      clientMock,
       {} as TodoistApiClient,
       {} as RepositoryFactory,
     );

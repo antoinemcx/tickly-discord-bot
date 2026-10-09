@@ -976,6 +976,114 @@ describe("TodoistApiClient", () => {
         .toThrow(error);
     });
   });
+
+  describe("getTask", () => {
+    it("should return a task for the user", async () => {
+      // Arrange
+      const taskId = "task-789";
+      const mockTask = { id: taskId, content: "Test task" };
+      const getTaskMock = jest.fn().mockResolvedValue(mockTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        getTask: getTaskMock,
+      });
+
+      // Act
+      const result = await todoistApiClientMock.getTask(TEST_USER_ID, taskId);
+
+      // Assert
+      expect(todoistApiClientMock.getUserApi).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(getTaskMock).toHaveBeenCalledWith(taskId);
+      expect(result).toEqual(mockTask);
+    });
+
+    it("should use the provided api instance instead of fetching one", async () => {
+      // Arrange
+      const taskId = "task-789";
+      const mockTask = { id: taskId, content: "Test task" };
+      const getTaskMock = jest.fn().mockResolvedValue(mockTask);
+      const providedApi = {
+        getTask: getTaskMock,
+      } as unknown as import("@doist/todoist-api-typescript").TodoistApi;
+      const getUserApiSpy = jest.spyOn(todoistApiClientMock, "getUserApi");
+
+      // Act
+      const result = await todoistApiClientMock.getTask(TEST_USER_ID, taskId, providedApi);
+
+      // Assert
+      expect(getTaskMock).toHaveBeenCalledWith(taskId);
+      expect(result).toEqual(mockTask);
+      expect(getUserApiSpy).not.toHaveBeenCalled();
+    });
+
+    it("should throw OAuthError when no session exists", async () => {
+      // Arrange
+      const taskId = "task-789";
+      mockSessionManager.getSession = jest.fn().mockResolvedValue(undefined);
+
+      // Act & Assert
+      await expect(todoistApiClientMock.getTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(/No Todoist access token found for user/);
+    });
+  });
+
+  describe("updateTask", () => {
+    it("should update a task for the user", async () => {
+      // Arrange
+      const taskId = "task-999";
+      const updateArgs = { content: "Updated task", priority: 2 };
+      const updatedTask = { id: taskId, content: "Updated task", priority: 2 };
+      const updateTaskMock = jest.fn().mockResolvedValue(updatedTask);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        updateTask: updateTaskMock,
+      });
+
+      // Act
+      const result = await todoistApiClientMock.updateTask(TEST_USER_ID, taskId, updateArgs);
+
+      // Assert
+      expect(todoistApiClientMock.getUserApi).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(updateTaskMock).toHaveBeenCalledWith(taskId, updateArgs);
+      expect(result).toEqual(updatedTask);
+    });
+
+    it("should use the provided api instance instead of fetching one", async () => {
+      // Arrange
+      const taskId = "task-999";
+      const updateArgs = { content: "Updated task" };
+      const updatedTask = { id: taskId, content: "Updated task" };
+      const updateTaskMock = jest.fn().mockResolvedValue(updatedTask);
+      const providedApi = {
+        updateTask: updateTaskMock,
+      } as unknown as import("@doist/todoist-api-typescript").TodoistApi;
+      const getUserApiSpy = jest.spyOn(todoistApiClientMock, "getUserApi");
+
+      // Act
+      const result = await todoistApiClientMock.updateTask(
+        TEST_USER_ID,
+        taskId,
+        updateArgs,
+        providedApi,
+      );
+
+      // Assert
+      expect(updateTaskMock).toHaveBeenCalledWith(taskId, updateArgs);
+      expect(result).toEqual(updatedTask);
+      expect(getUserApiSpy).not.toHaveBeenCalled();
+    });
+
+    it("should throw OAuthError when no session exists", async () => {
+      // Arrange
+      const taskId = "task-999";
+      const updateArgs = { content: "Updated task" };
+      mockSessionManager.getSession = jest.fn().mockResolvedValue(undefined);
+
+      // Act & Assert
+      await expect(todoistApiClientMock.updateTask(TEST_USER_ID, taskId, updateArgs))
+        .rejects
+        .toThrow(/No Todoist access token found for user/);
+    });
+  });
 });
 
 describe("getTaskDueDate", () => {

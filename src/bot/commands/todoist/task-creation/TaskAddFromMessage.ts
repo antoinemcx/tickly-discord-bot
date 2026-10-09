@@ -13,22 +13,25 @@ export default class TaskAddFromMessage extends MessageCommand {
   readonly translationName = "add-from-message";
   readonly data = {};
 
+  private readonly handler: TaskAddHandler;
+
   constructor(
     client: Tickly,
     todoistClient: TodoistApiClient,
     repositories: RepositoryFactory,
   ) {
     super(client, todoistClient, repositories);
+    this.handler = new TaskAddHandler(todoistClient, client);
 
     this.onMessageComponent(
       TaskAddHandler.ACTIONS_COMPONENT_ID,
       async (interaction, language) => {
         if (interaction.isStringSelectMenu()) {
-          await TaskAddHandler.handleTaskAction(
+          const componentIdBuilder = (action: string) => this.buildComponentId(action);
+          await this.handler.handleTaskAction(
             interaction,
             language,
-            this.todoistClient,
-            this.client,
+            componentIdBuilder,
           );
         }
       },
@@ -55,22 +58,17 @@ export default class TaskAddFromMessage extends MessageCommand {
     }
 
     if (api) {
-      const handler = new TaskAddHandler(
-        this.todoistClient,
-        this.client.getTranslationHandler(),
-        this.client.getConfig().emotes.priorities,
-      );
       const componentIdBuilder = (action: string) => this.buildComponentId(action);
 
       try {
         const prefill = this.buildPrefill(interaction);
-        const data = await handler.sendAndAwaitModalSubmit(
+        const data = await this.handler.sendAndAwaitModalSubmit(
           interaction,
           api,
           language,
           prefill,
         );
-        await handler.addToTodoist(
+        await this.handler.addToTodoist(
           userId,
           data,
           language,
@@ -86,11 +84,7 @@ export default class TaskAddFromMessage extends MessageCommand {
     }
   }
 
-  /**
-   * Extracts pre-fill data from the target message for the modal.
-   * @param interaction the message context menu interaction
-   * @returns prefill data with content and optional description
-   */
+  /** Extracts pre-fill data from the target message for the modal. */
   private buildPrefill(
     interaction: MessageContextMenuCommandInteraction,
   ): TaskAddModalPrefill {

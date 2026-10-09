@@ -18,6 +18,7 @@ describe("TaskAddHandler", () => {
   const language = Locale.EnglishUS;
   const mockComponentIdBuilder = (action: string) => `test:command:${action}`;
   let todoistClientMock: TodoistApiClient;
+  let clientMock: Tickly;
   let translationHandlerMock: TranslationHandler;
   let handler: TaskAddHandler;
 
@@ -34,11 +35,15 @@ describe("TaskAddHandler", () => {
       ),
     } as unknown as TranslationHandler;
 
-    handler = new TaskAddHandler(
-      todoistClientMock,
-      translationHandlerMock,
-      { 1: "p1", 2: "p2", 3: "p3", 4: "p4" },
-    );
+    clientMock = {
+      getTranslationHandler: jest.fn().mockReturnValue(translationHandlerMock),
+      getConfig: jest.fn().mockReturnValue({
+        emotes: { priorities: { 1: "p1", 2: "p2", 3: "p3", 4: "p4" } },
+      }),
+      getCommandMention: jest.fn().mockResolvedValue("/todoist login"),
+    } as unknown as Tickly;
+
+    handler = new TaskAddHandler(todoistClientMock, clientMock);
   });
 
   describe("sendAndAwaitModalSubmit", () => {
@@ -84,6 +89,7 @@ describe("TaskAddHandler", () => {
         language,
         { 1: "p1", 2: "p2", 3: "p3", 4: "p4" },
         undefined,
+        "add",
       );
       expect(interaction.showModal).toHaveBeenCalledWith("built-modal");
       expect(result).toBe(modalData);
@@ -121,6 +127,7 @@ describe("TaskAddHandler", () => {
         expect.anything(),
         expect.anything(),
         undefined,
+        "add",
       );
     });
 
@@ -159,6 +166,7 @@ describe("TaskAddHandler", () => {
         expect.anything(),
         expect.anything(),
         prefill,
+        "add",
       );
     });
 
@@ -604,11 +612,49 @@ describe("TaskAddHandler", () => {
   describe("handleTaskAction", () => {
     let todoistClientMock: TodoistApiClient;
     let clientMock: Tickly;
+    let actionHandler: TaskAddHandler;
+    const mockComponentIdBuilder = (action: string) => `test:command:${action}`;
+
+    /** Helper to create a mock interaction with all required fields */
+    const createMockInteraction = (overrides: Record<string, unknown> = {}) => ({
+      values: ["complete:task-123:Test"],
+      user: { id: "user-123" },
+      reply: jest.fn(),
+      deferReply: jest.fn(),
+      editReply: jest.fn(),
+      showModal: jest.fn(),
+      awaitModalSubmit: jest.fn(),
+      ...overrides,
+    });
 
     beforeEach(() => {
       todoistClientMock = {
         closeTask: jest.fn().mockResolvedValue(undefined),
         deleteTask: jest.fn().mockResolvedValue(undefined),
+        getUserApi: jest.fn().mockResolvedValue({
+          getProjects: jest.fn().mockResolvedValue({ results: [] }),
+        }),
+        getTask: jest.fn().mockResolvedValue({
+          id: "task-123",
+          content: "Test task",
+          description: "Test description",
+          priority: 2,
+          due: { date: "2026-06-01", string: "Jun 1", isRecurring: false },
+          projectId: "proj-1",
+          url: "https://todoist.com/task/123",
+        }),
+        addTaskBySelectedDate: jest.fn().mockResolvedValue({
+          id: "subtask-456",
+          content: "New subtask",
+          url: "https://todoist.com/task/456",
+          projectId: "proj-1",
+        }),
+        updateTask: jest.fn().mockResolvedValue({
+          id: "task-123",
+          content: "Updated task",
+          url: "https://todoist.com/task/123",
+          projectId: "proj-1",
+        }),
       } as unknown as TodoistApiClient;
 
       clientMock = {
@@ -618,25 +664,23 @@ describe("TaskAddHandler", () => {
           ),
         }),
         getCommandMention: jest.fn().mockResolvedValue("/todoist login"),
+        getConfig: jest.fn().mockReturnValue({
+          emotes: { priorities: { 1: "p1", 2: "p2", 3: "p3", 4: "p4" } },
+        }),
       } as unknown as Tickly;
+
+      actionHandler = new TaskAddHandler(todoistClientMock, clientMock);
     });
 
     it("should reply with error when action value is invalid", async () => {
       // Arrange
-      const interaction = {
-        values: ["invalid"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      const interaction = createMockInteraction({ values: ["invalid"] });
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -649,20 +693,15 @@ describe("TaskAddHandler", () => {
 
     it("should complete task successfully", async () => {
       // Arrange
-      const interaction = {
+      const interaction = createMockInteraction({
         values: ["complete:task-123:Buy milk"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      });
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -675,20 +714,15 @@ describe("TaskAddHandler", () => {
 
     it("should delete task successfully", async () => {
       // Arrange
-      const interaction = {
+      const interaction = createMockInteraction({
         values: ["delete:task-456:Important task"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      });
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -701,22 +735,17 @@ describe("TaskAddHandler", () => {
 
     it("should show session error when OAuthError is thrown on complete", async () => {
       // Arrange
-      const interaction = {
+      const interaction = createMockInteraction({
         values: ["complete:task-123:Buy milk"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      });
       (todoistClientMock.closeTask as jest.Mock)
         .mockRejectedValue(new OAuthError("Session expired"));
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -728,22 +757,17 @@ describe("TaskAddHandler", () => {
 
     it("should show session error when OAuthError is thrown on delete", async () => {
       // Arrange
-      const interaction = {
+      const interaction = createMockInteraction({
         values: ["delete:task-456:Task"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      });
       (todoistClientMock.deleteTask as jest.Mock)
         .mockRejectedValue(new OAuthError("Session expired"));
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -755,22 +779,17 @@ describe("TaskAddHandler", () => {
 
     it("should show complete error with error code on API failure", async () => {
       // Arrange
-      const interaction = {
+      const interaction = createMockInteraction({
         values: ["complete:task-123:Buy milk"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      });
       (todoistClientMock.closeTask as jest.Mock)
         .mockRejectedValue(new Error("API error"));
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -781,22 +800,17 @@ describe("TaskAddHandler", () => {
 
     it("should show delete error with error code on API failure", async () => {
       // Arrange
-      const interaction = {
+      const interaction = createMockInteraction({
         values: ["delete:task-456:Task"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      });
       (todoistClientMock.deleteTask as jest.Mock)
         .mockRejectedValue(new Error("API error"));
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -807,20 +821,15 @@ describe("TaskAddHandler", () => {
 
     it("should handle task name with colons correctly", async () => {
       // Arrange
-      const interaction = {
+      const interaction = createMockInteraction({
         values: ["complete:task-789:Task: with: colons"],
-        user: { id: "user-123" },
-        reply: jest.fn(),
-        deferReply: jest.fn(),
-        editReply: jest.fn(),
-      };
+      });
 
       // Act
-      await TaskAddHandler.handleTaskAction(
+      await actionHandler.handleTaskAction(
         interaction,
         Locale.EnglishUS,
-        todoistClientMock,
-        clientMock,
+        mockComponentIdBuilder,
       );
 
       // Assert
@@ -830,6 +839,327 @@ describe("TaskAddHandler", () => {
         "add-task.actions.complete.success",
         { task: "Task: with: colons" },
       );
+    });
+
+    describe("subtask action", () => {
+      it("should show modal and create subtask with parentId", async () => {
+        // Arrange
+        const modalSubmission = { reply: jest.fn() };
+        const modalData: TaskAddModalData = {
+          content: "New subtask",
+          description: "Subtask description",
+          project: "proj-1",
+          priority: 3,
+          dueDateString: undefined,
+          submission: modalSubmission as any,
+        };
+
+        const mockBuild = jest.fn().mockReturnValue("built-modal");
+        const mockAwaitSubmit = jest.fn().mockResolvedValue(modalData);
+        (TaskAddModal as jest.MockedClass<typeof TaskAddModal>)
+          .mockImplementation(
+            () => ({ build: mockBuild, awaitSubmit: mockAwaitSubmit }) as any,
+          );
+
+        const interaction = createMockInteraction({
+          values: ["subtask:parent-task-123:Parent task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert
+        expect(todoistClientMock.getUserApi).toHaveBeenCalledWith("user-123");
+        expect(interaction.showModal).toHaveBeenCalledWith("built-modal");
+        expect(todoistClientMock.addTaskBySelectedDate).toHaveBeenCalledWith(
+          "user-123",
+          undefined,
+          expect.objectContaining({
+            content: "New subtask",
+            parentId: "parent-task-123",
+          }),
+          expect.anything(),
+        );
+        // returns content with action components
+        expect(modalSubmission.reply).toHaveBeenCalledWith(
+          expect.objectContaining({
+            content: "add-task.actions.subtask.success",
+            components: expect.any(Array),
+            flags: MessageFlags.Ephemeral,
+          }),
+        );
+      });
+
+      it("should show session error when OAuthError on getUserApi for subtask", async () => {
+        // Arrange
+        (todoistClientMock.getUserApi as jest.Mock)
+          .mockRejectedValue(new OAuthError("Session expired"));
+
+        const interaction = createMockInteraction({
+          values: ["subtask:task-123:Task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert
+        expect(interaction.reply).toHaveBeenCalledWith({
+          content: "session.invalid",
+          flags: MessageFlags.Ephemeral,
+        });
+        expect(interaction.showModal).not.toHaveBeenCalled();
+      });
+
+      it("should show error when subtask creation fails", async () => {
+        // Arrange
+        const modalSubmission = { reply: jest.fn() };
+        const modalData: TaskAddModalData = {
+          content: "New subtask",
+          submission: modalSubmission as any,
+        };
+
+        const mockBuild = jest.fn().mockReturnValue("built-modal");
+        const mockAwaitSubmit = jest.fn().mockResolvedValue(modalData);
+        (TaskAddModal as jest.MockedClass<typeof TaskAddModal>)
+          .mockImplementation(
+            () => ({ build: mockBuild, awaitSubmit: mockAwaitSubmit }) as any,
+          );
+
+        (todoistClientMock.addTaskBySelectedDate as jest.Mock)
+          .mockRejectedValue(new Error("API error"));
+
+        const interaction = createMockInteraction({
+          values: ["subtask:task-123:Task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert - error reply goes to modal submission, not original interaction
+        expect(modalSubmission.reply).toHaveBeenCalledWith({
+          content: "add-task.actions.subtask.error",
+          flags: MessageFlags.Ephemeral,
+        });
+      });
+    });
+
+    describe("edit action", () => {
+      it("should fetch task, show prefilled modal, and update task", async () => {
+        // Arrange
+        const modalSubmission = { reply: jest.fn() };
+        const modalData: TaskAddModalData = {
+          content: "Updated task content",
+          description: "Updated description",
+          project: "proj-1",
+          priority: 1,
+          dueDateString: undefined,
+          submission: modalSubmission as any,
+        };
+
+        const mockBuild = jest.fn().mockReturnValue("built-modal");
+        const mockAwaitSubmit = jest.fn().mockResolvedValue(modalData);
+        (TaskAddModal as jest.MockedClass<typeof TaskAddModal>)
+          .mockImplementation(
+            () => ({ build: mockBuild, awaitSubmit: mockAwaitSubmit }) as any,
+          );
+
+        const interaction = createMockInteraction({
+          values: ["edit:task-123:Original task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert
+        expect(todoistClientMock.getTask).toHaveBeenCalledWith(
+          "user-123",
+          "task-123",
+          expect.anything(),
+        );
+        expect(TaskAddModal).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.anything(),
+          expect.anything(),
+          expect.anything(),
+          expect.objectContaining({
+            content: "Test task",
+            description: "Test description",
+            priority: 2,
+          }),
+          "edit",
+        );
+        expect(todoistClientMock.updateTask).toHaveBeenCalledWith(
+          "user-123",
+          "task-123",
+          expect.objectContaining({
+            content: "Updated task content",
+            description: "Updated description",
+            priority: 1,
+          }),
+          expect.anything(),
+        );
+        // Edit action returns simple success message without action components
+        expect(modalSubmission.reply).toHaveBeenCalledWith({
+          content: "add-task.actions.edit.success",
+          flags: MessageFlags.Ephemeral,
+        });
+      });
+
+      it("should show session error when OAuthError on getUserApi for edit", async () => {
+        // Arrange
+        (todoistClientMock.getUserApi as jest.Mock)
+          .mockRejectedValue(new OAuthError("Session expired"));
+
+        const interaction = createMockInteraction({
+          values: ["edit:task-123:Task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert
+        expect(interaction.reply).toHaveBeenCalledWith({
+          content: "session.invalid",
+          flags: MessageFlags.Ephemeral,
+        });
+        expect(todoistClientMock.getTask).not.toHaveBeenCalled();
+      });
+
+      it("should show session error when OAuthError on getTask", async () => {
+        // Arrange
+        (todoistClientMock.getTask as jest.Mock)
+          .mockRejectedValue(new OAuthError("Session expired"));
+
+        const interaction = createMockInteraction({
+          values: ["edit:task-123:Task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert
+        expect(interaction.reply).toHaveBeenCalledWith({
+          content: "session.invalid",
+          flags: MessageFlags.Ephemeral,
+        });
+        expect(interaction.showModal).not.toHaveBeenCalled();
+      });
+
+      it("should show error when getTask fails with non-OAuth error", async () => {
+        // Arrange
+        (todoistClientMock.getTask as jest.Mock)
+          .mockRejectedValue(new Error("API error"));
+
+        const interaction = createMockInteraction({
+          values: ["edit:task-123:Task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert
+        expect(interaction.reply).toHaveBeenCalledWith({
+          content: "add-task.actions.edit.error",
+          flags: MessageFlags.Ephemeral,
+        });
+        expect(interaction.showModal).not.toHaveBeenCalled();
+      });
+
+      it("should show error when updateTask fails", async () => {
+        // Arrange
+        const modalSubmission = { reply: jest.fn() };
+        const modalData: TaskAddModalData = {
+          content: "Updated",
+          submission: modalSubmission as any,
+        };
+
+        const mockBuild = jest.fn().mockReturnValue("built-modal");
+        const mockAwaitSubmit = jest.fn().mockResolvedValue(modalData);
+        (TaskAddModal as jest.MockedClass<typeof TaskAddModal>)
+          .mockImplementation(
+            () => ({ build: mockBuild, awaitSubmit: mockAwaitSubmit }) as any,
+          );
+
+        (todoistClientMock.updateTask as jest.Mock)
+          .mockRejectedValue(new Error("API error"));
+
+        const interaction = createMockInteraction({
+          values: ["edit:task-123:Task"],
+        });
+
+        // Act
+        await actionHandler.handleTaskAction(
+          interaction,
+          Locale.EnglishUS,
+          mockComponentIdBuilder,
+        );
+
+        // Assert - error reply goes to modal submission, not original interaction
+        expect(modalSubmission.reply).toHaveBeenCalledWith({
+          content: "add-task.actions.edit.error",
+          flags: MessageFlags.Ephemeral,
+        });
+      });
+    });
+  });
+
+  describe("buildActionsSelectMenu", () => {
+    it("should include subtask and edit options in correct order before complete and delete", async () => {
+      // Arrange
+      const task: Partial<Task> = {
+        id: "task-123",
+        content: "Test task",
+        url: "https://todoist.com/task/123",
+        projectId: "proj-1",
+        due: null as any,
+      };
+
+      // Act
+      const response = handler.buildSuccessResponse(
+        task as Task,
+        language,
+        mockComponentIdBuilder,
+      );
+
+      // Assert
+      const actionRow = response.components?.[0] as any;
+      expect(actionRow).toBeDefined();
+      const selectMenu = actionRow.components?.[0] as any;
+      expect(selectMenu).toBeDefined();
+      const options = selectMenu.options;
+      expect(options).toHaveLength(4);
+      expect(options[0].data.value).toContain("subtask:");
+      expect(options[1].data.value).toContain("edit:");
+      expect(options[2].data.value).toContain("complete:");
+      expect(options[3].data.value).toContain("delete:");
     });
   });
 });

@@ -5,6 +5,8 @@ import type { InteractionReplyOptions, Locale, ModalBuilder, ModalSubmitInteract
 import type { ProjectOption, TaskAddModalData, TaskAddModalPrefill } from "./TaskAddModal";
 import { Tickly } from "@bot/Tickly";
 import { OAuthError } from "@services/todoist/errors/OAuthError";
+import { TaskNotFoundError } from "@services/todoist/errors/TaskNotFoundError";
+import { DueStringSelectionOptions } from "@services/todoist/TodoistApiClient";
 import { displayDetailedError, generateErrorCode } from "@src/utils/logger";
 import {
   ComponentType,
@@ -12,18 +14,18 @@ import {
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
 } from "discord.js";
-import { TaskAddModal } from "./TaskAddModal";
+import { TaskAddModal, TaskAddModalMode } from "./TaskAddModal";
 
 interface Repliable {
-  reply: (options: InteractionReplyOptions) => Promise<unknown>;
+  reply: (options: InteractionReplyOptions
+    | { content: string; flags: number }) => Promise<unknown>;
 }
 
-interface SelectMenuInteraction {
+interface SelectMenuInteraction extends Repliable, InteractionWithModal {
   values: string[];
   user: { id: string };
   deferReply: (options: { flags: number }) => Promise<unknown>;
   editReply: (options: { content: string }) => Promise<unknown>;
-  reply: (options: { content: string; flags: number }) => Promise<unknown>;
 }
 
 /**
@@ -43,23 +45,26 @@ interface InteractionWithModal {
     time: number;
     filter: (i: ModalSubmitInteraction) => boolean;
   }) => Promise<ModalSubmitInteraction>;
-  reply: (options: { content: string; flags: number }) => Promise<unknown>;
 }
 
 /**
  * Handles the shared logic for adding a Todoist task:
  * fetching projects, showing the modal, and creating the task via the API.
- *
- * This handler is stateless per-invocation; a new instance should be created
- * for each command execution to hold the modal reference.
  */
 export class TaskAddHandler {
   /** Action identifier for the select menu component. */
   public static readonly ACTIONS_COMPONENT_ID = "actions";
+  /** Value prefix for the "create subtask" action in the select menu. */
+  public static readonly ACTION_SUBTASK = "subtask";
+  /** Value prefix for the "edit task" action in the select menu. */
+  public static readonly ACTION_EDIT = "edit";
   /** Value prefix for the "complete task" action in the select menu. */
   public static readonly ACTION_COMPLETE = "complete";
   /** Value prefix for the "delete task" action in the select menu. */
   public static readonly ACTION_DELETE = "delete";
+
+  private readonly translationHandler: TranslationHandler;
+  private readonly priorityEmotes: Record<number, string>;
 
   private modal: TaskAddModal | undefined;
   private projects: ProjectOption[] = [];
@@ -67,9 +72,11 @@ export class TaskAddHandler {
 
   constructor(
     private readonly todoistClient: TodoistApiClient,
-    private readonly translationHandler: TranslationHandler,
-    private readonly priorityEmotes: Record<number, string>,
-  ) {}
+    private readonly client: Tickly,
+  ) {
+    this.translationHandler = client.getTranslationHandler();
+    this.priorityEmotes = client.getConfig().emotes.priorities;
+  }
 
   /**
    * Fetches user projects, builds and shows the "Add Task" modal, and awaits
@@ -79,15 +86,17 @@ export class TaskAddHandler {
    * @param api the authenticated Todoist API instance
    * @param language locale for modal labels
    * @param prefill optional pre-fill data for the modal fields
+   * @param mode the modal add or edit mode
    * @returns the submitted modal data
    * @throws {ModalCancelledError} if the user does not submit the modal or
    *         if fetching projects fails (error reply is sent before throwing)
    */
   public async sendAndAwaitModalSubmit(
-    interaction: InteractionWithModal,
+    interaction: InteractionWithModal & Repliable,
     api: TodoistApi,
     language: Locale,
     prefill?: TaskAddModalPrefill,
+    mode: TaskAddModalMode = TaskAddModalMode.Add,
   ): Promise<TaskAddModalData> {
     try {
       await this.loadProjects(api);
@@ -111,6 +120,7 @@ export class TaskAddHandler {
       language,
       this.priorityEmotes,
       prefill,
+      mode,
     );
 
     await interaction.showModal(this.modal.build());
@@ -197,34 +207,34 @@ export class TaskAddHandler {
    *
    * @param task the created Todoist task
    * @param language locale for translations
-   * @param componentIdBuilder function to build component customIds (from the command)
+   * @param componentIdBuilder function to build component customIds, from the command
+   * @param parentTaskName optional parent task name, for subtask creation
    * @returns the interaction reply options with components
    */
   public buildSuccessResponse(
     task: Task,
     language: Locale,
     componentIdBuilder: (action: string) => string,
+    parentTaskName?: string,
   ): InteractionReplyOptions {
-    const projectName = this.findProjectName(task.projectId);
     const dateDisplay = task.due?.date
       ? (Tickly.dateStringToDiscordTimestamp(task.due.date) ?? task.due.string)
       : this.translationHandler.translateCommon(language, "add-task.success-no-date");
 
-    const truncatedTask = task.content.length > 80
-      ? task.content.substring(0, 80) + "..."
-      : task.content;
-
-    const successText
-      = this.translationHandler.translateCommon(language, "add-task.success", {
-        task: truncatedTask,
-        taskUrl: task.url,
-        project: projectName
-          || this.translationHandler.translateCommon(
-            language,
-            "add-task.success-no-project",
-          ),
-        date: dateDisplay,
-      });
+    const successText = parentTaskName // subtask creation if parent task name
+      ? this.translationHandler.translateCommon(language, "add-task.actions.subtask.success", {
+          task: TaskAddHandler.truncateTaskName(task.content),
+          taskUrl: task.url,
+          parentTask: TaskAddHandler.truncateTaskName(parentTaskName),
+          date: dateDisplay,
+        })
+      : this.translationHandler.translateCommon(language, "add-task.success", {
+          task: TaskAddHandler.truncateTaskName(task.content),
+          taskUrl: task.url,
+          project: this.findProjectName(task.projectId)
+            || this.translationHandler.translateCommon(language, "add-task.success-no-project"),
+          date: dateDisplay,
+        });
 
     const selectMenu = this.buildActionsSelectMenu(task, language, componentIdBuilder);
 
@@ -241,11 +251,6 @@ export class TaskAddHandler {
   /**
    * Builds the actions select menu for the task success message.
    * Each option value encodes "action:taskId:truncatedTaskName" for parsing.
-   *
-   * @param task the Todoist task
-   * @param language locale for option labels
-   * @param componentIdBuilder function to build the customId
-   * @returns the configured StringSelectMenuBuilder
    */
   private buildActionsSelectMenu(
     task: Task,
@@ -256,106 +261,340 @@ export class TaskAddHandler {
       ? task.content.substring(0, 50) // truncate to avoid Discord limit
       : task.content;
 
+    const actions = [
+      { action: TaskAddHandler.ACTION_SUBTASK, key: "subtask" },
+      { action: TaskAddHandler.ACTION_EDIT, key: "edit" },
+      { action: TaskAddHandler.ACTION_COMPLETE, key: "complete" },
+      { action: TaskAddHandler.ACTION_DELETE, key: "delete" },
+    ] as const;
+
     return new StringSelectMenuBuilder()
       .setCustomId(componentIdBuilder(TaskAddHandler.ACTIONS_COMPONENT_ID))
-      .setPlaceholder(
-        this.translationHandler.translateCommon(language, "add-task.actions.placeholder"),
-      )
+      .setPlaceholder(this.translationHandler.translateCommon(
+        language,
+        "add-task.actions.placeholder",
+      ))
       .addOptions(
-        new StringSelectMenuOptionBuilder()
-          .setLabel(this.translationHandler.translateCommon(
-            language,
-            "add-task.actions.complete.label",
-          ))
-          .setValue(`${TaskAddHandler.ACTION_COMPLETE}:${task.id}:${taskNameForValue}`),
-        new StringSelectMenuOptionBuilder()
-          .setLabel(this.translationHandler.translateCommon(
-            language,
-            "add-task.actions.delete.label",
-          ))
-          .setValue(`${TaskAddHandler.ACTION_DELETE}:${task.id}:${taskNameForValue}`),
+        actions.map(({ action, key }) =>
+          new StringSelectMenuOptionBuilder()
+            .setLabel(this.translationHandler.translateCommon(
+              language,
+              `add-task.actions.${key}.label`,
+            ))
+            .setValue(`${action}:${task.id}:${taskNameForValue}`)),
       );
   }
 
   /**
    * Handles task actions from the success message select menu.
-   * This is a static method that can be called from command handlers.
    *
    * @param interaction the select menu interaction
    * @param language locale for response messages
-   * @param todoistClient the Todoist API client
-   * @param client the Tickly client instance
+   * @param componentIdBuilder function to build component customIds for follow-up
    */
-  public static async handleTaskAction(
+  public async handleTaskAction(
     interaction: SelectMenuInteraction,
     language: Locale,
-    todoistClient: TodoistApiClient,
-    client: Tickly,
+    componentIdBuilder: (action: string) => string,
   ): Promise<void> {
     const selectedValue = interaction.values[0];
     const parsed = TaskAddHandler.parseActionValue(selectedValue);
-    const translationHandler = client.getTranslationHandler();
 
     if (!parsed) {
       await interaction.reply({
-        content: translationHandler.translateCommon(language, "interactionHandling.executionError", {
-          errorCode: "INVALID_ACTION",
-        }),
+        content: this.translationHandler.translateCommon(
+          language,
+          "interactionHandling.executionError",
+          { errorCode: "INVALID_ACTION" },
+        ),
         flags: MessageFlags.Ephemeral,
       });
       return;
     }
 
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-
     const userId = interaction.user.id;
     const { action, taskId, taskName } = parsed;
 
+    /* Handle modal-based actions separately */
+    if (action === TaskAddHandler.ACTION_SUBTASK
+      || action === TaskAddHandler.ACTION_EDIT) {
+      await this.handleModalAction(
+        interaction,
+        language,
+        componentIdBuilder,
+        action === TaskAddHandler.ACTION_SUBTASK
+          ? TaskAddModalMode.Subtask
+          : TaskAddModalMode.Edit,
+        userId,
+        taskId,
+        action === TaskAddHandler.ACTION_SUBTASK ? taskName : undefined,
+      );
+      return;
+    }
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    /* Handle other atomic actions */
     try {
       if (action === TaskAddHandler.ACTION_COMPLETE) {
-        await todoistClient.closeTask(userId, taskId);
+        await this.todoistClient.closeTask(userId, taskId);
         await interaction.editReply({
-          content: translationHandler.translateCommon(language, "add-task.actions.complete.success", {
-            task: taskName,
-          }),
+          content: this.translationHandler.translateCommon(
+            language,
+            "add-task.actions.complete.success",
+            { task: taskName },
+          ),
         });
       } else if (action === TaskAddHandler.ACTION_DELETE) {
-        await todoistClient.deleteTask(userId, taskId);
+        await this.todoistClient.deleteTask(userId, taskId);
         await interaction.editReply({
-          content: translationHandler.translateCommon(language, "add-task.actions.delete.success", {
-            task: taskName,
-          }),
+          content: this.translationHandler.translateCommon(
+            language,
+            "add-task.actions.delete.success",
+            { task: taskName },
+          ),
         });
       }
     } catch (error) {
-      if (error instanceof OAuthError) {
-        await interaction.editReply({
-          content: translationHandler.translateCommon(language, "session.invalid", {
-            loginCommand: await client.getCommandMention("todoist login"),
-          }),
-        });
-        return;
-      }
-
-      const errorCode = generateErrorCode();
-      displayDetailedError(`Error executing task action '${action}'`, error, errorCode);
-
-      const errorKey = action === TaskAddHandler.ACTION_COMPLETE
-        ? "add-task.actions.complete.error"
-        : "add-task.actions.delete.error";
-
-      await interaction.editReply({
-        content: translationHandler.translateCommon(language, errorKey, { errorCode }),
-      });
+      await this.handleActionError(
+        error,
+        action === TaskAddHandler.ACTION_COMPLETE
+          ? "add-task.actions.complete.error"
+          : "add-task.actions.delete.error",
+        language,
+        msg => interaction.editReply({ content: msg }),
+      );
     }
   }
 
   /**
-   * Parses the value from the actions select menu interaction.
-   *
-   * @param value the selected option value in format "action:taskId:taskName"
-   * @returns parsed action data or undefined if format is invalid
+   * Unified handler for modal-based actions (subtask and edit).
+   * @param interaction the select menu interaction
+   * @param language user preferred locale
+   * @param componentIdBuilder function to build component customIds for follow-up
+   * @param mode the modal mode
+   * @param userId the user ID
+   * @param taskId the task ID
+   * @param parentTaskName the parent task name, for subtask creation
    */
+  private async handleModalAction(
+    interaction: SelectMenuInteraction,
+    language: Locale,
+    componentIdBuilder: (action: string) => string,
+    mode: TaskAddModalMode.Subtask | TaskAddModalMode.Edit,
+    userId: string,
+    taskId: string,
+    parentTaskName?: string,
+  ): Promise<void> {
+    const errorKey = mode === TaskAddModalMode.Subtask
+      ? "add-task.actions.subtask.error"
+      : "add-task.actions.edit.error";
+
+    /* Retrieve API client */
+    let api: TodoistApi;
+    try {
+      api = await this.todoistClient.getUserApi(userId);
+    } catch (error) {
+      if (error instanceof OAuthError) {
+        await this.replySessionInvalid(interaction, language);
+        return;
+      }
+      throw error;
+    }
+
+    let modalData: TaskAddModalData | undefined;
+    try {
+      let prefill: TaskAddModalPrefill | undefined;
+      let taskName = parentTaskName;
+
+      /* For task update, fetch current task to pre-fill the modal */
+      if (mode === TaskAddModalMode.Edit) {
+        const task = await this.todoistClient.getTask(userId, taskId, api);
+        prefill = {
+          content: task.content,
+          description: task.description || undefined,
+          priority: task.priority,
+          dueDate: TaskAddHandler.taskDueDateToSelectionOption(task),
+          project: task.projectId,
+        };
+        taskName = task.content;
+      }
+
+      /* Show modal and await submission */
+      modalData = await this.sendAndAwaitModalSubmit(
+        interaction,
+        api,
+        language,
+        prefill,
+        mode,
+      );
+
+      /* Create subtask or update the recently created task */
+      if (mode === TaskAddModalMode.Subtask) {
+        const subtask = await this.todoistClient.addTaskBySelectedDate(
+          userId,
+          modalData.dueDateString,
+          {
+            content: modalData.content,
+            description: modalData.description,
+            priority: modalData.priority,
+            projectId: modalData.project !== TaskAddModal.PROJECT_NONE_VALUE
+              ? modalData.project
+              : undefined,
+            parentId: taskId,
+          },
+          api,
+        );
+
+        await modalData.submission.reply(this.buildSuccessResponse(
+          subtask,
+          language,
+          componentIdBuilder,
+          taskName,
+        ));
+      } else {
+        const updatedTask = await this.todoistClient.updateTask(
+          userId,
+          taskId,
+          {
+            content: modalData.content,
+            description: modalData.description,
+            priority: modalData.priority,
+            dueString: modalData.dueDateString,
+          },
+          api,
+        );
+
+        await modalData.submission.reply({
+          content: this.translationHandler.translateCommon(
+            language,
+            "add-task.actions.edit.success",
+            { task: TaskAddHandler.truncateTaskName(updatedTask.content) },
+          ),
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    } catch (error) {
+      if (error instanceof ModalCancelledError) {
+        return; // User cancelled or modal timed out: already handled
+      }
+
+      const submission = modalData?.submission;
+      const replyFn = submission
+        ? (msg: string) => submission.reply({
+            content: msg,
+            flags: MessageFlags.Ephemeral,
+          })
+        : (msg: string) => interaction.reply({
+            content: msg,
+            flags: MessageFlags.Ephemeral,
+          });
+
+      await this.handleActionError(error, errorKey, language, replyFn);
+    }
+  }
+
+  /**
+   * Handles errors for task actions with consistent OAuth and generic error handling.
+   */
+  private async handleActionError(
+    error: unknown,
+    errorKey: string,
+    language: Locale,
+    reply: (message: string) => Promise<unknown>,
+  ): Promise<void> {
+    if (error instanceof OAuthError) {
+      await reply(this.translationHandler.translateCommon(language, "session.invalid", {
+        loginCommand: await this.client.getCommandMention("todoist login"),
+      }));
+      return;
+    }
+
+    if (error instanceof TaskNotFoundError) {
+      await reply(this.translationHandler.translateCommon(
+        language,
+        "add-task.task-not-found",
+      ));
+      return;
+    }
+
+    const errorCode = generateErrorCode();
+    displayDetailedError(`Error executing task action`, error, errorCode);
+    await reply(
+      this.translationHandler.translateCommon(language, errorKey, { errorCode }),
+    );
+  }
+
+  /** Replies with the session invalid message for OAuth errors. */
+  private async replySessionInvalid(
+    interaction: Repliable,
+    language: Locale,
+  ): Promise<void> {
+    await interaction.reply({
+      content: this.translationHandler.translateCommon(language, "session.invalid", {
+        loginCommand: await this.client.getCommandMention("todoist login"),
+      }),
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  /** Truncates a task name to 80 characters if needed. */
+  private static truncateTaskName(content: string, maxLength = 80): string {
+    return content.length > maxLength
+      ? content.substring(0, maxLength) + "..."
+      : content;
+  }
+
+  /**
+   * Converts a task's due date to the corresponding DueStringSelectionOptions value.
+   * Returns undefined if the task's due date doesn't match any predefined options.
+   */
+  private static taskDueDateToSelectionOption(task: Task): DueStringSelectionOptions | undefined {
+    if (!task.due?.date)
+      return undefined;
+
+    /* Check if the date is today */
+    const taskDate = task.due.date.slice(0, 10);
+    const today = new Date();
+    const toDateStr = (d: Date) => d.toISOString().slice(0, 10);
+    if (taskDate === toDateStr(today)) {
+      return DueStringSelectionOptions.Today;
+    }
+
+    /* Check if the date is tomorrow */
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (taskDate === toDateStr(tomorrow)) {
+      return DueStringSelectionOptions.Tomorrow;
+    }
+
+    /* Check if the date is another day of the week */
+    const dayOfWeek = today.getDay();
+    const daysUntilNextMonday = (8 - dayOfWeek) % 7 || 7;
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + daysUntilNextMonday);
+    if (taskDate === toDateStr(nextMonday)) {
+      return DueStringSelectionOptions.NextMonday;
+    }
+
+    /* Check if the date is next week */
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    if (taskDate === toDateStr(nextWeek)) {
+      return DueStringSelectionOptions.NextWeek;
+    }
+
+    /* Check if the date is next month */
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(today.getMonth() + 1);
+    if (taskDate === toDateStr(nextMonth)) {
+      return DueStringSelectionOptions.NextMonth;
+    }
+
+    return undefined;
+  }
+
+  /** Parses the value from the actions select menu interaction. */
   private static parseActionValue(value: string): {
     action: string;
     taskId: string;
@@ -389,8 +628,6 @@ export class TaskAddHandler {
 
   /**
    * Finds a project name by ID from the fetched project list.
-   * @param projectId the project ID to search for
-   * @returns the project name, or undefined if not found
    */
   private findProjectName(projectId: string): string | undefined {
     return this.projects.find(p => p.id === projectId)?.name;

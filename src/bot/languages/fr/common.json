@@ -14,6 +14,8 @@
   },
   "add-task": {
     "modal-title": "Ajouter une tâche à Todoist",
+    "subtask-modal-title": "Ajouter une sous-tâche",
+    "edit-modal-title": "Modifier la tâche",
     "title": "Titre de la tâche",
     "title-placeholder": "ex. Acheter des courses",
     "description": "Description de la tâche",
@@ -37,13 +39,25 @@
       "next-week": "La semaine prochaine",
       "next-month": "Le mois prochain"
     },
-    "success": "{{v}} Tâche ajoutée avec succès :\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Projet** : {{project}}\n**Date d'échéance : {{date}}",
+    "success": "{{v}} Tâche ajoutée avec succès :\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Projet** : {{project}}\n**Date d'échéance :** {{date}}",
     "success-no-project": "Boîte de réception (pas de projet)",
     "success-no-date": "Pas de date d'échéance",
     "creation-error": "{{x}} Une erreur est survenue lors de la création de la tâche dans Todoist (code d'erreur : {{errorCode}}).",
     "projects-fetch-error": "{{x}} Une erreur est survenue lors de la récupération de vos projets Todoist (code d'erreur : {{errorCode}}).",
+    "task-not-found": "{{x}} La tâche est introuvable. Elle a peut-être été supprimée.",
     "actions": {
       "placeholder": "Plus d'actions",
+      "subtask": {
+        "label": "Créer une sous-tâche",
+        "success": "{{v}} Sous-tâche ajoutée avec succès :\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Tâche parente** : {{parentTask}}\n**Date d'échéance :** {{date}}",
+        "error": "{{x}} Impossible de créer la sous-tâche (code d'erreur : {{errorCode}}).",
+        "project-inherited": "Les sous-tâches héritent du projet de leur tâche parente."
+      },
+      "edit": {
+        "label": "Modifier la tâche",
+        "success": "{{v}} La tâche \"{{task}}\" a été mise à jour.",
+        "error": "{{x}} Impossible de modifier la tâche (code d'erreur : {{errorCode}})."
+      },
       "complete": {
         "label": "Terminer la tâche",
         "success": "{{v}} Tâche \"{{task}}\" marquée comme terminée.",

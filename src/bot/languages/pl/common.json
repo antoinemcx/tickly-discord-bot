@@ -14,6 +14,8 @@
   },
   "add-task": {
     "modal-title": "Dodaj zadanie do Todoist",
+    "subtask-modal-title": "Dodaj podzadanie",
+    "edit-modal-title": "Edytuj zadanie",
     "title": "Tytuł zadania",
     "title-placeholder": "np. Kupić warzywa",
     "description": "Opis zadania",
@@ -42,8 +44,20 @@
     "success-no-date": "Brak terminu",
     "creation-error": "{{x}} Wystąpił błąd podczas tworzenia zadania w Todoist (kod błędu: {{errorCode}}).",
     "projects-fetch-error": "{{x}} Wystąpił błąd podczas pobierania Twoich projektów z Todoist (kod błędu: {{errorCode}}).",
+    "task-not-found": "{{x}} Nie można odnaleźć zadania. Mogło zostać usunięte.",
     "actions": {
       "placeholder": "Więcej akcji",
+      "subtask": {
+        "label": "Utwórz podzadanie",
+        "success": "{{v}} Podzadanie dodane pomyślnie:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Zadanie nadrzędne:** {{parentTask}}\n**Termin wykonania:** {{date}}",
+        "error": "{{x}} Nie udało się utworzyć podzadania (kod błędu: {{errorCode}}).",
+        "project-inherited": "Podzadania dziedziczą projekt z zadania nadrzędnego."
+      },
+      "edit": {
+        "label": "Edytuj zadanie",
+        "success": "{{v}} Zadanie \"{{task}}\" zostało zaktualizowane.",
+        "error": "{{x}} Nie udało się zaktualizować zadania (kod błędu: {{errorCode}})."
+      },
       "complete": {
         "label": "Ukończ zadanie",
         "success": "{{v}} Zadanie \"{{task}}\" oznaczono jako ukończone.",

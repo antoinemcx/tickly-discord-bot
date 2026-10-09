@@ -1,6 +1,6 @@
 import type { TranslationHandler } from "@bot/handlers/TranslationHandler";
 import type { ModalSubmitInteraction } from "discord.js";
-import { TaskAddModal } from "@bot/commands/todoist/task-creation/TaskAddModal";
+import { TaskAddModal, TaskAddModalMode } from "@bot/commands/todoist/task-creation/TaskAddModal";
 import { DueStringSelectionOptions } from "@services/todoist/TodoistApiClient";
 import { Locale } from "discord.js";
 
@@ -55,6 +55,18 @@ describe("TaskAddModal", () => {
       expect(modal).toBeInstanceOf(TaskAddModal);
     });
 
+    it("should create an instance with mode parameter", () => {
+      // Arrange & Act
+      const modalAdd = new TaskAddModal([], translationHandlerMock, language, emotes, undefined, TaskAddModalMode.Add);
+      const modalSubtask = new TaskAddModal([], translationHandlerMock, language, emotes, undefined, TaskAddModalMode.Subtask);
+      const modalEdit = new TaskAddModal([], translationHandlerMock, language, emotes, undefined, TaskAddModalMode.Edit);
+
+      // Assert
+      expect(modalAdd).toBeInstanceOf(TaskAddModal);
+      expect(modalSubtask).toBeInstanceOf(TaskAddModal);
+      expect(modalEdit).toBeInstanceOf(TaskAddModal);
+    });
+
     it("should initialize customId with the expected prefix", () => {
       // Act
       const modal = new TaskAddModal([], translationHandlerMock, language, emotes);
@@ -75,6 +87,57 @@ describe("TaskAddModal", () => {
 
       // Assert
       expect(json.title).toBe("add-task.modal-title");
+    });
+
+    it("should return a modal with subtask title when mode is subtask", () => {
+      // Arrange
+      const modal = new TaskAddModal([], translationHandlerMock, language, emotes, undefined, TaskAddModalMode.Subtask);
+
+      // Act
+      const built = modal.build();
+      const json = built.toJSON();
+
+      // Assert
+      expect(json.title).toBe("add-task.subtask-modal-title");
+    });
+
+    it("should not include project selector and add description to title in subtask mode", () => {
+      // Arrange
+      const modal = new TaskAddModal(
+        [{ id: "1", name: "Project 1" }],
+        translationHandlerMock,
+        language,
+        emotes,
+        undefined,
+        TaskAddModalMode.Subtask,
+      );
+
+      // Act
+      const built = modal.build();
+      const json = built.toJSON();
+
+      // Assert - should have 4 components (no project) instead of 5
+      expect(json.components).toHaveLength(4);
+
+      // Title should have description explaining project inheritance
+      const titleLabel = json.components[0] as any;
+      expect(titleLabel.description).toBe("add-task.actions.subtask.project-inherited");
+
+      // No project selector should exist
+      const customIds = json.components.map((c: any) => c.component?.custom_id);
+      expect(customIds).not.toContain("task_project");
+    });
+
+    it("should return a modal with edit title when mode is edit", () => {
+      // Arrange
+      const modal = new TaskAddModal([], translationHandlerMock, language, emotes, undefined, TaskAddModalMode.Edit);
+
+      // Act
+      const built = modal.build();
+      const json = built.toJSON();
+
+      // Assert
+      expect(json.title).toBe("add-task.edit-modal-title");
     });
 
     it("should include a custom ID starting with the expected prefix", () => {
@@ -240,6 +303,32 @@ describe("TaskAddModal", () => {
         expect(projectLabel.component.options[0].value)
           .toBe(TaskAddModal.PROJECT_NONE_VALUE);
       });
+
+      it("should pre-select project option when prefill.project is provided", () => {
+        // Arrange
+        const projects = [
+          { id: "proj1", name: "Work" },
+          { id: "proj2", name: "Personal" },
+        ];
+        const prefill = { project: "proj2" };
+        const modal = new TaskAddModal(
+          projects,
+          translationHandlerMock,
+          language,
+          emotes,
+          prefill,
+        );
+
+        // Act
+        const built = modal.build();
+        const json = built.toJSON();
+        const projectLabel = json.components[2] as any;
+        const options = projectLabel.component.options;
+
+        // Assert
+        expect(options[0].default).toBe(false);
+        expect(options[1].default).toBe(true);
+      });
     });
 
     describe("priority select menu", () => {
@@ -311,6 +400,43 @@ describe("TaskAddModal", () => {
         expect(priorityLabel.component.options[2].default).toBe(false);
         expect(priorityLabel.component.options[3].default).toBe(true);
       });
+
+      it("should pre-select priority option when prefill.priority is provided", () => {
+        // Arrange
+        // Todoist priority 4 = value "1" (5 - 4 = 1), display priority 1
+        const prefill = { priority: 4 };
+        const modal = new TaskAddModal([], translationHandlerMock, language, emotes, prefill);
+
+        // Act
+        const built = modal.build();
+        const json = built.toJSON();
+        const priorityLabel = json.components[3] as any;
+
+        // Assert
+        // priority 4 (stored as value "1") corresponds to display priority 1
+        expect(priorityLabel.component.options[0].default).toBe(true);
+        expect(priorityLabel.component.options[1].default).toBe(false);
+        expect(priorityLabel.component.options[2].default).toBe(false);
+        expect(priorityLabel.component.options[3].default).toBe(false);
+      });
+
+      it("should pre-select priority 2 option when prefill.priority is 3", () => {
+        // Arrange
+        // Todoist priority 3 = value "2" (5 - 3 = 2), display priority 2
+        const prefill = { priority: 3 };
+        const modal = new TaskAddModal([], translationHandlerMock, language, emotes, prefill);
+
+        // Act
+        const built = modal.build();
+        const json = built.toJSON();
+        const priorityLabel = json.components[3] as any;
+
+        // Assert
+        expect(priorityLabel.component.options[0].default).toBe(false);
+        expect(priorityLabel.component.options[1].default).toBe(true);
+        expect(priorityLabel.component.options[2].default).toBe(false);
+        expect(priorityLabel.component.options[3].default).toBe(false);
+      });
     });
 
     describe("due date select menu", () => {
@@ -333,6 +459,71 @@ describe("TaskAddModal", () => {
         expect(values).toContain(DueStringSelectionOptions.NextMonday);
         expect(values).toContain(DueStringSelectionOptions.NextWeek);
         expect(values).toContain(DueStringSelectionOptions.NextMonth);
+      });
+
+      it("should have no option selected by default", () => {
+        // Arrange
+        const modal = new TaskAddModal([], translationHandlerMock, language, emotes);
+
+        // Act
+        const built = modal.build();
+        const json = built.toJSON();
+        const dueDateLabel = json.components[4] as any;
+
+        // Assert
+        const defaultOptions = dueDateLabel.component.options.filter((o: any) => o.default);
+        expect(defaultOptions).toHaveLength(0);
+      });
+
+      it("should pre-select Today option when prefill.dueDate is Today", () => {
+        // Arrange
+        const prefill = { dueDate: DueStringSelectionOptions.Today };
+        const modal = new TaskAddModal([], translationHandlerMock, language, emotes, prefill);
+
+        // Act
+        const built = modal.build();
+        const json = built.toJSON();
+        const dueDateLabel = json.components[4] as any;
+
+        // Assert
+        const todayOption = dueDateLabel.component.options.find(
+          (o: any) => o.value === DueStringSelectionOptions.Today,
+        );
+        expect(todayOption.default).toBe(true);
+      });
+
+      it("should pre-select Tomorrow option when prefill.dueDate is Tomorrow", () => {
+        // Arrange
+        const prefill = { dueDate: DueStringSelectionOptions.Tomorrow };
+        const modal = new TaskAddModal([], translationHandlerMock, language, emotes, prefill);
+
+        // Act
+        const built = modal.build();
+        const json = built.toJSON();
+        const dueDateLabel = json.components[4] as any;
+
+        // Assert
+        const tomorrowOption = dueDateLabel.component.options.find(
+          (o: any) => o.value === DueStringSelectionOptions.Tomorrow,
+        );
+        expect(tomorrowOption.default).toBe(true);
+      });
+
+      it("should pre-select NextWeek option when prefill.dueDate is NextWeek", () => {
+        // Arrange
+        const prefill = { dueDate: DueStringSelectionOptions.NextWeek };
+        const modal = new TaskAddModal([], translationHandlerMock, language, emotes, prefill);
+
+        // Act
+        const built = modal.build();
+        const json = built.toJSON();
+        const dueDateLabel = json.components[4] as any;
+
+        // Assert
+        const nextWeekOption = dueDateLabel.component.options.find(
+          (o: any) => o.value === DueStringSelectionOptions.NextWeek,
+        );
+        expect(nextWeekOption.default).toBe(true);
       });
     });
   });

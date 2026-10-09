@@ -14,6 +14,8 @@
   },
   "add-task": {
     "modal-title": "Add a task to Todoist",
+    "subtask-modal-title": "Add a subtask",
+    "edit-modal-title": "Edit task",
     "title": "Task title",
     "title-placeholder": "e.g. Buy groceries",
     "description": "Task description",
@@ -42,8 +44,20 @@
     "success-no-date": "No due date",
     "creation-error": "{{x}} An error occurred while creating the task in Todoist (error code: {{errorCode}}).",
     "projects-fetch-error": "{{x}} An error occurred while fetching your Todoist projects (error code: {{errorCode}}).",
+    "task-not-found": "{{x}} The task could not be found. It may have been deleted.",
     "actions": {
       "placeholder": "More actions",
+      "subtask": {
+        "label": "Create subtask",
+        "success": "{{v}} Subtask added successfully:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Parent task**: {{parentTask}}\n**Due date:** {{date}}",
+        "error": "{{x}} Failed to create subtask (error code: {{errorCode}}).",
+        "project-inherited": "Subtasks inherit the project from their parent task."
+      },
+      "edit": {
+        "label": "Edit task",
+        "success": "{{v}} Task \"{{task}}\" has been updated.",
+        "error": "{{x}} Failed to update the task (error code: {{errorCode}})."
+      },
       "complete": {
         "label": "Complete task",
         "success": "{{v}} Task \"{{task}}\" marked as complete.",

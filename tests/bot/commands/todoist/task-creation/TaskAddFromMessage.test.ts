@@ -20,6 +20,7 @@ describe("TaskAddFromMessage Command", () => {
   let todoistClientMock: TodoistApiClient;
   let mockSendAndAwaitModalSubmit: jest.Mock;
   let mockAddToTodoist: jest.Mock;
+  let mockHandleTaskAction: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -41,10 +42,12 @@ describe("TaskAddFromMessage Command", () => {
 
     mockSendAndAwaitModalSubmit = jest.fn();
     mockAddToTodoist = jest.fn();
+    mockHandleTaskAction = jest.fn();
     (TaskAddHandler as jest.MockedClass<typeof TaskAddHandler>)
       .mockImplementation(() => ({
         sendAndAwaitModalSubmit: mockSendAndAwaitModalSubmit,
         addToTodoist: mockAddToTodoist,
+        handleTaskAction: mockHandleTaskAction,
       }) as any);
 
     command = new TaskAddFromMessage(
@@ -63,7 +66,7 @@ describe("TaskAddFromMessage Command", () => {
       expect(handlers.has(`add-from-message:${TaskAddHandler.ACTIONS_COMPONENT_ID}`)).toBe(true);
     });
 
-    it("should delegate to TaskAddHandler.handleTaskAction for select menu interactions", async () => {
+    it("should delegate to handler.handleTaskAction for select menu interactions", async () => {
       // Arrange
       const handlers = command.getMessageComponentHandlers();
       const componentId = `add-from-message:${TaskAddHandler.ACTIONS_COMPONENT_ID}`;
@@ -73,17 +76,15 @@ describe("TaskAddFromMessage Command", () => {
         values: ["complete:task-123:Buy milk"],
         user: { id: "user-123" },
       } as any;
-      (TaskAddHandler.handleTaskAction as jest.Mock).mockResolvedValue(undefined);
 
       // Act
       await handler(interaction, language);
 
       // Assert
-      expect(TaskAddHandler.handleTaskAction).toHaveBeenCalledWith(
+      expect(mockHandleTaskAction).toHaveBeenCalledWith(
         interaction,
         language,
-        todoistClientMock,
-        clientMock,
+        expect.any(Function),
       );
     });
 
@@ -100,7 +101,7 @@ describe("TaskAddFromMessage Command", () => {
       await handler(interaction, language);
 
       // Assert
-      expect(TaskAddHandler.handleTaskAction).not.toHaveBeenCalled();
+      expect(mockHandleTaskAction).not.toHaveBeenCalled();
     });
   });
 

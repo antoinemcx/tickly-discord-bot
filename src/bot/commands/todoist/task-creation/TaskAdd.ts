@@ -19,6 +19,8 @@ export default class TaskAdd extends SubCommand {
     }],
   };
 
+  private readonly handler: TaskAddHandler;
+
   constructor(
     client: Tickly,
     todoistClient: TodoistApiClient,
@@ -27,16 +29,17 @@ export default class TaskAdd extends SubCommand {
     parentCommandCategory?: SlashCommandCategory,
   ) {
     super(client, todoistClient, repositories, parentCommandName, parentCommandCategory);
+    this.handler = new TaskAddHandler(todoistClient, client);
 
     this.onMessageComponent(
       TaskAddHandler.ACTIONS_COMPONENT_ID,
       async (interaction, language) => {
         if (interaction.isStringSelectMenu()) {
-          await TaskAddHandler.handleTaskAction(
+          const componentIdBuilder = (action: string) => this.buildComponentId(action);
+          await this.handler.handleTaskAction(
             interaction,
             language,
-            this.todoistClient,
-            this.client,
+            componentIdBuilder,
           );
         }
       },
@@ -64,15 +67,10 @@ export default class TaskAdd extends SubCommand {
     }
 
     if (api) {
-      const handler = new TaskAddHandler(
-        this.todoistClient,
-        this.client.getTranslationHandler(),
-        this.client.getConfig().emotes.priorities,
-      );
       const componentIdBuilder = (action: string) => this.buildComponentId(action);
 
       if (content) {
-        await handler.addToTodoist(
+        await this.handler.addToTodoist(
           userId,
           content,
           language,
@@ -82,12 +80,12 @@ export default class TaskAdd extends SubCommand {
         );
       } else {
         try {
-          const data = await handler.sendAndAwaitModalSubmit(
+          const data = await this.handler.sendAndAwaitModalSubmit(
             interaction,
             api,
             language,
           );
-          await handler.addToTodoist(
+          await this.handler.addToTodoist(
             userId,
             data,
             language,
