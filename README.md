@@ -7,7 +7,7 @@
 
 ## 📋 Overview
 
-The bot is available in several languages: **English**, **French**, and **Polish**.
+The bot is available in several languages: **English**, **French**, **German**, **Polish**, and **Spanish**.
 
 ### Features
 * 📝 Create Todoist tasks via [command or right-clicking a message](./docs/en-US/getting-started.md#adding-your-first-task)

@@ -154,6 +154,8 @@ export class DrizzleDatabase {
       { id: 1, code: Locale.EnglishUS, name: "English" },
       { id: 2, code: Locale.French, name: "French" },
       { id: 3, code: Locale.Polish, name: "Polish" },
+      { id: 4, code: Locale.SpanishES, name: "Spanish" },
+      { id: 5, code: Locale.German, name: "German" },
     ];
 
     try {

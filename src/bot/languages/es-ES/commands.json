@@ -1,0 +1,168 @@
+{
+  "help": {
+    "description": "❓ Muestra información de ayuda sobre el bot y sus comandos.",
+    "options": {
+      "command": {
+        "description": "Nombre de un comando para obtener ayuda específica sobre él."
+      },
+      "ephemeral": {
+        "description": "Si está activado, la respuesta solo será visible para ti."
+      }
+    },
+    "errors": {
+      "unknownCommand": "{{x}} Comando `{{command}}` no encontrado.",
+      "unknownSubcommand": "{{x}} Subcomando `{{subcommand}}` no encontrado para el comando `{{command}}`.",
+      "adminOnlyCommand": "{{x}} El comando `{{command}}` está reservado para mis administradores."
+    },
+    "fields": {
+      "category": "Categoría",
+      "description": "Descripción",
+      "requiredPermissions": "Permisos requeridos",
+      "subcommands": "Subcomandos"
+    },
+    "subCommandsHelpTip": "Para más información sobre un subcomando específico, usa `/help {{command}} <subcommand>`.",
+    "userPermissions": "Usuario: {{permissions}}",
+    "botPermissions": "Tickly: {{permissions}}",
+    "noRequiredPermissions": "No se requieren permisos.",
+    "buttons": {
+      "support": "Servidor de soporte",
+      "invite": "Añadir Bot",
+      "roadmap": "Roadmap",
+      "backToCommands": "Volver a los comandos",
+      "guide": "Guía de inicio"
+    },
+    "categories": {
+      "Bot": "{{robot}} Bot",
+      "Todoist": "{{todoistSmall}} Todoist",
+      "Other": "Otro"
+    },
+    "botDescription": "Tickly es una integración no oficial, pero [de código abierto]({{githubLink}}), de [Todoist]({{todoistLink}}) para Discord.",
+    "commandList": {
+      "intro": {
+        "title": "## ¿Qué es Tickly?",
+        "features": "Con este bot, puedes fácilmente:\n- **gestionar tus tareas y proyectos de Todoist** directamente desde Discord\n- [__PRÓXIMAMENTE__] **recibir recordatorios** de tareas próximas o perdidas"
+      },
+      "commands": {
+        "title": "## Comandos",
+        "tip": "> {{i}} Escribe `/help [comando]` para más detalles sobre un comando específico."
+      },
+      "startGuidePrompt": "> **¿Necesitas una guía de inicio rápido?** Haz clic en el siguiente botón."
+    },
+    "startingGuide": {
+      "title": "## Primeros pasos",
+      "step1": {
+        "title": "### 1. Instalación",
+        "body": "Los bots de Discord pueden añadirse como **instalación de servidor** (en un servidor específico) o **instalación de usuario**.\n\nTickly soporta ambos métodos, pero **recomendamos añadirlo a tu cuenta** para que puedas usarlo en cualquier lugar de Discord, incluyendo todos los servidores y mensajes privados.\nPara hacerlo, haz clic en el [botón \"Añadir Bot\"]({{inviteLink}}), luego elige \"Añadir a mis aplicaciones\":",
+        "imageDescription": "Haz clic en \"Añadir a\" para instalar el bot en tu cuenta: \"Añadir a mis aplicaciones\"",
+        "note": "> Ten en cuenta que algunos servidores pueden deshabilitar las aplicaciones instaladas por el usuario (\"externas\"), lo que significa que el bot debe añadirse directamente en esos servidores."
+      },
+      "step2": {
+        "title": "### 2. Inicia sesión en tu cuenta de Todoist",
+        "body": "Ejecuta {{loginMention}}, serás redirigido al inicio de sesión OAuth2 de Todoist.\nDespués de aprobar el acceso, Tickly cifra y almacena tu token de acceso de Todoist en una sesión para futuras interacciones.\nPor defecto, tu sesión expira después de 30 días de inactividad — puedes cambiar esto en `/settings`."
+      },
+      "step3": {
+        "title": "### 3. Añade tu primera tarea",
+        "body": "Ahora puedes interactuar con el bot usando **comandos `/`** o **haciendo clic derecho en un mensaje**. Estos comandos están disponibles en cualquier canal de texto — y en mensajes privados si has instalado Tickly en tu cuenta.\n\nPara añadir tu primera tarea, usa {{addTaskMention}} o haz clic derecho en un mensaje y ve a \"Aplicaciones\".\nAmbos métodos abren la misma ventana, pre-rellenada si se seleccionó un mensaje:",
+        "addFromMessageImageDescription": "Creación de tarea desde un mensaje haciendo clic derecho en él.",
+        "naturalLanguageNote": "El comando de añadir también soporta [procesamiento de lenguaje natural]({{naturalLanguageLink}}), como parámetro, para crear tareas más rápidamente sin abrir la ventana modal:",
+        "addNaturalLanguageImageDescription": "Creación de tarea usando el comando con contenido en lenguaje natural."
+      }
+    }
+  },
+  "ping": {
+    "description": "Muestra el tiempo de respuesta del bot.",
+    "process": "Calculando..."
+  },
+  "todoist": {
+    "description": "Gestiona tus tareas y proyectos de Todoist.",
+    "login": {
+      "description": "🎉 Inicia sesión en tu cuenta de Todoist.",
+      "alreadyLoggedIn": "{{x}} Ya has iniciado sesión en tu cuenta de Todoist. Usa {{helpCommand}} para aprender cómo usar Tickly.",
+      "existingPendingSession": "{{i}} Ya comenzaste una sesión de inicio de sesión pero aún no la has completado.\nSe enviará un nuevo enlace de autenticación en el siguiente mensaje, el anterior ya no es válido.",
+      "instructions": "**Haz clic en el enlace de abajo para iniciar sesión.**\nSerás redirigido a una página de inicio de sesión segura de Todoist, donde se te pedirá autorizar a Tickly para acceder a tu cuenta.",
+      "link": "Enlace de inicio de sesión"
+    },
+    "logout": {
+      "description": "⛔ Cierra sesión de tu cuenta de Todoist.",
+      "noSession": "{{x}} No has iniciado sesión en una cuenta de Todoist.\n> ¿Quizás querías iniciar sesión? Usa {{loginCommand}} para hacerlo.",
+      "logoutError": "{{x}} Ocurrió un error al cerrar sesión de tu cuenta de Todoist. Por favor, inténtalo de nuevo.",
+      "logoutSuccess": "{{v}} Has cerrado sesión de tu cuenta de Todoist correctamente."
+    },
+    "add": {
+      "description": "➕ Añade una tarea a tu cuenta de Todoist (abre una ventana modal).",
+      "options": {
+        "content": {
+          "description": "Contenido de la tarea en lenguaje natural (omite la modal), usando el motor de análisis de Todoist."
+        }
+      }
+    },
+    "upcoming": {
+      "description": "📋 Ve tus tareas próximas y atrasadas de Todoist.",
+      "options": {
+        "period": {
+          "description": "Pestaña de filtro inicial.",
+          "choices": {
+            "today": "Hoy",
+            "tomorrow": "Mañana",
+            "week": "Esta semana",
+            "upcoming": "Próximas"
+          }
+        }
+      },
+      "title": "Tareas próximas",
+      "taskCount": "{{count}} tarea(s) activa(s)",
+      "taskCountMax": "{{count}}+ tareas activas",
+      "page": "Página {{current}}/{{total}}",
+      "noTasks": "{{i}} No tienes tareas activas. ¡Usa {{addCommand}} para crear una!",
+      "noTasksForFilter": "{{i}} No hay tareas para este período.",
+      "fetchError": "{{x}} Ocurrió un error al obtener tus tareas. Por favor, inténtalo de nuevo.",
+      "sections": {
+        "overdue": "Atrasadas",
+        "today": "Hoy"
+      },
+      "filters": {
+        "today": "Hoy",
+        "tomorrow": "Mañana",
+        "week": "Esta semana",
+        "upcoming": "Próximas"
+      },
+      "buttons": {
+        "prev": "← Anterior",
+        "next": "Siguiente →"
+      }
+    }
+  },
+  "add-from-message": {
+    "name": "Añadir tarea de Todoist"
+  },
+  "settings": {
+    "description": "🔧 Ve y modifica tus preferencias de usuario (idioma, recordatorios, etc.).",
+    "fetchError": "{{x}} Ocurrió un error al obtener tu configuración general. Por favor, inténtalo más tarde.",
+    "view": {
+      "generalSettings": "### Configuración general",
+      "language": "Idioma usado en las respuestas del bot:",
+      "defaultLanguage": "Idioma por defecto",
+      "defaultLanguageDescription": "Configuración regional de Discord, o inglés si no está soportado.",
+      "sessionDuration": "Duración de la sesión (expiración por inactividad):"
+    },
+    "sessionDurationOptions": {
+      "default": "Por defecto ({{days}} días)",
+      "defaultDescription": "Tu sesión expira después de {{days}} días de inactividad.",
+      "7days": "1 semana",
+      "14days": "2 semanas",
+      "30days": "1 mes",
+      "90days": "3 meses",
+      "180days": "6 meses"
+    },
+    "update": {
+      "preferredLanguage": {
+        "success": "{{v}} Tu idioma ha sido actualizado a {{language}}.",
+        "cleared": "{{v}} Tu idioma ha sido restablecido.\nSe usará la configuración regional de tu cuenta de Discord, o inglés si no está soportada."
+      },
+      "sessionRetention": {
+        "success": "{{v}} La duración de tu sesión ha sido actualizada a {{duration}}.",
+        "cleared": "{{v}} La duración de tu sesión ha sido restablecida al valor por defecto ({{days}} días)."
+      }
+    }
+  }
+}

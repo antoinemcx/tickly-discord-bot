@@ -1,0 +1,73 @@
+{
+  "languageName": "Español",
+  "interactionHandling": {
+    "privateCommand": "{{x}} Este comando es privado y solo para mis desarrolladores.",
+    "missingPermission": {
+      "user": "{{x}} Te faltan permisos (requeridos: {{required}})",
+      "bot": "{{x}} Me faltan permisos (requeridos: {{required}})"
+    },
+    "executionError": "{{x}} Ocurrió un error desconocido al ejecutar el comando (código: {{errorCode}}).",
+    "unkownCommand": "{{x}} Comando desconocido."
+  },
+  "session": {
+    "invalid": "{{x}} No has iniciado sesión en una cuenta de Todoist o tu sesión ha expirado.\n> Por favor, inicia sesión de nuevo usando el comando {{loginCommand}}."
+  },
+  "add-task": {
+    "modal-title": "Añadir una tarea a Todoist",
+    "subtask-modal-title": "Añadir una subtarea",
+    "edit-modal-title": "Editar tarea",
+    "title": "Título de la tarea",
+    "title-placeholder": "ej. Comprar comida",
+    "description": "Descripción de la tarea",
+    "description-placeholder": "Detalles adicionales (opcional)",
+    "project": "Proyecto",
+    "project-none": "Bandeja de entrada",
+    "priorities": {
+      "label": "Prioridad",
+      "none": "Ninguna",
+      "1": "Prioridad 1 (Urgente)",
+      "2": "Prioridad 2",
+      "3": "Prioridad 3",
+      "4": "Prioridad 4 (Normal)"
+    },
+    "due-date": {
+      "label": "Fecha de vencimiento",
+      "none": "Sin fecha de vencimiento",
+      "today": "Hoy",
+      "tomorrow": "Mañana",
+      "next-monday": "Próximo lunes",
+      "next-week": "La próxima semana",
+      "next-month": "El próximo mes"
+    },
+    "success": "{{v}} Tarea añadida con éxito:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Proyecto**: {{project}}\n**Fecha de vencimiento:** {{date}}",
+    "success-no-project": "Bandeja de entrada (sin proyecto)",
+    "success-no-date": "Sin fecha de vencimiento",
+    "creation-error": "{{x}} Ocurrió un error al crear la tarea en Todoist (código de error: {{errorCode}}).",
+    "projects-fetch-error": "{{x}} Ocurrió un error al obtener tus proyectos de Todoist (código de error: {{errorCode}}).",
+    "task-not-found": "{{x}} No se pudo encontrar la tarea. Puede que haya sido eliminada.",
+    "actions": {
+      "placeholder": "Más acciones",
+      "subtask": {
+        "label": "Crear subtarea",
+        "success": "{{v}} Subtarea añadida con éxito:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Tarea principal**: {{parentTask}}\n**Fecha de vencimiento:** {{date}}",
+        "error": "{{x}} No se pudo crear la subtarea (código de error: {{errorCode}}).",
+        "project-inherited": "Las subtareas heredan el proyecto de su tarea principal."
+      },
+      "edit": {
+        "label": "Editar tarea",
+        "success": "{{v}} La tarea \"{{task}}\" ha sido actualizada.",
+        "error": "{{x}} No se pudo actualizar la tarea (código de error: {{errorCode}})."
+      },
+      "complete": {
+        "label": "Completar tarea",
+        "success": "{{v}} Tarea \"{{task}}\" marcada como completada.",
+        "error": "{{x}} No se pudo completar la tarea (código de error: {{errorCode}})."
+      },
+      "delete": {
+        "label": "Eliminar tarea",
+        "success": "{{v}} La tarea \"{{task}}\" ha sido eliminada.",
+        "error": "{{x}} No se pudo eliminar la tarea (código de error: {{errorCode}})."
+      }
+    }
+  }
+}

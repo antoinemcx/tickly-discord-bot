@@ -1,0 +1,19 @@
+{
+  "success": {
+    "title": "Todoist conectado",
+    "description": "Tu cuenta de Todoist ahora está vinculada a Discord. Redirigiendo...",
+    "button": "Volver a Discord"
+  },
+  "error": {
+    "title": "Conexión fallida",
+    "button": "Volver a Discord",
+    "reasons": {
+      "invalid_callback_query": "Algo salió mal. Por favor, intenta conectarte de nuevo desde Discord.",
+      "invalid_oauth_state": "Algo salió mal. Por favor, intenta conectarte de nuevo desde Discord.",
+      "expired_oauth_state": "El enlace de conexión ha expirado. Por favor, inténtalo de nuevo desde Discord.",
+      "token_exchange_failed": "Algo salió mal con Todoist. Por favor, intenta conectarte de nuevo desde Discord.",
+      "access_denied": "El acceso a tu cuenta de Todoist ha sido denegado o has cancelado la acción.",
+      "unknown_error": "Algo salió mal. Por favor, intenta conectarte de nuevo desde Discord."
+    }
+  }
+}

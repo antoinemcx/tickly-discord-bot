@@ -1,0 +1,19 @@
+{
+  "success": {
+    "title": "Todoist verbunden",
+    "description": "Dein Todoist-Konto ist jetzt mit Discord verknüpft. Du wirst weitergeleitet...",
+    "button": "Zurück zu Discord"
+  },
+  "error": {
+    "title": "Verbindung fehlgeschlagen",
+    "button": "Zurück zu Discord",
+    "reasons": {
+      "invalid_callback_query": "Etwas ist schiefgelaufen. Bitte versuche die Verbindung erneut von Discord aus.",
+      "invalid_oauth_state": "Etwas ist schiefgelaufen. Bitte versuche die Verbindung erneut von Discord aus.",
+      "expired_oauth_state": "Der Verbindungslink ist abgelaufen. Bitte versuche es erneut von Discord aus.",
+      "token_exchange_failed": "Etwas ist mit Todoist schiefgelaufen. Bitte versuche die Verbindung erneut von Discord aus.",
+      "access_denied": "Der Zugriff auf dein Todoist-Konto wurde verweigert oder du hast die Aktion abgebrochen.",
+      "unknown_error": "Etwas ist schiefgelaufen. Bitte versuche die Verbindung erneut von Discord aus."
+    }
+  }
+}

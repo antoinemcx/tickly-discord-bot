@@ -1,0 +1,168 @@
+{
+  "help": {
+    "description": "❓ Zeigt Hilfeinformationen über den Bot und seine Befehle an.",
+    "options": {
+      "command": {
+        "description": "Name eines Befehls, um spezifische Hilfe zu erhalten."
+      },
+      "ephemeral": {
+        "description": "Wenn aktiviert, ist die Antwort nur für dich sichtbar."
+      }
+    },
+    "errors": {
+      "unknownCommand": "{{x}} Befehl `{{command}}` nicht gefunden.",
+      "unknownSubcommand": "{{x}} Unterbefehl `{{subcommand}}` für Befehl `{{command}}` nicht gefunden.",
+      "adminOnlyCommand": "{{x}} Der Befehl `{{command}}` ist meinen Administratoren vorbehalten."
+    },
+    "fields": {
+      "category": "Kategorie",
+      "description": "Beschreibung",
+      "requiredPermissions": "Erforderliche Berechtigungen",
+      "subcommands": "Unterbefehle"
+    },
+    "subCommandsHelpTip": "Für weitere Informationen zu einem bestimmten Unterbefehl, verwende `/help {{command}} <subcommand>`.",
+    "userPermissions": "Nutzer: {{permissions}}",
+    "botPermissions": "Tickly: {{permissions}}",
+    "noRequiredPermissions": "Keine Berechtigungen erforderlich.",
+    "buttons": {
+      "support": "Support-Server",
+      "invite": "Bot hinzufügen",
+      "roadmap": "Roadmap",
+      "backToCommands": "Zurück zu den Befehlen",
+      "guide": "Startanleitung"
+    },
+    "categories": {
+      "Bot": "{{robot}} Bot",
+      "Todoist": "{{todoistSmall}} Todoist",
+      "Other": "Sonstiges"
+    },
+    "botDescription": "Tickly ist eine inoffizielle, aber [quelloffene]({{githubLink}}), [Todoist]({{todoistLink}})-Integration für Discord.",
+    "commandList": {
+      "intro": {
+        "title": "## Was ist Tickly?",
+        "features": "Mit diesem Bot kannst du ganz einfach:\n- **deine Todoist-Aufgaben und Projekte** direkt von Discord aus verwalten\n- [__BALD__] **Erinnerungen** für bevorstehende oder verpasste Aufgaben erhalten"
+      },
+      "commands": {
+        "title": "## Befehle",
+        "tip": "> {{i}} Gib `/help [befehl]` ein, um mehr Details zu einem bestimmten Befehl zu erhalten."
+      },
+      "startGuidePrompt": "> **Brauchst du eine Kurzanleitung?** Klicke auf den folgenden Button."
+    },
+    "startingGuide": {
+      "title": "## Erste Schritte",
+      "step1": {
+        "title": "### 1. Installation",
+        "body": "Discord-Bots können als **Server-Installation** (auf einem bestimmten Server) oder als **Nutzer-Installation** hinzugefügt werden.\n\nTickly unterstützt beide Methoden, aber **wir empfehlen, ihn zu deinem Konto hinzuzufügen**, damit du ihn überall in Discord nutzen kannst, einschließlich aller Server und Direktnachrichten.\nKlicke dazu auf den [\"Bot hinzufügen\"-Button]({{inviteLink}}) und wähle dann \"Zu meinen Apps hinzufügen\":",
+        "imageDescription": "Klicke auf \"Hinzufügen zu\", um den Bot auf deinem Konto zu installieren: \"Zu meinen Apps hinzufügen\"",
+        "note": "> Beachte, dass einige Server nutzerinstallierte (\"externe\") Apps deaktivieren können, was bedeutet, dass der Bot direkt auf diesen Servern hinzugefügt werden muss."
+      },
+      "step2": {
+        "title": "### 2. Bei deinem Todoist-Konto anmelden",
+        "body": "Führe {{loginMention}} aus, du wirst zur Todoist OAuth2-Anmeldung weitergeleitet.\nNachdem du den Zugriff genehmigt hast, verschlüsselt und speichert Tickly dein Todoist-Zugriffstoken in einer Sitzung für zukünftige Interaktionen.\nStandardmäßig läuft deine Sitzung nach 30 Tagen Inaktivität ab — du kannst dies in `/settings` ändern."
+      },
+      "step3": {
+        "title": "### 3. Füge deine erste Aufgabe hinzu",
+        "body": "Du kannst jetzt mit dem Bot interagieren, indem du **`/`-Befehle** verwendest oder **mit der rechten Maustaste auf eine Nachricht klickst**. Diese Befehle sind in jedem Textkanal verfügbar — und in Direktnachrichten, wenn du Tickly auf deinem Konto installiert hast.\n\nUm deine erste Aufgabe hinzuzufügen, verwende {{addTaskMention}} oder klicke mit der rechten Maustaste auf eine Nachricht und gehe zu \"Apps\".\nBeide Methoden öffnen das gleiche Fenster, vorausgefüllt wenn eine Nachricht ausgewählt wurde:",
+        "addFromMessageImageDescription": "Aufgabenerstellung aus einer Nachricht durch Rechtsklick darauf.",
+        "naturalLanguageNote": "Der Hinzufügen-Befehl unterstützt auch [natürliche Sprachverarbeitung]({{naturalLanguageLink}}) als Parameter, um Aufgaben schneller ohne das Öffnen des Modals zu erstellen:",
+        "addNaturalLanguageImageDescription": "Aufgabenerstellung mit dem Befehl und Inhalt in natürlicher Sprache."
+      }
+    }
+  },
+  "ping": {
+    "description": "Zeigt die Antwortzeit des Bots an.",
+    "process": "Berechne..."
+  },
+  "todoist": {
+    "description": "Verwalte deine Todoist-Aufgaben und Projekte.",
+    "login": {
+      "description": "🎉 Melde dich bei deinem Todoist-Konto an.",
+      "alreadyLoggedIn": "{{x}} Du bist bereits bei deinem Todoist-Konto angemeldet. Verwende {{helpCommand}}, um zu erfahren, wie du Tickly nutzen kannst.",
+      "existingPendingSession": "{{i}} Du hast bereits eine Anmeldesitzung gestartet, aber noch nicht abgeschlossen.\nEin neuer Authentifizierungslink wird in der nächsten Nachricht gesendet, der vorherige ist jetzt ungültig.",
+      "instructions": "**Klicke auf den Link unten, um dich anzumelden.**\nDu wirst zu einer sicheren Todoist-Anmeldeseite weitergeleitet, auf der du Tickly den Zugriff auf dein Konto genehmigen sollst.",
+      "link": "Anmeldelink"
+    },
+    "logout": {
+      "description": "⛔ Melde dich von deinem Todoist-Konto ab.",
+      "noSession": "{{x}} Du bist bei keinem Todoist-Konto angemeldet.\n> Wolltest du dich vielleicht anmelden? Verwende {{loginCommand}} dafür.",
+      "logoutError": "{{x}} Beim Abmelden von deinem Todoist-Konto ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+      "logoutSuccess": "{{v}} Du wurdest erfolgreich von deinem Todoist-Konto abgemeldet."
+    },
+    "add": {
+      "description": "➕ Fügt eine Aufgabe zu deinem Todoist-Konto hinzu (öffnet ein Modal-Fenster).",
+      "options": {
+        "content": {
+          "description": "Aufgabeninhalt in natürlicher Sprache (überspringt das Modal), unter Verwendung der Todoist-Parsing-Engine."
+        }
+      }
+    },
+    "upcoming": {
+      "description": "📋 Zeige deine bevorstehenden und überfälligen Todoist-Aufgaben an.",
+      "options": {
+        "period": {
+          "description": "Anfängliche Filter-Registerkarte.",
+          "choices": {
+            "today": "Heute",
+            "tomorrow": "Morgen",
+            "week": "Diese Woche",
+            "upcoming": "Bevorstehend"
+          }
+        }
+      },
+      "title": "Bevorstehende Aufgaben",
+      "taskCount": "{{count}} aktive Aufgabe(n)",
+      "taskCountMax": "{{count}}+ aktive Aufgaben",
+      "page": "Seite {{current}}/{{total}}",
+      "noTasks": "{{i}} Du hast keine aktiven Aufgaben. Verwende {{addCommand}}, um eine zu erstellen!",
+      "noTasksForFilter": "{{i}} Keine Aufgaben für diesen Zeitraum.",
+      "fetchError": "{{x}} Beim Abrufen deiner Aufgaben ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+      "sections": {
+        "overdue": "Überfällig",
+        "today": "Heute"
+      },
+      "filters": {
+        "today": "Heute",
+        "tomorrow": "Morgen",
+        "week": "Diese Woche",
+        "upcoming": "Bevorstehend"
+      },
+      "buttons": {
+        "prev": "← Zurück",
+        "next": "Weiter →"
+      }
+    }
+  },
+  "add-from-message": {
+    "name": "Todoist-Aufgabe hinzufügen"
+  },
+  "settings": {
+    "description": "🔧 Zeige und ändere deine Nutzereinstellungen (Sprache, Erinnerungen, etc.).",
+    "fetchError": "{{x}} Beim Abrufen deiner allgemeinen Einstellungen ist ein Fehler aufgetreten. Bitte versuche es später erneut.",
+    "view": {
+      "generalSettings": "### Allgemeine Einstellungen",
+      "language": "Sprache für Bot-Antworten:",
+      "defaultLanguage": "Standardsprache",
+      "defaultLanguageDescription": "Discord-Spracheinstellung, oder Englisch wenn nicht unterstützt.",
+      "sessionDuration": "Sitzungsdauer (Ablauf bei Inaktivität):"
+    },
+    "sessionDurationOptions": {
+      "default": "Standard ({{days}} Tage)",
+      "defaultDescription": "Deine Sitzung läuft nach {{days}} Tagen Inaktivität ab.",
+      "7days": "1 Woche",
+      "14days": "2 Wochen",
+      "30days": "1 Monat",
+      "90days": "3 Monate",
+      "180days": "6 Monate"
+    },
+    "update": {
+      "preferredLanguage": {
+        "success": "{{v}} Deine Sprache wurde auf {{language}} aktualisiert.",
+        "cleared": "{{v}} Deine Spracheinstellung wurde zurückgesetzt.\nDie auf deinem Discord-Konto konfigurierte Sprache wird nun verwendet, oder Englisch wenn nicht unterstützt."
+      },
+      "sessionRetention": {
+        "success": "{{v}} Deine Sitzungsdauer wurde auf {{duration}} aktualisiert.",
+        "cleared": "{{v}} Deine Sitzungsdauer wurde auf den Standard zurückgesetzt ({{days}} Tage)."
+      }
+    }
+  }
+}

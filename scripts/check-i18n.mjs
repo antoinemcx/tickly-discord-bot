@@ -5,6 +5,11 @@
  *   directory per locale <dir>/<locale>/<file>.json (for bot translation)
  *   file per locale <dir>/<locale>.json (for web services translation)
  *
+ * Also verifies:
+ *   - All translation sources have the same set of locales
+ *   - All translated locales have an emoji in config.example.ts
+ *   - Documentation folders (docs/) have the same files across locales
+ *
  * Usage:
  *   node scripts/check-i18n.mjs [dir1] [dir2] ...
  *   (defaults to all known language directories when no args are given)
@@ -13,7 +18,7 @@
  * Exit 1 — at least one mismatch found
  */
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import process from "node:process";
 
@@ -21,6 +26,9 @@ const DEFAULT_DIRS = [
   "src/bot/languages",
   "src/services/oauth/languages",
 ];
+
+const CONFIG_PATH = "config.example.ts";
+const DOCS_DIR = "docs";
 
 const dirs = process.argv.slice(2).length > 0 ? process.argv.slice(2) : DEFAULT_DIRS;
 
@@ -173,9 +181,144 @@ function checkFilePerLocale(dir) {
   return hasErrors;
 }
 
-// ── Main
+// ── Cross-source locale consistency check ────────────────────────────────────
+/** Get locales from a directory (handles both dir-per-locale and file-per-locale). */
+function getLocalesFromDir(dir) {
+  const entries = readdirSync(dir, { withFileTypes: true });
+  const hasSubDirs = entries.some(e => e.isDirectory());
+
+  if (hasSubDirs) {
+    return entries.filter(d => d.isDirectory()).map(d => d.name);
+  }
+  return entries
+    .filter(f => f.isFile() && f.name.endsWith(".json"))
+    .map(f => basename(f.name, ".json"));
+}
+
+/** Check that all translation sources have the same set of locales. */
+function checkLocaleConsistency(dirs) {
+  console.log("\nLocale consistency across sources:");
+
+  const localesByDir = {};
+  for (const dir of dirs) {
+    localesByDir[dir] = new Set(getLocalesFromDir(dir));
+  }
+
+  const [referenceDir, ...otherDirs] = dirs;
+  const referenceLocales = localesByDir[referenceDir];
+  let hasErrors = false;
+
+  for (const dir of otherDirs) {
+    const locales = localesByDir[dir];
+    const missing = [...referenceLocales].filter(l => !locales.has(l));
+    const extra = [...locales].filter(l => !referenceLocales.has(l));
+
+    if (missing.length) {
+      console.error(`  ❌ [${dir}] Missing locales (present in ${referenceDir}): ${missing.join(", ")}`);
+      hasErrors = true;
+    }
+    if (extra.length) {
+      console.error(`  ❌ [${dir}] Extra locales (not in ${referenceDir}): ${extra.join(", ")}`);
+      hasErrors = true;
+    }
+  }
+
+  if (!hasErrors) {
+    console.log(`  ✅ All sources have the same locales: ${[...referenceLocales].join(", ")}`);
+  }
+
+  return { hasErrors, locales: referenceLocales };
+}
+
+// ── Config emoji check ───────────────────────────────────────────────────────
+/** Check that all translated locales have an emoji in config.example.ts. */
+function checkConfigLanguages(translatedLocales) {
+  console.log("\nConfig emoji coverage:");
+
+  if (!existsSync(CONFIG_PATH)) {
+    console.error(`  ❌ Config file not found: ${CONFIG_PATH}`);
+    return true;
+  }
+
+  const configContent = readFileSync(CONFIG_PATH, "utf-8");
+  const languagesMatch = configContent.match(/languages:\s*\{([^}]+)\}/);
+
+  if (!languagesMatch) {
+    console.error(`  ❌ Could not find emotes.languages in ${CONFIG_PATH}`);
+    return true;
+  }
+
+  // Extract locale keys from the config (e.g., "en-US", "fr", etc.)
+  const configLocales = new Set(
+    [...languagesMatch[1].matchAll(/"([^"]+)":/g)].map(m => m[1]),
+  );
+
+  // Check that every translated locale has an emoji
+  const missing = [...translatedLocales].filter(locale => !configLocales.has(locale));
+
+  if (missing.length) {
+    console.error(`  ❌ Locales missing from emotes.languages in ${CONFIG_PATH}: ${missing.join(", ")}`);
+    return true;
+  }
+
+  console.log(`  ✅ All translated locales have emojis in config`);
+  return false;
+}
+
+// ── Documentation folder check ───────────────────────────────────────────────
+/** Check that docs/ locale folders have the same markdown files. */
+function checkDocsFolders() {
+  console.log("\nDocumentation folder sync:");
+
+  if (!existsSync(DOCS_DIR)) {
+    console.log(`  ⚠️  Docs directory not found: ${DOCS_DIR} (skipping)`);
+    return false;
+  }
+
+  const entries = readdirSync(DOCS_DIR, { withFileTypes: true });
+  const localeDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
+
+  if (localeDirs.length < 2) {
+    console.log("  Only one locale folder found, nothing to compare.");
+    return false;
+  }
+
+  const [reference, ...others] = localeDirs;
+  const referenceFiles = readdirSync(join(DOCS_DIR, reference))
+    .filter(f => f.endsWith(".md"))
+    .sort();
+
+  let hasErrors = false;
+
+  for (const locale of others) {
+    const files = readdirSync(join(DOCS_DIR, locale))
+      .filter(f => f.endsWith(".md"))
+      .sort();
+
+    const missing = referenceFiles.filter(f => !files.includes(f));
+    const extra = files.filter(f => !referenceFiles.includes(f));
+
+    if (missing.length) {
+      console.error(`  ❌ [docs/${locale}] Missing files (present in docs/${reference}): ${missing.join(", ")}`);
+      hasErrors = true;
+    }
+    if (extra.length) {
+      console.error(`  ❌ [docs/${locale}] Extra files (not in docs/${reference}): ${extra.join(", ")}`);
+      hasErrors = true;
+    }
+  }
+
+  if (!hasErrors) {
+    console.log(`  ✅ All locale folders have the same files: ${referenceFiles.join(", ")}`);
+  }
+
+  return hasErrors;
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
 let globalErrors = false;
 
+// 1. Check individual directories (JSON key sync)
 for (const dir of dirs) {
   console.log(`\nChecking: ${dir}`);
 
@@ -185,6 +328,22 @@ for (const dir of dirs) {
   const hasErrors = hasSubDirs ? checkDirPerLocale(dir) : checkFilePerLocale(dir);
   if (hasErrors)
     globalErrors = true;
+}
+
+// 2. Check locale consistency across all translation sources
+const { hasErrors: localeConsistencyErrors, locales } = checkLocaleConsistency(dirs);
+if (localeConsistencyErrors) {
+  globalErrors = true;
+}
+
+// 3. Check config emoji coverage (only if we have locales)
+if (locales.size > 0 && checkConfigLanguages(locales)) {
+  globalErrors = true;
+}
+
+// 4. Check documentation folder sync
+if (checkDocsFolders()) {
+  globalErrors = true;
 }
 
 if (globalErrors) {

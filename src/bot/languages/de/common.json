@@ -1,0 +1,73 @@
+{
+  "languageName": "Deutsch",
+  "interactionHandling": {
+    "privateCommand": "{{x}} Dieser Befehl ist privat und nur für meine Entwickler.",
+    "missingPermission": {
+      "user": "{{x}} Dir fehlen Berechtigungen (erforderlich: {{required}})",
+      "bot": "{{x}} Mir fehlen Berechtigungen (erforderlich: {{required}})"
+    },
+    "executionError": "{{x}} Beim Ausführen des Befehls ist ein unbekannter Fehler aufgetreten (Code: {{errorCode}}).",
+    "unkownCommand": "{{x}} Unbekannter Befehl."
+  },
+  "session": {
+    "invalid": "{{x}} Du bist nicht bei einem Todoist-Konto angemeldet oder deine Sitzung ist abgelaufen.\n> Bitte melde dich erneut mit dem Befehl {{loginCommand}} an."
+  },
+  "add-task": {
+    "modal-title": "Aufgabe zu Todoist hinzufügen",
+    "subtask-modal-title": "Unteraufgabe hinzufügen",
+    "edit-modal-title": "Aufgabe bearbeiten",
+    "title": "Aufgabentitel",
+    "title-placeholder": "z.B. Einkaufen gehen",
+    "description": "Aufgabenbeschreibung",
+    "description-placeholder": "Zusätzliche Details (optional)",
+    "project": "Projekt",
+    "project-none": "Eingang",
+    "priorities": {
+      "label": "Priorität",
+      "none": "Keine",
+      "1": "Priorität 1 (Dringend)",
+      "2": "Priorität 2",
+      "3": "Priorität 3",
+      "4": "Priorität 4 (Normal)"
+    },
+    "due-date": {
+      "label": "Fälligkeitsdatum",
+      "none": "Kein Fälligkeitsdatum",
+      "today": "Heute",
+      "tomorrow": "Morgen",
+      "next-monday": "Nächsten Montag",
+      "next-week": "Nächste Woche",
+      "next-month": "Nächsten Monat"
+    },
+    "success": "{{v}} Aufgabe erfolgreich hinzugefügt:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Projekt**: {{project}}\n**Fälligkeitsdatum:** {{date}}",
+    "success-no-project": "Eingang (kein Projekt)",
+    "success-no-date": "Kein Fälligkeitsdatum",
+    "creation-error": "{{x}} Beim Erstellen der Aufgabe in Todoist ist ein Fehler aufgetreten (Fehlercode: {{errorCode}}).",
+    "projects-fetch-error": "{{x}} Beim Abrufen deiner Todoist-Projekte ist ein Fehler aufgetreten (Fehlercode: {{errorCode}}).",
+    "task-not-found": "{{x}} Die Aufgabe konnte nicht gefunden werden. Sie wurde möglicherweise gelöscht.",
+    "actions": {
+      "placeholder": "Weitere Aktionen",
+      "subtask": {
+        "label": "Unteraufgabe erstellen",
+        "success": "{{v}} Unteraufgabe erfolgreich hinzugefügt:\n\n>>> [{{task}}](<{{taskUrl}}>)\n**Übergeordnete Aufgabe**: {{parentTask}}\n**Fälligkeitsdatum:** {{date}}",
+        "error": "{{x}} Unteraufgabe konnte nicht erstellt werden (Fehlercode: {{errorCode}}).",
+        "project-inherited": "Unteraufgaben erben das Projekt von ihrer übergeordneten Aufgabe."
+      },
+      "edit": {
+        "label": "Aufgabe bearbeiten",
+        "success": "{{v}} Die Aufgabe \"{{task}}\" wurde aktualisiert.",
+        "error": "{{x}} Die Aufgabe konnte nicht aktualisiert werden (Fehlercode: {{errorCode}})."
+      },
+      "complete": {
+        "label": "Aufgabe abschließen",
+        "success": "{{v}} Aufgabe \"{{task}}\" als abgeschlossen markiert.",
+        "error": "{{x}} Die Aufgabe konnte nicht abgeschlossen werden (Fehlercode: {{errorCode}})."
+      },
+      "delete": {
+        "label": "Aufgabe löschen",
+        "success": "{{v}} Die Aufgabe \"{{task}}\" wurde gelöscht.",
+        "error": "{{x}} Die Aufgabe konnte nicht gelöscht werden (Fehlercode: {{errorCode}})."
+      }
+    }
+  }
+}
