@@ -278,6 +278,52 @@ describe("UserRepository", () => {
     });
   });
 
+  describe("ensureUserExists", () => {
+    it("should insert a new user when user does not exist", async () => {
+      // Arrange
+      const insertChain = createInsertChain();
+      connectionMock.insert = jest.fn().mockReturnValue(insertChain);
+
+      // Act
+      await repository.ensureUserExists("123");
+
+      // Assert
+      expect(connectionMock.insert).toHaveBeenCalled();
+      expect(insertChain.values).toHaveBeenCalledWith({ id: BigInt("123") });
+      expect(insertChain.onDuplicateKeyUpdate).toHaveBeenCalledWith({ set: {
+        id: BigInt("123"),
+      } });
+    });
+
+    it("should be idempotent and not fail when user already exists", async () => {
+      // Arrange
+      const insertChain = createInsertChain();
+      connectionMock.insert = jest.fn().mockReturnValue(insertChain);
+
+      // Act
+      await repository.ensureUserExists("123");
+      await repository.ensureUserExists("123");
+
+      // Assert
+      expect(connectionMock.insert).toHaveBeenCalledTimes(2);
+      expect(insertChain.values).toHaveBeenNthCalledWith(1, { id: BigInt("123") });
+      expect(insertChain.values).toHaveBeenNthCalledWith(2, { id: BigInt("123") });
+    });
+
+    it("should handle bigint user IDs correctly", async () => {
+      // Arrange
+      const insertChain = createInsertChain();
+      connectionMock.insert = jest.fn().mockReturnValue(insertChain);
+      const largeUserId = "290467364372480000";
+
+      // Act
+      await repository.ensureUserExists(largeUserId);
+
+      // Assert
+      expect(insertChain.values).toHaveBeenCalledWith({ id: BigInt(largeUserId) });
+    });
+  });
+
   describe("deleteUser", () => {
     it("should delete the user row by ID", async () => {
       // Arrange

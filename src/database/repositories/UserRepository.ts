@@ -164,7 +164,11 @@ export class UserRepository extends BaseRepository {
       .where(eq(usersTable.id, BigInt(userId)));
   }
 
-  private async ensureUserExists(userId: string): Promise<void> {
+  /**
+   * Ensures a user row exists in the database.
+   * @param userId Discord user ID to register
+   */
+  public async ensureUserExists(userId: string): Promise<void> {
     await this.db.getConnection()
       .insert(usersTable)
       .values({ id: BigInt(userId) })

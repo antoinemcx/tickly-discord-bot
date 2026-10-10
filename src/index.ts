@@ -63,10 +63,12 @@ import "dotenv/config";
 
   /* Initialize Todoist utilities */
   const sessionManager = repositories.getUserSessionRepository();
+  const userRepository = repositories.getUserRepository();
   const todoistClient = new TodoistApiClient(
     process.env.TODOIST_CLIENT_ID,
     process.env.TODOIST_CLIENT_SECRET,
     sessionManager,
+    userRepository,
     { permissions: ["data:read_write"] },
   );
   const oauthApiService = new OAuthApiService(

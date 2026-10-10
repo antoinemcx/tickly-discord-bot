@@ -7,6 +7,7 @@ services:
       db:
         condition: service_healthy
     environment:
+      TZ: UTC
       DISCORD_CLIENT_TOKEN: ${DISCORD_CLIENT_TOKEN}
       TODOIST_CLIENT_ID: ${TODOIST_CLIENT_ID}
       TODOIST_CLIENT_SECRET: ${TODOIST_CLIENT_SECRET}
@@ -33,6 +34,7 @@ services:
     container_name: tickly-db
     restart: unless-stopped
     environment:
+      TZ: UTC
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}

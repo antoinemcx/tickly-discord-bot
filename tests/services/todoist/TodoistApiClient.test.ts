@@ -1,3 +1,4 @@
+import type { UserRepository } from "@database/repositories/UserRepository";
 import type {
   AuthTokenResponse,
   Task,
@@ -36,6 +37,11 @@ const mockSessionManager: UserSessionManager = {
   pruneExpiredSessions: jest.fn(),
   touchSession: jest.fn().mockResolvedValue(undefined),
 };
+
+const mockUserRepository: UserRepository = {
+  ensureUserExists: jest.fn().mockResolvedValue(undefined),
+} as unknown as UserRepository;
+
 let todoistApiClientMock: TodoistApiClient;
 
 beforeEach(() => {
@@ -45,6 +51,7 @@ beforeEach(() => {
     TEST_CLIENT_ID,
     TEST_CLIENT_SECRET,
     mockSessionManager,
+    mockUserRepository,
   );
 });
 

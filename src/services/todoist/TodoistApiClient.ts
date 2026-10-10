@@ -1,3 +1,4 @@
+import type { UserRepository } from "@database/repositories/UserRepository";
 import type {
   AddTaskArgs,
   GetTasksResponse,
@@ -60,6 +61,7 @@ export class TodoistApiClient {
   private readonly permissions: readonly Permission[];
   private readonly oauthStateLifetimeMs: number;
   private readonly sessionManager: UserSessionManager;
+  private readonly userRepository: UserRepository;
 
   /**
    * Creates a reusable application-level Todoist client.
@@ -67,6 +69,7 @@ export class TodoistApiClient {
    * @param clientId the Todoist API client ID
    * @param clientSecret the Todoist API client secret
    * @param sessionManager the session manager to use for managing user sessions
+   * @param userRepository the user repository for ensuring users exist
    * @param options the options for configuring the Todoist client, which
    *   includes Todoist permissions of the client and the lifetime
    *   of the OAuth state values (valid sessions don't expire)
@@ -75,6 +78,7 @@ export class TodoistApiClient {
     clientId: string,
     clientSecret: string,
     sessionManager: UserSessionManager,
+    userRepository: UserRepository,
     options?: TodoistClientOptions,
   ) {
     this.clientId = clientId;
@@ -84,6 +88,7 @@ export class TodoistApiClient {
     this.oauthStateLifetimeMs = options?.oauthStateLifetimeMs
       ?? TodoistApiClient.DEFAULT_OAUTH_STATE_LIFETIME_MS;
     this.sessionManager = sessionManager;
+    this.userRepository = userRepository;
   }
 
   /**
@@ -158,6 +163,7 @@ export class TodoistApiClient {
       expiresAt,
     );
 
+    await this.userRepository.ensureUserExists(userId);
     if (existingSession) {
       await this.sessionManager.updateSession(pendingSession);
     } else {
@@ -204,6 +210,7 @@ export class TodoistApiClient {
       null,
     );
 
+    await this.userRepository.ensureUserExists(userId);
     if (session) {
       await this.sessionManager.updateSession(updatedSession);
     } else {
