@@ -1,6 +1,6 @@
 services:
-  app:
-    build: .
+  tickly:
+    image: ghcr.io/antoinemcx/tickly-discord-bot:latest
     container_name: tickly-bot
     restart: unless-stopped
     depends_on:
@@ -15,11 +15,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-    ports:
-      - "${OAUTH_SERVICE_PORT:-3999}:3999"
-    networks:
-      - tickly-network
-      - traefik-proxy
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-proxy
@@ -28,6 +24,9 @@ services:
       - traefik.http.routers.tickly-website-https.tls.certresolver=cloudflare
       - traefik.http.routers.tickly-website-https.entrypoints=websecure
       - traefik.http.routers.tickly-website-https.rule=Host(`tickly.antoinemcx.fr`)
+    networks:
+      - tickly-network
+      - traefik-proxy
 
   db:
     image: mariadb:11
@@ -44,7 +43,7 @@ services:
       test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
       interval: 30s
       timeout: 5s
-      retries: 5
+      retries: 3
       start_period: 30s
     networks:
       - tickly-network

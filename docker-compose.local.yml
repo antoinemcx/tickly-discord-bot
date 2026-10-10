@@ -15,6 +15,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
     ports:
       - "${OAUTH_SERVICE_PORT:-3999}:3999"
     networks:
