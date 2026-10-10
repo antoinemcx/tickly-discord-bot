@@ -31,6 +31,9 @@ import "dotenv/config";
   } else if (!process.env.DISCORD_CLIENT_TOKEN) {
     displayError("Bot token environment variable must be set.");
     process.exit(1);
+  } else if (!process.env.TOKEN_ENCRYPTION_KEY) {
+    displayError("TOKEN_ENCRYPTION_KEY environment variable must be set.");
+    process.exit(1);
   }
 
   /* Initialize database */

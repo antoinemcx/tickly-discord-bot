@@ -49,8 +49,9 @@ Wir sind nicht verantwortlich für die Datenpraktiken dieser Dienste.
 
 ## 5. Sicherheit
 
-Dein Todoist-Zugriffstoken wird in einer privaten Datenbank gespeichert. Wir treffen angemessene Maßnahmen,
-um deine Daten zu schützen, aber kein System ist perfekt sicher.
+Dein Todoist-Zugriffstoken wird verschlüsselt, bevor es in unserer Datenbank gespeichert wird. Das bedeutet, dass wir dein Token nicht im Klartext lesen können, selbst mit direktem Datenbankzugriff. Diese Verschlüsselung entspricht den Datenschutzanforderungen der DSGVO.
+
+Wir treffen angemessene Maßnahmen, um deine Daten zu schützen, aber kein System ist perfekt sicher.
 
 ## 6. Haftungsbeschränkung
 

@@ -49,8 +49,9 @@ No somos responsables de las prácticas de datos de estos servicios.
 
 ## 5. Seguridad
 
-Tu token de acceso de Todoist se almacena en una base de datos privada. Tomamos medidas razonables para
-proteger tus datos, pero ningún sistema es perfectamente seguro.
+Tu token de acceso de Todoist se cifra antes de almacenarse en nuestra base de datos. Esto significa que no podemos leer tu token en texto plano, ni siquiera con acceso directo a la base de datos. Este cifrado cumple con los requisitos de protección de datos del RGPD.
+
+Tomamos medidas razonables para proteger tus datos, pero ningún sistema es perfectamente seguro.
 
 ## 6. Limitación de Responsabilidad
 

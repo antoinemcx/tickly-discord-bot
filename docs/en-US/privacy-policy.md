@@ -49,8 +49,9 @@ We are not responsible for the data practices of these services.
 
 ## 5. Security
 
-Your Todoist access token is stored in a private database. We take reasonable measures to
-protect your data, but no system is perfectly secure.
+Your Todoist access token is encrypted before being stored in our database. This means we cannot read your token in plain text, even with direct database access. This encryption aligns with GDPR data protection requirements.
+
+We take reasonable measures to protect your data, but no system is perfectly secure.
 
 ## 6. Limitation of Liability
 
