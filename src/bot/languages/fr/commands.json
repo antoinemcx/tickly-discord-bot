@@ -163,6 +163,21 @@
         "success": "{{v}} La durée de votre session a été mise à jour : {{duration}}.",
         "cleared": "{{v}} La durée de session a été réinitialisée au défaut ({{days}} jours)."
       }
+    },
+    "deletion": {
+      "infoText": "Vous pouvez [supprimer vos données]({{gdprLink}}) à tout moment.",
+      "button": "Supprimer mes données",
+      "modal": {
+        "title": "Supprimer mes données",
+        "confirmInput": {
+          "label": "Confirmation",
+          "placeholder": "Tapez {{confirmWord}} pour confirmer"
+        },
+        "confirmWord": "SUPPRIMER"
+      },
+      "success": "{{v}} Vos données ont été supprimées avec succès.",
+      "error": "{{x}} Une erreur est survenue lors de la suppression de vos données. Veuillez réessayer, ou nous contacter sur notre [serveur de support]({{supportServer}}) si l'erreur persiste.",
+      "invalidConfirmation": "{{x}} Mot de confirmation incorrect, suppression annulée."
     }
   }
 }

@@ -33,8 +33,9 @@ Tus datos se utilizan exclusivamente para proporcionar la funcionalidad de Tickl
   Puedes cambiar esto con `/settings`.
 - **Las sesiones OAuth pendientes** (iniciadas pero no completadas) expiran automáticamente después de 15 minutos.
 - Puedes eliminar tu sesión y token de acceso en cualquier momento ejecutando `/todoist logout`.
-- Para solicitar la eliminación completa de tus datos (incluyendo tu registro de usuario), abre un issue en
-  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) o contáctanos en nuestro
+- Para eliminar todos tus datos (incluyendo tu registro de usuario y sesión de Todoist), usa el comando
+  `/settings` y haz clic en "Eliminar mis datos", o contáctanos en
+  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) o nuestro
   [servidor de soporte](https://antoinemcx.fr/discord).
 
 ## 4. Servicios de Terceros

@@ -163,6 +163,21 @@
         "success": "{{v}} Twój czas trwania sesji został zmieniony na {{duration}}.",
         "cleared": "{{v}} Twój czas trwania sesji został zresetowany do ustawień domyślnych ({{days}} dni)."
       }
+    },
+    "deletion": {
+      "infoText": "Możesz [usunąć swoje dane]({{gdprLink}}) w dowolnym momencie.",
+      "button": "Usuń moje dane",
+      "modal": {
+        "title": "Usuń moje dane",
+        "confirmInput": {
+          "label": "Potwierdzenie",
+          "placeholder": "Wpisz {{confirmWord}}, aby potwierdzić"
+        },
+        "confirmWord": "USUŃ"
+      },
+      "success": "{{v}} Twoje dane zostały pomyślnie usunięte.",
+      "error": "{{x}} Wystąpił błąd podczas usuwania Twoich danych. Proszę spróbować ponownie lub skontaktować się z nami na naszym [serwerze wsparcia]({{supportServer}}), jeśli błąd będzie się powtarzał.",
+      "invalidConfirmation": "{{x}} Nieprawidłowe słowo potwierdzenia, usuwanie anulowane."
     }
   }
 }

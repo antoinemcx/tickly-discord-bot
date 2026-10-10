@@ -277,4 +277,82 @@ describe("UserRepository", () => {
       expect(updateChain.set).toHaveBeenCalledWith({ sessionRetentionDays: null });
     });
   });
+
+  describe("deleteUser", () => {
+    it("should delete the user row by ID", async () => {
+      // Arrange
+      const deleteChain = { where: jest.fn().mockResolvedValue(undefined) };
+      connectionMock.delete = jest.fn().mockReturnValue(deleteChain);
+
+      // Act
+      await repository.deleteUser("123");
+
+      // Assert
+      expect(connectionMock.delete).toHaveBeenCalled();
+      expect(deleteChain.where).toHaveBeenCalled();
+    });
+
+    it("should use the provided executor when given", async () => {
+      // Arrange
+      const executorDeleteChain = { where: jest.fn().mockResolvedValue(undefined) };
+      const executor = { delete: jest.fn().mockReturnValue(executorDeleteChain) };
+      connectionMock.delete = jest.fn();
+
+      // Act
+      await repository.deleteUser("123", executor as any);
+
+      // Assert
+      expect(executor.delete).toHaveBeenCalled();
+      expect(connectionMock.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("deleteAllUserData", () => {
+    it("should delete session and user data within a transaction", async () => {
+      // Arrange
+      const deleteChain = { where: jest.fn().mockResolvedValue(undefined) };
+      const txMock = { delete: jest.fn().mockReturnValue(deleteChain) };
+      connectionMock.transaction = jest.fn().mockImplementation(async cb => cb(txMock));
+
+      const sessionDeleteMock = jest.fn().mockResolvedValue(undefined);
+      const repositoriesMock = {
+        getUserSessionRepository: () => ({ deleteSession: sessionDeleteMock }),
+      } as any;
+
+      // Act
+      await repository.deleteAllUserData("123", repositoriesMock);
+
+      // Assert
+      expect(connectionMock.transaction).toHaveBeenCalled();
+      expect(sessionDeleteMock).toHaveBeenCalledWith("123", txMock);
+      expect(txMock.delete).toHaveBeenCalled();
+    });
+
+    it("should call session deletion before user deletion", async () => {
+      // Arrange
+      const callOrder: string[] = [];
+      const deleteChain = {
+        where: jest.fn().mockImplementation(() => {
+          callOrder.push("user");
+          return Promise.resolve();
+        }),
+      };
+      const txMock = { delete: jest.fn().mockReturnValue(deleteChain) };
+      connectionMock.transaction = jest.fn().mockImplementation(async cb => cb(txMock));
+
+      const sessionDeleteMock = jest.fn().mockImplementation(() => {
+        callOrder.push("session");
+        return Promise.resolve();
+      });
+      const repositoriesMock = {
+        getUserSessionRepository: () => ({ deleteSession: sessionDeleteMock }),
+      } as any;
+
+      // Act
+      await repository.deleteAllUserData("123", repositoriesMock);
+
+      // Assert
+      expect(callOrder).toEqual(["session", "user"]);
+    });
+  });
 });

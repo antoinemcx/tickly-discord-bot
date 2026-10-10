@@ -31,7 +31,10 @@ Twoje dane są wykorzystywane wyłącznie w celu zapewnienia prawidłowego dzia�
 - **Aktywne sesje** wygasają po określonym czasie braku aktywności (domyślnie: 30 dni). Możesz to zmienić za pomocą komendy `/settings`.
 - **Oczekujące sesje OAuth** (rozpoczęte, lecz niedokończone) wygasają automatycznie po 15 minutach.
 - W każdej chwili możesz usunąć swoją sesję oraz token dostępu, wpisując komendę `/todoist logout`.
-- Aby zażądać całkowitego usunięcia swoich danych (w tym profilu użytkownika), utwórz zgłoszenie w serwisie [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) lub skontaktuj się z nami na naszym [serwerze wsparcia](https://antoinemcx.fr/discord).
+- Aby usunąć wszystkie swoje dane (w tym profil użytkownika i sesję Todoist), użyj komendy `/settings`
+  i kliknij „Usuń moje dane", lub skontaktuj się z nami w serwisie
+  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) lub na naszym
+  [serwerze wsparcia](https://antoinemcx.fr/discord).
 
 ## 4. Usługi podmiotów trzecich
 

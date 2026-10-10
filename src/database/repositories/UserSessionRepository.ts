@@ -2,6 +2,7 @@ import type { DrizzleDatabase } from "@database/DrizzleDatabase";
 import type { UserSession as DbUserSession } from "@database/schema/user.schema";
 import type { AesGcmEncryptionService } from "@services/encryption/AesGcmEncryptionService";
 import type { UserSessionManager } from "@services/todoist/sessions/UserSessionManager";
+import type { MySql2Database } from "drizzle-orm/mysql2";
 import { BaseRepository } from "@database/repositories/BaseRepository";
 import { userSessionsTable, usersTable } from "@database/schema/user.schema";
 import { EncryptionError } from "@services/encryption/EncryptionError";
@@ -84,10 +85,14 @@ export class UserSessionRepository extends BaseRepository implements UserSession
     }
   }
 
-  public async deleteSession(userId: string): Promise<void> {
+  public async deleteSession(
+    userId: string,
+    executor?: Pick<MySql2Database, "delete">,
+  ): Promise<void> {
     try {
-      await this.db
-        .getConnection()
+      const dbExecutor = executor ?? this.db.getConnection();
+
+      await dbExecutor
         .delete(userSessionsTable)
         .where(eq(userSessionsTable.userId, this.toBigIntUserId(userId)));
     } catch (error) {

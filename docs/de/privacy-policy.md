@@ -33,8 +33,9 @@ Deine Daten werden ausschließlich verwendet, um die Funktionalität von Tickly 
   Du kannst dies mit `/settings` ändern.
 - **Ausstehende OAuth-Sitzungen** (gestartet aber nicht abgeschlossen) laufen automatisch nach 15 Minuten ab.
 - Du kannst deine Sitzung und deinen Zugriffstoken jederzeit löschen, indem du `/todoist logout` ausführst.
-- Um eine vollständige Löschung deiner Daten (einschließlich deines Benutzerdatensatzes) zu beantragen, eröffne ein Issue auf
-  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) oder kontaktiere uns auf unserem
+- Um alle deine Daten zu löschen (einschließlich deines Benutzerdatensatzes und deiner Todoist-Sitzung),
+  verwende den Befehl `/settings` und klicke auf „Meine Daten löschen", oder kontaktiere uns auf
+  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) oder unserem
   [Support-Server](https://antoinemcx.fr/discord).
 
 ## 4. Dienste von Drittanbietern

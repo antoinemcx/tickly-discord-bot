@@ -38,9 +38,10 @@ Vos données sont utilisées exclusivement pour fournir les fonctionnalités de 
   après 15 minutes.
 - Vous pouvez supprimer votre session et votre jeton d'accès à tout moment en exécutant
   `/todoist logout`.
-- Pour demander la suppression complète de vos données (y compris votre profil utilisateur),
-  ouvrez une issue sur [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) ou
-  contactez-nous sur notre [serveur de support](https://antoinemcx.fr/discord).
+- Pour supprimer toutes vos données (y compris votre profil utilisateur et votre session Todoist),
+  utilisez la commande `/settings` et cliquez sur « Supprimer mes données », ou contactez-nous sur
+  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) ou notre
+  [serveur de support](https://antoinemcx.fr/discord).
 
 ## 4. Services Tiers
 

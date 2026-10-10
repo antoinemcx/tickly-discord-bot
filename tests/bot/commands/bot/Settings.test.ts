@@ -10,6 +10,7 @@ describe("Settings Command", () => {
   let clientMock: jest.Mocked<Tickly>;
   let repositoriesMock: jest.Mocked<RepositoryFactory>;
   let userRepositoryMock: any;
+  let userSessionRepositoryMock: any;
 
   beforeEach(() => {
     userRepositoryMock = {
@@ -19,6 +20,11 @@ describe("Settings Command", () => {
       }),
       setUserPreferredLanguage: jest.fn().mockResolvedValue(undefined),
       setUserSessionRetentionDays: jest.fn().mockResolvedValue(undefined),
+      deleteUser: jest.fn().mockResolvedValue(undefined),
+    };
+
+    userSessionRepositoryMock = {
+      deleteSession: jest.fn().mockResolvedValue(undefined),
     };
 
     clientMock = {
@@ -36,27 +42,29 @@ describe("Settings Command", () => {
 
     repositoriesMock = {
       getUserRepository: jest.fn().mockReturnValue(userRepositoryMock),
+      getUserSessionRepository: jest.fn().mockReturnValue(userSessionRepositoryMock),
     } as unknown as jest.Mocked<RepositoryFactory>;
 
     command = new Settings(clientMock, {} as TodoistApiClient, repositoriesMock);
   });
 
   describe("message component handlers", () => {
-    it("should register handlers for both language and retention selects", () => {
+    it("should register handlers for language, retention, and delete data", () => {
       // Act
       const handlers = command.getMessageComponentHandlers();
 
       // Assert
       expect(handlers.has("settings:set_language")).toBe(true);
       expect(handlers.has("settings:set_retention")).toBe(true);
+      expect(handlers.has("settings:delete_data")).toBe(true);
     });
 
-    it("should register exactly two handlers", () => {
+    it("should register exactly three handlers", () => {
       // Act
       const handlers = command.getMessageComponentHandlers();
 
       // Assert
-      expect(handlers.size).toBe(2);
+      expect(handlers.size).toBe(3);
     });
   });
 
@@ -242,6 +250,41 @@ describe("Settings Command", () => {
 
       // Act & Assert
       await expect(handler(interaction, language)).resolves.toBeUndefined();
+    });
+  });
+
+  describe("delete_data handler", () => {
+    it("should show the deletion confirmation modal when button is clicked", async () => {
+      // Arrange
+      const handler = command.getMessageComponentHandlers().get("settings:delete_data")!;
+      const interaction = {
+        user: { id: "123" },
+        isButton: jest.fn().mockReturnValue(true),
+        showModal: jest.fn().mockResolvedValue(undefined),
+        awaitModalSubmit: jest.fn().mockRejectedValue(new Error("timeout")),
+      } as any;
+
+      // Act
+      await handler(interaction, language);
+
+      // Assert
+      expect(interaction.showModal).toHaveBeenCalled();
+    });
+
+    it("should not show modal for non-button interactions", async () => {
+      // Arrange
+      const handler = command.getMessageComponentHandlers().get("settings:delete_data")!;
+      const interaction = {
+        user: { id: "123" },
+        isButton: jest.fn().mockReturnValue(false),
+        showModal: jest.fn(),
+      } as any;
+
+      // Act
+      await handler(interaction, language);
+
+      // Assert
+      expect(interaction.showModal).not.toHaveBeenCalled();
     });
   });
 });

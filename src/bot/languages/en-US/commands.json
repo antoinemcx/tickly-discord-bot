@@ -163,6 +163,21 @@
         "success": "{{v}} Your session duration has been updated to {{duration}}.",
         "cleared": "{{v}} Your session duration has been reset to the default ({{days}} days)."
       }
+    },
+    "deletion": {
+      "infoText": "You can [delete your data]({{gdprLink}}) at any time.",
+      "button": "Delete my data",
+      "modal": {
+        "title": "Delete my data",
+        "confirmInput": {
+          "label": "Confirmation",
+          "placeholder": "Type {{confirmWord}} to confirm"
+        },
+        "confirmWord": "DELETE"
+      },
+      "success": "{{v}} Your data has been deleted successfully.",
+      "error": "{{x}} An error occurred while deleting your data. Please try again, or contact us on our [support server]({{supportServer}}) if the error persists.",
+      "invalidConfirmation": "{{x}} Incorrect confirmation word, deletion cancelled."
     }
   }
 }

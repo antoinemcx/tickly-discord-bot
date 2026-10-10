@@ -163,6 +163,21 @@
         "success": "{{v}} Deine Sitzungsdauer wurde auf {{duration}} aktualisiert.",
         "cleared": "{{v}} Deine Sitzungsdauer wurde auf den Standard zurückgesetzt ({{days}} Tage)."
       }
+    },
+    "deletion": {
+      "infoText": "Du kannst deine Daten jederzeit [löschen]({{gdprLink}}).",
+      "button": "Meine Daten löschen",
+      "modal": {
+        "title": "Meine Daten löschen",
+        "confirmInput": {
+          "label": "Bestätigung",
+          "placeholder": "Gib {{confirmWord}} ein, um zu bestätigen"
+        },
+        "confirmWord": "LÖSCHEN"
+      },
+      "success": "{{v}} Deine Daten wurden erfolgreich gelöscht.",
+      "error": "{{x}} Beim Löschen deiner Daten ist ein Fehler aufgetreten. Bitte versuche es erneut, oder kontaktiere uns auf unserem [Support-Server]({{supportServer}}), wenn der Fehler weiterhin besteht.",
+      "invalidConfirmation": "{{x}} Falsches Bestätigungswort, Löschung abgebrochen."
     }
   }
 }

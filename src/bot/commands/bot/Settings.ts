@@ -2,17 +2,25 @@ import type { Tickly } from "@bot/Tickly";
 import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type {
+  ButtonInteraction,
   ChatInputCommandInteraction,
   InteractionReplyOptions,
   Locale,
+  ModalSubmitInteraction,
   StringSelectMenuInteraction,
 } from "discord.js";
 import { displayDetailedError } from "@src/utils/logger";
 import {
+  ButtonBuilder,
+  ButtonStyle,
   ContainerBuilder,
+  LabelBuilder,
   MessageFlags,
+  ModalBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } from "discord.js";
 import { BaseCommand } from "../core/BaseCommand";
 import { SlashCommand, SlashCommandCategory } from "../core/SlashCommand";
@@ -33,6 +41,20 @@ export default class Settings extends SlashCommand {
   // TODO this setting won't be updatable with reminder systems
   private static readonly SET_RETENTION_ACTION = "set_retention";
   private static readonly DEFAULT_RETENTION_VALUE = "default";
+
+  private static readonly DELETE_DATA_ACTION = "delete_data";
+  private static readonly DELETE_MODAL_CUSTOM_ID = "settings:delete_data_modal";
+  private static readonly DELETE_MODAL_CONFIRM_FIELD = "confirm_deletion";
+  private static readonly DELETE_MODAL_TIMEOUT_MS = 5 * 60_000;
+
+  /** GDPR Article 17 links by locale */
+  private static readonly GDPR_LINKS: Partial<Record<Locale, string>> = {
+    "fr": "https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre3#Article17",
+    "de": "https://gdprinfo.eu/de/de-article-17",
+    "en-US": "https://gdprinfo.eu/en-article-17",
+    "es-ES": "https://gdprinfo.eu/es/es-article-17",
+    "pl": "https://gdprinfo.eu/pl/pl-article-17",
+  };
 
   /** Available session retention options */
   private static readonly RETENTION_OPTIONS: ReadonlyArray<{
@@ -72,6 +94,18 @@ export default class Settings extends SlashCommand {
         if (interaction.isStringSelectMenu()) {
           await this.updateSessionRetention(
             interaction as StringSelectMenuInteraction,
+            language,
+          );
+        }
+      },
+    );
+
+    this.onMessageComponent(
+      Settings.DELETE_DATA_ACTION,
+      async (interaction, language) => {
+        if (interaction.isButton()) {
+          await this.showDeleteConfirmationModal(
+            interaction as ButtonInteraction,
             language,
           );
         }
@@ -122,6 +156,7 @@ export default class Settings extends SlashCommand {
   ): Promise<void> {
     const languageSelect = this.buildLanguageSelect(language, preferredLocale);
     const retentionSelect = this.buildRetentionSelect(language, retentionDays);
+    const gdprLink = Settings.GDPR_LINKS[language] ?? Settings.GDPR_LINKS["en-US"]!;
 
     const container = new ContainerBuilder()
       .setAccentColor(BaseCommand.EMBED_COLOR)
@@ -135,7 +170,16 @@ export default class Settings extends SlashCommand {
         this.translate(language, "view.sessionDuration"),
       ))
       .addActionRowComponents(actionRow =>
-        actionRow.addComponents(retentionSelect));
+        actionRow.addComponents(retentionSelect))
+      .addSeparatorComponents(separator => separator.setDivider(true))
+      .addSectionComponents(section => section
+        .addTextDisplayComponents(textDisplay => textDisplay.setContent(
+          this.translate(language, "deletion.infoText", { gdprLink }),
+        ))
+        .setButtonAccessory(new ButtonBuilder()
+          .setCustomId(this.buildComponentId(Settings.DELETE_DATA_ACTION))
+          .setLabel(this.translate(language, "deletion.button"))
+          .setStyle(ButtonStyle.Danger)));
 
     await interaction.editReply({
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -315,6 +359,101 @@ export default class Settings extends SlashCommand {
       await interaction.followUp({
         ...response,
         flags: MessageFlags.Ephemeral,
+      });
+    }
+  }
+
+  /**
+   * Shows the data deletion confirmation modal.
+   *
+   * @param interaction the button interaction that triggered the modal
+   * @param language the current response language
+   */
+  private async showDeleteConfirmationModal(
+    interaction: ButtonInteraction,
+    language: Locale,
+  ): Promise<void> {
+    const confirmWord = this.translate(language, "deletion.modal.confirmWord");
+
+    const confirmInput = new TextInputBuilder()
+      .setCustomId(Settings.DELETE_MODAL_CONFIRM_FIELD)
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true)
+      .setMaxLength(20)
+      .setPlaceholder(this.translate(
+        language,
+        "deletion.modal.confirmInput.placeholder",
+        { confirmWord },
+      ));
+    const confirmLabel = new LabelBuilder()
+      .setLabel(this.translate(language, "deletion.modal.confirmInput.label"))
+      .setTextInputComponent(confirmInput);
+
+    const modal = new ModalBuilder()
+      .setCustomId(Settings.DELETE_MODAL_CUSTOM_ID)
+      .setTitle(this.translate(language, "deletion.modal.title"))
+      .addLabelComponents(confirmLabel);
+
+    await interaction.showModal(modal);
+
+    try {
+      const submission = await interaction.awaitModalSubmit({
+        time: Settings.DELETE_MODAL_TIMEOUT_MS,
+        filter: i =>
+          i.customId === Settings.DELETE_MODAL_CUSTOM_ID
+          && i.user.id === interaction.user.id,
+      });
+
+      await this.handleDeleteModalSubmit(submission, language, confirmWord);
+    } catch {
+      // Modal timed out or was dismissed: no action needed
+    }
+  }
+
+  /**
+   * Handles the submission of the deletion confirmation modal.
+   *
+   * @param interaction the modal submit interaction
+   * @param language the current response language
+   * @param confirmWord the word the user must type to confirm
+   */
+  private async handleDeleteModalSubmit(
+    interaction: ModalSubmitInteraction,
+    language: Locale,
+    confirmWord: string,
+  ): Promise<void> {
+    const inputValue
+      = interaction.fields.getTextInputValue(Settings.DELETE_MODAL_CONFIRM_FIELD);
+
+    /* Assert confirmation text */
+    if (inputValue.toUpperCase() !== confirmWord.toUpperCase()) {
+      await interaction.reply({
+        content: this.translate(language, "deletion.invalidConfirmation", {
+          confirmWord,
+        }),
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+    /* Delete user data */
+    try {
+      await this.repositories.getUserRepository()
+        .deleteAllUserData(interaction.user.id, this.repositories);
+      await interaction.editReply({
+        content: this.translate(language, "deletion.success"),
+      });
+    } catch (error) {
+      displayDetailedError(
+        `Failed to delete user data for user ${interaction.user.id}`,
+        error,
+      );
+      await interaction.editReply({
+        content: this.translate(language, "deletion.error", {
+          supportServer: this.client.getConfig().links.supportServer,
+        }),
       });
     }
   }

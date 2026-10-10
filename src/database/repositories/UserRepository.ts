@@ -1,6 +1,8 @@
 import type { DrizzleDatabase } from "@database/DrizzleDatabase";
+import type { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import type { Language } from "@database/schema/user.schema";
 import type { Locale } from "discord.js";
+import type { MySql2Database } from "drizzle-orm/mysql2";
 import { languagesTable, usersTable } from "@database/schema/user.schema";
 import { eq } from "drizzle-orm";
 import { BaseRepository } from "./BaseRepository";
@@ -167,5 +169,39 @@ export class UserRepository extends BaseRepository {
       .insert(usersTable)
       .values({ id: BigInt(userId) })
       .onDuplicateKeyUpdate({ set: { id: BigInt(userId) } });
+  }
+
+  /**
+   * Deletes a user and its preferences from the database.
+   *
+   * @param userId Discord user ID
+   * @param executor optional executor for transactions
+   */
+  public async deleteUser(
+    userId: string,
+    executor?: Pick<MySql2Database, "delete">,
+  ): Promise<void> {
+    const dbExecutor = executor ?? this.db.getConnection();
+
+    await dbExecutor
+      .delete(usersTable)
+      .where(eq(usersTable.id, BigInt(userId)));
+  }
+
+  /**
+   * Deletes all data associated with a user (session and preferences)
+   * within a single transaction.
+   *
+   * @param userId Discord user ID
+   * @param repositories repository factory to delete other repositories data
+   */
+  public async deleteAllUserData(
+    userId: string,
+    repositories: RepositoryFactory,
+  ): Promise<void> {
+    await this.db.getConnection().transaction(async (tx) => {
+      await repositories.getUserSessionRepository().deleteSession(userId, tx);
+      await this.deleteUser(userId, tx);
+    });
   }
 }

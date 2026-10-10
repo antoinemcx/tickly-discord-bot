@@ -33,8 +33,9 @@ Your data is used exclusively to provide Tickly's functionality:
   You can change this with `/settings`.
 - **Pending OAuth sessions** (started but not completed) expire automatically after 15 minutes.
 - You can delete your session and access token at any time by running `/todoist logout`.
-- To request full deletion of your data (including your user record), open an issue on
-  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) or contact us on our
+- To delete all your data (including your user record and Todoist session), use the `/settings`
+  command and click "Delete my data", or contact us on
+  [GitHub](https://github.com/antoinemcx/tickly-discord-bot/issues) or our
   [support server](https://antoinemcx.fr/discord).
 
 ## 4. Third-Party Services

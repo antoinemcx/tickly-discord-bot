@@ -408,6 +408,19 @@ describe("UserSessionRepository", () => {
       expect(connectionMock.delete).toHaveBeenCalled();
     });
 
+    it("should use the provided executor when given", async () => {
+      // Arrange
+      const executorDeleteChain = { where: jest.fn().mockResolvedValue(undefined) };
+      const executor = { delete: jest.fn().mockReturnValue(executorDeleteChain) };
+
+      // Act
+      await sessionManager.deleteSession("123", executor as any);
+
+      // Assert
+      expect(executor.delete).toHaveBeenCalled();
+      expect(connectionMock.delete).not.toHaveBeenCalled();
+    });
+
     it("should throw PersistenceError for db errors", async () => {
       // Arrange
       connectionMock.delete.mockReturnValue({

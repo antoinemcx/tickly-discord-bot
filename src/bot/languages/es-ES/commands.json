@@ -163,6 +163,21 @@
         "success": "{{v}} La duración de tu sesión ha sido actualizada a {{duration}}.",
         "cleared": "{{v}} La duración de tu sesión ha sido restablecida al valor por defecto ({{days}} días)."
       }
+    },
+    "deletion": {
+      "infoText": "Puedes [eliminar tus datos]({{gdprLink}}) en cualquier momento.",
+      "button": "Eliminar mis datos",
+      "modal": {
+        "title": "Eliminar mis datos",
+        "confirmInput": {
+          "label": "Confirmación",
+          "placeholder": "Escribe {{confirmWord}} para confirmar"
+        },
+        "confirmWord": "ELIMINAR"
+      },
+      "success": "{{v}} Tus datos han sido eliminados correctamente.",
+      "error": "{{x}} Ocurrió un error al eliminar tus datos. Por favor, inténtalo de nuevo, o contáctanos en nuestro [servidor de soporte]({{supportServer}}) si el error persiste.",
+      "invalidConfirmation": "{{x}} Palabra de confirmación incorrecta, eliminación cancelada."
     }
   }
 }
