@@ -20,7 +20,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-proxy
-      - traefik.http.services.tickly-website.loadbalancer.server.port=3000
+      - traefik.http.services.tickly-website.loadbalancer.server.port=3999
       - traefik.http.routers.tickly-website-https.tls=true
       - traefik.http.routers.tickly-website-https.tls.certresolver=cloudflare
       - traefik.http.routers.tickly-website-https.entrypoints=websecure
