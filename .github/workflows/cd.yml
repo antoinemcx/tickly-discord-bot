@@ -1,0 +1,49 @@
+name: CD (Continuous Deployment)
+
+on:
+  workflow_run:
+    workflows: [CI (Continuous Integration)]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish Docker image
+    runs-on: ubuntu-latest
+
+    # Only run on master if CI succeeded
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Prepare config for build
+        run: cp config.example.ts config.ts
+
+      - name: Build latest image
+        run: docker build -t ghcr.io/${{ github.repository }}:latest .
+
+      - name: Build image with deployment tag
+        run: |
+          COMMIT_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)
+          docker build -t ghcr.io/${{ github.repository }}:$COMMIT_SHA .
+
+      - name: Push latest image to GHCR
+        run: docker push ghcr.io/${{ github.repository }}:latest
+
+      - name: Push deployment image to GHCR
+        run: |
+          COMMIT_SHA=$(echo ${{ github.event.workflow_run.head_sha }} | cut -c1-7)
+          docker push ghcr.io/${{ github.repository }}:$COMMIT_SHA

@@ -1,13 +1,9 @@
-> [!WARNING]
-> This project is currently in early development and is not yet ready for production use.  
-> If you want to follow the development progress or contribute, feel free to join the [support discord server](https://antoinemcx.fr/discord) !
-
-
 ![Tickly banner](./docs/banner.png)
 
-## 📋 Overview
+## 📋 [Overview](https://antoinemcx.fr/projects/tickly)
 
-The bot is available in several languages: **English**, **French**, **German**, **Polish**, and **Spanish**.
+The bot is available in several languages: **English**, **French**, **German**, **Polish**, and **Spanish**.  
+It is in early development so feel free to join the [discord server](https://antoinemcx.fr/discord) to follow the development progress.
 
 ### Features
 * 📝 Create Todoist tasks via [command or right-clicking a message](./docs/en-US/getting-started.md#adding-your-first-task)
@@ -25,7 +21,7 @@ After it is installed, you can interact with the bot by using:
 - [**Slash commands**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): type `/` in any text channel or DM and select a command.
 - [**Message context menu**](https://discord.com/blog/welcome-to-the-new-era-of-discord-apps): right-click on any message and select a command from the "Apps" section.
 
-> New to Tickly?  
+> **New to Tickly?**  
 > Follow the instructions in [docs/en-US/getting-started.md](./docs/en-US/getting-started.md), or the one in your language, to install the bot, log into Todoist and start interacting with it.
 
 <br><br>
