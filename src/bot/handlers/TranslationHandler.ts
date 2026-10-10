@@ -20,6 +20,18 @@ export class TranslationHandler extends Handler {
     = "Missing translation for ";
 
   /**
+   * Preferred locale order for display.
+   * Locales not in this list appear after in alphabetical order.
+   */
+  private static readonly LOCALE_ORDER: readonly Locale[] = [
+    Locale.EnglishUS,
+    Locale.French,
+    Locale.SpanishES,
+    Locale.German,
+    Locale.Polish,
+  ];
+
+  /**
    * Stored translations with the translation types (common, commands, etc.)
    * and the translation key of each translation locale folder.
    */
@@ -68,9 +80,33 @@ export class TranslationHandler extends Handler {
     }
   }
 
-  /** @returns language locales that have stored translations */
+  /**
+   * @returns language locales that have stored translations, in preferred display order
+   */
   public getLocales(): Locale[] {
-    return this.translations ? Array.from(this.translations.keys()) : [];
+    if (!this.translations) {
+      return [];
+    }
+
+    const locales = Array.from(this.translations.keys());
+    return locales.sort((a, b) => {
+      const indexA = TranslationHandler.LOCALE_ORDER.indexOf(a);
+      const indexB = TranslationHandler.LOCALE_ORDER.indexOf(b);
+
+      /* Both in preferred order: sort by that order */
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      /* Only one in preferred order: it comes first */
+      if (indexA !== -1) {
+        return -1;
+      }
+      if (indexB !== -1) {
+        return 1;
+      }
+      /* Neither in preferred order: alphabetical */
+      return a.localeCompare(b);
+    });
   }
 
   /**
