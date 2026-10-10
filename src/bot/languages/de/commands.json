@@ -92,7 +92,7 @@
       "description": "➕ Fügt eine Aufgabe zu deinem Todoist-Konto hinzu (öffnet ein Modal-Fenster).",
       "options": {
         "content": {
-          "description": "Aufgabeninhalt in natürlicher Sprache (überspringt das Modal), unter Verwendung der Todoist-Parsing-Engine."
+          "description": "Aufgabeninhalt in natürlicher Sprache (überspringt das Modal, nutzt Todoist-Parsing)."
         }
       }
     },

@@ -88,8 +88,10 @@ describe("TranslationHandler", () => {
     it("should load the supported language directories", async () => {
       // Arrange
       const handler = createHandler();
+
       // Act
       await handler.setup();
+
       // Assert
       expect(handler.getLocales()).toEqual([Locale.EnglishUS, Locale.French]);
     });
@@ -110,6 +112,94 @@ describe("TranslationHandler", () => {
 
       // Assert
       await expect(result).rejects.toThrow();
+    });
+  });
+
+  describe("getLocales", () => {
+    it("should return an empty array when no translations are loaded", () => {
+      // Arrange
+      const handler = createHandler();
+
+      // Act
+      const result = handler.getLocales();
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it("should return locales in preferred order (en-US before fr)", async () => {
+      // Arrange
+      (readdirSync as jest.Mock).mockImplementation((path: string) => {
+        const parts = path.split(/[\\/]/);
+        if (parts.at(-1) === "languages") {
+          return [Locale.French, Locale.EnglishUS]; // filesystem returns alphabetically wrong
+        }
+        if (parts.includes(Locale.EnglishUS) || parts.includes(Locale.French)) {
+          return ["common.json", "commands.json"];
+        }
+        return [];
+      });
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.getLocales();
+
+      // Assert
+      expect(result).toEqual([Locale.EnglishUS, Locale.French]);
+    });
+
+    it("should sort locales by popularity order", async () => {
+      // Arrange
+      (readdirSync as jest.Mock).mockImplementation((path: string) => {
+        const parts = path.split(/[\\/]/);
+        if (parts.at(-1) === "languages") {
+          // filesystem order (alphabetical): de, en-US, es-ES, fr, pl
+          return [
+            Locale.German,
+            Locale.EnglishUS,
+            Locale.SpanishES,
+            Locale.French,
+            Locale.Polish,
+          ];
+        }
+        return ["common.json", "commands.json"];
+      });
+      (readFileSync as jest.Mock).mockReturnValue(JSON.stringify({}));
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.getLocales();
+
+      // Assert
+      expect(result).toEqual([
+        Locale.EnglishUS,
+        Locale.French,
+        Locale.SpanishES,
+        Locale.German,
+        Locale.Polish,
+      ]);
+    });
+
+    it("should place unknown locales after preferred ones in alphabetical order", async () => {
+      // Arrange
+      (readdirSync as jest.Mock).mockImplementation((path: string) => {
+        const parts = path.split(/[\\/]/);
+        if (parts.at(-1) === "languages") {
+          return [Locale.Japanese, Locale.EnglishUS, Locale.ChineseCN];
+        }
+        return ["common.json", "commands.json"];
+      });
+      (readFileSync as jest.Mock).mockReturnValue(JSON.stringify({}));
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.getLocales();
+
+      // Assert — en-US first (preferred), then ja and zh-CN alphabetically
+      expect(result).toEqual([Locale.EnglishUS, Locale.Japanese, Locale.ChineseCN]);
     });
   });
 
