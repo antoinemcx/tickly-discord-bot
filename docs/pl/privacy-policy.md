@@ -43,7 +43,9 @@ Nie ponosimy odpowiedzialności za praktyki tych podmiotów w zakresie ochrony d
 
 ## 5. Bezpieczeństwo
 
-Twój token dostępu Todoist jest przechowywany w prywatnej bazie danych. Stosujemy uzasadnione środki ostrożności w celu ochrony Twoich danych, pamiętaj jednak, że żaden system informatyczny nie jest w pełni bezpieczny.
+Twój token dostępu Todoist jest szyfrowany przed zapisaniem w naszej bazie danych. Oznacza to, że nie możemy odczytać Twojego tokena w postaci jawnej, nawet mając bezpośredni dostęp do bazy danych. To szyfrowanie jest zgodne z wymogami ochrony danych RODO.
+
+Stosujemy uzasadnione środki ostrożności w celu ochrony Twoich danych, pamiętaj jednak, że żaden system informatyczny nie jest w pełni bezpieczny.
 
 ## 6. Ograniczenie odpowiedzialności
 

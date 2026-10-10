@@ -2,6 +2,7 @@ import type { DrizzleDatabase } from "@database/DrizzleDatabase";
 import { LanguageRepository } from "@database/repositories/LanguageRepository";
 import { UserRepository } from "@database/repositories/UserRepository";
 import { UserSessionRepository } from "@database/repositories/UserSessionRepository";
+import { AesGcmEncryptionService } from "@services/encryption/AesGcmEncryptionService";
 import config from "../../../config";
 
 /**
@@ -12,6 +13,7 @@ export class RepositoryFactory {
   private languageRepository?: LanguageRepository;
   private userRepository?: UserRepository;
   private userSessionRepository?: UserSessionRepository;
+  private encryptionService?: AesGcmEncryptionService;
 
   public constructor(private readonly database: DrizzleDatabase) {}
 
@@ -32,7 +34,14 @@ export class RepositoryFactory {
     this.userSessionRepository ??= new UserSessionRepository(
       this.database,
       config.defaultSessionRetentionDays,
+      this.getEncryptionService(),
     );
     return this.userSessionRepository;
+  }
+
+  /** @returns the shared encryption service instance. */
+  private getEncryptionService(): AesGcmEncryptionService {
+    this.encryptionService ??= new AesGcmEncryptionService();
+    return this.encryptionService;
   }
 }

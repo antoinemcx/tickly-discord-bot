@@ -1,17 +1,23 @@
 import type { DrizzleDatabase } from "@database/DrizzleDatabase";
 import type { UserSession as DbUserSession } from "@database/schema/user.schema";
+import type { AesGcmEncryptionService } from "@services/encryption/AesGcmEncryptionService";
 import type { UserSessionManager } from "@services/todoist/sessions/UserSessionManager";
 import { BaseRepository } from "@database/repositories/BaseRepository";
 import { userSessionsTable, usersTable } from "@database/schema/user.schema";
+import { EncryptionError } from "@services/encryption/EncryptionError";
 import { PersistenceError } from "@services/todoist/errors/PersistenceError";
 import { UserSession, UserSessionStatus } from "@services/todoist/sessions/UserSession";
 import { eq, inArray, lte } from "drizzle-orm";
 
-/** Database-backed session manager adapter for Todoist OAuth sessions. */
+/**
+ * Database-backed session manager adapter for Todoist OAuth sessions.
+ * Access tokens are encrypted at rest using AES-256-GCM.
+ */
 export class UserSessionRepository extends BaseRepository implements UserSessionManager {
   public constructor(
     database: DrizzleDatabase,
     private readonly defaultRetentionDays: number,
+    private readonly encryptionService: AesGcmEncryptionService,
   ) {
     super(database);
   }
@@ -163,22 +169,51 @@ export class UserSessionRepository extends BaseRepository implements UserSession
     }
   }
 
+  /**
+   * Converts a database entity to a domain model, decrypting the access token.
+   * @param session the stored session
+   * @returns the domain model with decrypted access token (or null if corrupted)
+   */
   private toSessionModel(session: DbUserSession): UserSession {
+    let decryptedToken: string | null = null;
+
+    if (session.accessToken) {
+      try {
+        decryptedToken = this.encryptionService.decrypt(session.accessToken);
+      } catch (error) {
+        if (error instanceof EncryptionError) {
+          decryptedToken = null; // treat as if no exists to trigger login
+        } else {
+          throw error;
+        }
+      }
+    }
+
     return new UserSession(
       session.userId.toString(),
       session.status,
       session.oauthState,
-      session.accessToken,
+      decryptedToken,
       session.expiresAt,
     );
   }
 
+  /**
+   * Converts a domain model to a database entity, encrypting the access token.
+   * @param session the domain model to convert
+   * @returns the database entity with encrypted access token.
+   * @throws {EncryptionError} if encryption fails.
+   */
   private toSessionEntity(session: UserSession): typeof userSessionsTable.$inferInsert {
+    const encryptedToken = session.accessToken
+      ? this.encryptionService.encrypt(session.accessToken)
+      : null;
+
     return {
       userId: this.toBigIntUserId(session.userId),
       status: session.status,
       oauthState: session.oauthState,
-      accessToken: session.accessToken,
+      accessToken: encryptedToken,
       expiresAt: session.expiresAt,
       lastUsedAt: new Date(),
     };

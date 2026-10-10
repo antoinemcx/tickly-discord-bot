@@ -20,7 +20,7 @@ export default class Login extends SubCommand {
     const session
       = await this.todoistClient.getSessionByUserId(interaction.user.id);
 
-    if (session?.status === UserSessionStatus.Completed) {
+    if (session?.status === UserSessionStatus.Completed && session.accessToken) {
       await interaction.editReply({
         content: this.translate(language, "alreadyLoggedIn", {
           helpCommand: await this.client.getCommandMention("help"),

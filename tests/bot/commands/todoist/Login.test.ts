@@ -46,6 +46,7 @@ describe("Login Command", () => {
       } as any;
       todoistClientMock.getSessionByUserId = jest.fn().mockResolvedValue({
         status: UserSessionStatus.Completed,
+        accessToken: "valid-token",
       });
 
       // Act
@@ -56,6 +57,33 @@ describe("Login Command", () => {
       expect(interaction.editReply).toHaveBeenCalledWith({
         content: expect.stringContaining("alreadyLoggedIn"),
       });
+    });
+
+    it("should send a new authorization URL if session is completed but accessToken is null (corrupted)", async () => {
+      // Arrange
+      const userId = "123";
+      const authUrl = "https://todoist.com/oauth/authorize?client_id=abc";
+      const interaction = {
+        user: { id: userId },
+        deferReply: jest.fn(),
+        editReply: jest.fn(),
+      } as any;
+      todoistClientMock.getSessionByUserId = jest.fn().mockResolvedValue({
+        status: UserSessionStatus.Completed,
+        accessToken: null, // corrupted token
+      });
+      todoistClientMock.createOAuthAuthorizationUrl
+        = jest.fn().mockResolvedValue(authUrl);
+
+      // Act
+      await command.execute(interaction, language);
+
+      // Assert
+      expect(todoistClientMock.createOAuthAuthorizationUrl)
+        .toHaveBeenCalledWith(userId, language);
+
+      const editArg = (interaction.editReply as jest.Mock).mock.calls[0][0];
+      expect(editArg.content).toEqual(expect.stringContaining("instructions"));
     });
 
     it("should send a message with a new authorization URL if the user does not have one", async () => {

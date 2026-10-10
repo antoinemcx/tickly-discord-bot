@@ -1,5 +1,7 @@
 import type { DrizzleDatabase } from "@database/DrizzleDatabase";
+import type { AesGcmEncryptionService } from "@services/encryption/AesGcmEncryptionService";
 import { UserSessionRepository } from "@database/repositories/UserSessionRepository";
+import { EncryptionError } from "@services/encryption/EncryptionError";
 import { PersistenceError } from "@services/todoist/errors/PersistenceError";
 import { UserSession, UserSessionStatus } from "@services/todoist/sessions/UserSession";
 
@@ -7,6 +9,7 @@ const DEFAULT_RETENTION_DAYS = 30;
 
 let sessionManager: UserSessionRepository;
 let databaseMock: jest.Mocked<DrizzleDatabase>;
+let encryptionServiceMock: jest.Mocked<AesGcmEncryptionService>;
 let connectionMock: any;
 
 function createSelectChain(result: unknown): any {
@@ -51,7 +54,12 @@ beforeEach(() => {
     getConnection: jest.fn().mockReturnValue(connectionMock),
   } as any;
 
-  sessionManager = new UserSessionRepository(databaseMock, DEFAULT_RETENTION_DAYS);
+  encryptionServiceMock = {
+    encrypt: jest.fn((plaintext: string) => `encrypted:${plaintext}`),
+    decrypt: jest.fn((ciphertext: string) => ciphertext.replace("encrypted:", "")),
+  } as any;
+
+  sessionManager = new UserSessionRepository(databaseMock, DEFAULT_RETENTION_DAYS, encryptionServiceMock);
 });
 
 describe("UserSessionRepository", () => {
@@ -84,6 +92,75 @@ describe("UserSessionRepository", () => {
       ));
     });
 
+    it("should decrypt accessToken when reading session with token", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectChain([
+        {
+          id: 1n,
+          userId: 123n,
+          status: "completed",
+          oauthState: "oauth-state",
+          accessToken: "encrypted:secret-token",
+          expiresAt: null,
+          lastUsedAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      ]));
+
+      // Act
+      const result = await sessionManager.getSession("123");
+
+      // Assert
+      expect(encryptionServiceMock.decrypt).toHaveBeenCalledWith("encrypted:secret-token");
+      expect(result?.accessToken).toBe("secret-token");
+    });
+
+    it("should return session with null accessToken when decryption fails", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectChain([
+        {
+          id: 1n,
+          userId: 123n,
+          status: "completed",
+          oauthState: "oauth-state",
+          accessToken: "corrupted-token-data",
+          expiresAt: null,
+          lastUsedAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      ]));
+      encryptionServiceMock.decrypt.mockImplementation(() => {
+        throw new EncryptionError("Decryption failed");
+      });
+
+      // Act
+      const result = await sessionManager.getSession("123");
+
+      // Assert
+      expect(result).toBeInstanceOf(UserSession);
+      expect(result?.status).toBe(UserSessionStatus.Completed);
+      expect(result?.accessToken).toBeNull();
+    });
+
+    it("should rethrow non-EncryptionError errors during decryption", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectChain([
+        {
+          id: 1n,
+          userId: 123n,
+          status: "completed",
+          oauthState: "oauth-state",
+          accessToken: "some-token",
+          expiresAt: null,
+          lastUsedAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      ]));
+      encryptionServiceMock.decrypt.mockImplementation(() => {
+        throw new Error("Unexpected system error");
+      });
+
+      // Act & Assert
+      await expect(sessionManager.getSession("123")).rejects.toThrow("Unexpected system error");
+    });
+
     it("should return undefined when not found", async () => {
       // Arrange
       connectionMock.select.mockReturnValue(createSelectChain([]));
@@ -113,7 +190,7 @@ describe("UserSessionRepository", () => {
           userId: 42n,
           status: "completed",
           oauthState: "oauth-state-2",
-          accessToken: "token",
+          accessToken: "encrypted:token",
           expiresAt: null,
           lastUsedAt: new Date("2026-01-01T00:00:00.000Z"),
         },
@@ -123,6 +200,7 @@ describe("UserSessionRepository", () => {
       const result = await sessionManager.getSessionByOAuthState("oauth-state-2");
 
       // Assert
+      expect(encryptionServiceMock.decrypt).toHaveBeenCalledWith("encrypted:token");
       expect(result).toEqual(new UserSession(
         "42",
         UserSessionStatus.Completed,
@@ -130,6 +208,28 @@ describe("UserSessionRepository", () => {
         "token",
         null,
       ));
+    });
+
+    it("should not decrypt null accessToken", async () => {
+      // Arrange
+      connectionMock.select.mockReturnValue(createSelectChain([
+        {
+          id: 1n,
+          userId: 42n,
+          status: "pending",
+          oauthState: "oauth-state-3",
+          accessToken: null,
+          expiresAt: new Date("2026-01-01T00:00:00.000Z"),
+          lastUsedAt: new Date("2026-01-01T00:00:00.000Z"),
+        },
+      ]));
+
+      // Act
+      const result = await sessionManager.getSessionByOAuthState("oauth-state-3");
+
+      // Assert
+      expect(encryptionServiceMock.decrypt).not.toHaveBeenCalled();
+      expect(result?.accessToken).toBeNull();
     });
   });
 
@@ -173,6 +273,50 @@ describe("UserSessionRepository", () => {
       );
     });
 
+    it("should encrypt accessToken when creating session with token", async () => {
+      // Arrange
+      const session = new UserSession(
+        "123",
+        UserSessionStatus.Completed,
+        "oauth-state",
+        "my-secret-token",
+        null,
+      );
+      const insertValues = connectionMock.insert().values as jest.Mock;
+      connectionMock.insert.mockReturnValue({ values: insertValues });
+
+      // Act
+      await sessionManager.createSession(session);
+
+      // Assert
+      expect(encryptionServiceMock.encrypt).toHaveBeenCalledWith("my-secret-token");
+      expect(insertValues).toHaveBeenCalledWith(
+        expect.objectContaining({ accessToken: "encrypted:my-secret-token" }),
+      );
+    });
+
+    it("should not encrypt null accessToken", async () => {
+      // Arrange
+      const session = new UserSession(
+        "123",
+        UserSessionStatus.Pending,
+        "oauth-state",
+        null,
+        null,
+      );
+      const insertValues = connectionMock.insert().values as jest.Mock;
+      connectionMock.insert.mockReturnValue({ values: insertValues });
+
+      // Act
+      await sessionManager.createSession(session);
+
+      // Assert
+      expect(encryptionServiceMock.encrypt).not.toHaveBeenCalled();
+      expect(insertValues).toHaveBeenCalledWith(
+        expect.objectContaining({ accessToken: null }),
+      );
+    });
+
     it("should wrap db errors in PersistenceError", async () => {
       // Arrange
       connectionMock.insert.mockReturnValue({
@@ -211,6 +355,28 @@ describe("UserSessionRepository", () => {
       // Assert
       expect(connectionMock.delete).toHaveBeenCalled();
       expect(connectionMock.insert).toHaveBeenCalled();
+    });
+
+    it("should encrypt accessToken when updating session with token", async () => {
+      // Arrange
+      const session = new UserSession(
+        "999",
+        UserSessionStatus.Completed,
+        "new-state",
+        "updated-token",
+        null,
+      );
+      const insertValues = connectionMock.insert().values as jest.Mock;
+      connectionMock.insert.mockReturnValue({ values: insertValues });
+
+      // Act
+      await sessionManager.updateSession(session);
+
+      // Assert
+      expect(encryptionServiceMock.encrypt).toHaveBeenCalledWith("updated-token");
+      expect(insertValues).toHaveBeenCalledWith(
+        expect.objectContaining({ accessToken: "encrypted:updated-token" }),
+      );
     });
 
     it("should throw PersistenceError for db errors", async () => {

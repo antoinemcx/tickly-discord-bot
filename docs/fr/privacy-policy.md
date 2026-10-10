@@ -54,8 +54,9 @@ Nous ne sommes pas responsables des pratiques en matière de données de ces ser
 
 ## 5. Sécurité
 
-Votre jeton d'accès Todoist est stocké dans une base de données privée. Nous prenons des
-mesures raisonnables pour protéger vos données, mais aucun système n'est parfaitement sécurisé.
+Votre jeton d'accès Todoist est chiffré avant d'être stocké dans notre base de données. Cela signifie que nous ne pouvons pas lire votre jeton en clair, même avec un accès direct à la base de données. Ce chiffrement est conforme aux exigences du RGPD en matière de protection des données.
+
+Nous prenons des mesures raisonnables pour protéger vos données, mais aucun système n'est parfaitement sécurisé.
 
 ## 6. Limitation de Responsabilité
 
