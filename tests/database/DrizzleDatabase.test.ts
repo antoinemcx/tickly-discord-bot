@@ -87,7 +87,10 @@ describe("DrizzleDatabase", () => {
 
       // Assert
       expect(result).resolves.not.toThrow();
-      expect(createPool).toHaveBeenCalledWith(configMock);
+      expect(createPool).toHaveBeenCalledWith({
+        ...configMock,
+        supportBigNumbers: true,
+      });
       expect(drizzle).toHaveBeenCalledWith(poolMock, {
         schema: expect.anything(),
         mode: "default",

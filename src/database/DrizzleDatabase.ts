@@ -83,6 +83,7 @@ export class DrizzleDatabase {
         user: config.user.trim(),
         password: config.password,
         database: config.database.trim(),
+        supportBigNumbers: true,
       });
       await pool.getConnection(); // connection test
 
