@@ -6,8 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-COPY tsconfig.json ./
-COPY config.ts config.example.ts ./
+COPY tsconfig.json tsconfig.build.json ./
 COPY src/ ./src/
 
 RUN npm run build

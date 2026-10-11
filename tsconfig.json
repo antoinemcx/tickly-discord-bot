@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2023",
+    "rootDir": ".",
     "module": "commonjs",
     "paths": {
       "@bot/*": ["./src/bot/*"],
@@ -19,7 +20,6 @@
     "skipLibCheck": true
   },
   "include": [
-    "./config.example.ts",
     "./src/**/*.ts",
     "./src/**/*.json",
     "./tests/**/*.ts"

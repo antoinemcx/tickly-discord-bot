@@ -7,7 +7,7 @@
  *
  * Also verifies:
  *   - All translation sources have the same set of locales
- *   - All translated locales have an emoji in config.example.ts
+ *   - All translated locales have an emoji in config.example.json
  *   - Documentation folders (docs/) have the same files across locales
  *
  * Usage:
@@ -27,7 +27,7 @@ const DEFAULT_DIRS = [
   "src/services/oauth/languages",
 ];
 
-const CONFIG_PATH = "config.example.ts";
+const CONFIG_PATH = "config.example.json";
 const DOCS_DIR = "docs";
 
 const dirs = process.argv.slice(2).length > 0 ? process.argv.slice(2) : DEFAULT_DIRS;
@@ -231,7 +231,7 @@ function checkLocaleConsistency(dirs) {
 }
 
 // ── Config emoji check ───────────────────────────────────────────────────────
-/** Check that all translated locales have an emoji in config.example.ts. */
+/** Check that all translated locales have an emoji in config.example.json. */
 function checkConfigLanguages(translatedLocales) {
   console.log("\nConfig emoji coverage:");
 
@@ -240,18 +240,16 @@ function checkConfigLanguages(translatedLocales) {
     return true;
   }
 
-  const configContent = readFileSync(CONFIG_PATH, "utf-8");
-  const languagesMatch = configContent.match(/languages:\s*\{([^}]+)\}/);
-
-  if (!languagesMatch) {
-    console.error(`  ❌ Could not find emotes.languages in ${CONFIG_PATH}`);
+  let configJson;
+  try {
+    configJson = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
+  }
+  catch {
+    console.error(`  ❌ Could not parse ${CONFIG_PATH}`);
     return true;
   }
 
-  // Extract locale keys from the config (e.g., "en-US", "fr", etc.)
-  const configLocales = new Set(
-    [...languagesMatch[1].matchAll(/"([^"]+)":/g)].map(m => m[1]),
-  );
+  const configLocales = new Set(Object.keys(configJson.emotes?.languages || {}));
 
   // Check that every translated locale has an emoji
   const missing = [...translatedLocales].filter(locale => !configLocales.has(locale));

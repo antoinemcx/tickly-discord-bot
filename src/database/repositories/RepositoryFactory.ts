@@ -3,7 +3,7 @@ import { LanguageRepository } from "@database/repositories/LanguageRepository";
 import { UserRepository } from "@database/repositories/UserRepository";
 import { UserSessionRepository } from "@database/repositories/UserSessionRepository";
 import { AesGcmEncryptionService } from "@services/encryption/AesGcmEncryptionService";
-import config from "../../../config";
+import { config } from "@src/config";
 
 /**
  * Central access point for all repository instances used by Tickly.

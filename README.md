@@ -54,10 +54,10 @@ Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed cont
 
 ### Start the app
 #### With Docker (recommended)
-1. Copy `.env.example` to a new `.env` file and fill in all required values (see [Generating the encryption key](#generating-the-encryption-key) for `TOKEN_ENCRYPTION_KEY`).
-
-2. Copy `config.example.ts` to a `config.ts` file and replace with your own values.
+1. Copy `.env.example` to a new `.env` file and fill in all required values (see [Encryption Key](./docs/configuration.md#encryption-key) for generating the `TOKEN_ENCRYPTION_KEY`).  
 `DB_HOST` must be set to `tickly-db` to work with the Docker setup.
+
+2. Copy `config.example.json` to a `config.json` file and replace with your own values (see [Configuration Reference](./docs/configuration.md)).
 
 3. Build and start all services
    <details>
@@ -91,9 +91,10 @@ Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed cont
 #### Without Docker
 1. **Prerequisites**: Node.js (v22+) and a running MariaDB instance.
 
-2. Copy `.env.example` to `.env` and fill in the values (see [Generating the encryption key](#generating-the-encryption-key) for `TOKEN_ENCRYPTION_KEY`). `DB_HOST` will be `localhost` if the database is running locally.
+2. Copy `.env.example` to `.env` and fill in the values (see [Encryption Key](./docs/configuration.md#encryption-key) for generating the `TOKEN_ENCRYPTION_KEY`).  
+`DB_HOST` will be `localhost` if the database is running locally.
 
-3. Copy `config.example.ts` to `config.ts` and replace with your own values.
+3. Copy `config.example.json` to `config.json` and replace with your own values (see [Configuration Reference](./docs/configuration.md)).
 
 4. Install dependencies and build:
    ```sh
@@ -114,17 +115,6 @@ Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed cont
 This starts the bot and the OAuth web service (default port `3999`) together.
 
 ### Development
-
-#### Generating the encryption key
-
-The `TOKEN_ENCRYPTION_KEY` environment variable must be a 32-byte key encoded in base64. Generate one with:
-
-| OS | Command |
-|---|---|
-| Linux / macOS | `openssl rand -base64 32` |
-| Windows (PowerShell) | `[Convert]::ToBase64String([byte[]](1..32 \| ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))` |
-
-#### Other scripts
 
 Other npm scripts are available for development purposes:
 | Command | Description |

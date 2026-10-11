@@ -1,6 +1,6 @@
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
+import type { Configuration } from "@src/config";
 import type { PermissionResolvable } from "discord.js";
-import type configurationExample from "../../config.example";
 import type { SlashCommand } from "./commands/core/SlashCommand";
 import type { CommandHandler } from "./handlers/CommandHandler";
 import type { EventHandler } from "./handlers/EventHandler";
@@ -14,8 +14,6 @@ import {
   GatewayIntentBits,
   PermissionsBitField,
 } from "discord.js";
-
-export type Configuration = typeof configurationExample;
 
 /**
  * Discord application and unofficial Todoist integration for Discord

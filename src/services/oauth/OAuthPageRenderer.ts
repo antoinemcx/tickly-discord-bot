@@ -1,5 +1,5 @@
-import type { Configuration } from "@bot/Tickly";
 import type { TranslationLoader } from "@services/apiBuilder/TranslationLoader";
+import type { Configuration } from "@src/config";
 import { displayWarning } from "@src/utils/logger";
 
 interface PageOptions {

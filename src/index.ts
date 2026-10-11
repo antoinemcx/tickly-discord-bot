@@ -12,7 +12,7 @@ import { OAuthApiService } from "@services/oauth/OAuthApiService";
 import { OAuthPageRenderer } from "@services/oauth/OAuthPageRenderer";
 import { CallbackRoute } from "@services/todoist/oauth/CallbackRoute";
 import { TodoistApiClient } from "@services/todoist/TodoistApiClient";
-import config from "../config";
+import { config } from "@src/config";
 import {
   displayDetailedError,
   displayError,

@@ -1,0 +1,40 @@
+{
+  "ownerIds": [""],
+  "links": {
+    "supportServer": "https://antoinemcx.fr/discord",
+    "github": "https://github.com/antoinemcx/tickly-discord-bot",
+    "roadmap": "https://github.com/users/antoinemcx/projects/3"
+  },
+  "emotes": {
+    "v": "✅",
+    "x": "❌",
+    "i": "ℹ️",
+    "warning": "⚠️",
+    "todoist": "🟥",
+    "todoistSmall": "🟥",
+    "priorities": {
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": ""
+    },
+    "robot": "🤖",
+    "languages": {
+      "en-US": "🇺🇸",
+      "fr": "🇫🇷",
+      "pl": "🇵🇱",
+      "es-ES": "🇪🇸",
+      "de": "🇩🇪"
+    }
+  },
+  "oauth": {
+    "colors": {
+      "background": "#fafaf9",
+      "primary": "#fb2c36"
+    }
+  },
+  "mentionUserInReply": true,
+  "defaultLocale": "en-US",
+  "defaultSessionRetentionDays": 30,
+  "enableDailyPrune": true
+}
