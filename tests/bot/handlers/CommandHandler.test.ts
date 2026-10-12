@@ -251,6 +251,7 @@ describe("CommandHandler", () => {
           getTranslationHandler: jest.fn().mockReturnValue({
             isSupportedLocale: jest.fn().mockReturnValue(true),
             getDefaultLocale: jest.fn().mockReturnValue(Locale.EnglishUS),
+            getLocales: jest.fn().mockReturnValue([Locale.EnglishUS, Locale.French]),
             translateCommon: translateCommonMock,
           }),
           getConfig: jest.fn().mockReturnValue({ ownerIds: [] }),
