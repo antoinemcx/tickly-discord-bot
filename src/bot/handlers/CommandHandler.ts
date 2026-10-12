@@ -335,7 +335,8 @@ export class CommandHandler extends Handler {
     } catch {
       // Interaction locale will be used
     }
-    if (!translationHandler.isSupportedLocale(language)) {
+    if (!translationHandler.getLocales().includes(language)
+      || !translationHandler.isSupportedLocale(language)) {
       language = translationHandler.getDefaultLocale();
     }
     return language;
