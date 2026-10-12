@@ -38,6 +38,13 @@ Emotes used in bot messages. Can be Unicode emojis or Discord custom emotes (for
 | `robot` | Robot emote |
 | `languages.*` | Flag emotes for each supported locale |
 
+### `discordWebhooks`
+[Discord webhooks](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) used for logging events.
+
+| Key | Description |
+|-----|-------------|
+| `installLogs` | Webhook URL to log when the bot is installed or uninstalled from a server. Leave empty to disable. |
+
 ### `oauth`
 OAuth success and error pages appearance settings. Must be hex colors.
 

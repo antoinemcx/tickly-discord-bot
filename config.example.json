@@ -27,6 +27,9 @@
       "de": "🇩🇪"
     }
   },
+  "discordWebhooks": {
+    "installLogs": ""
+  },
   "oauth": {
     "colors": {
       "background": "#fafaf9",

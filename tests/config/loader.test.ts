@@ -25,6 +25,9 @@ const validConfig: Configuration = {
       "de": "🇩🇪",
     },
   },
+  discordWebhooks: {
+    installLogs: "",
+  },
   oauth: {
     colors: {
       background: "#fafaf9",

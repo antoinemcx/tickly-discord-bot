@@ -36,6 +36,10 @@ export const configSchema = z.object({
     }),
   }),
 
+  discordWebhooks: z.object({
+    installLogs: z.string().describe("Webhook URL to log bot installs/uninstalls. Leave empty to disable."),
+  }),
+
   oauth: z.object({
     colors: z.object({
       background: z.string().describe("Background color for OAuth page"),

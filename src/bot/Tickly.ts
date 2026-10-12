@@ -1,11 +1,12 @@
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { Configuration } from "@src/config";
-import type { PermissionResolvable } from "discord.js";
+import type { PermissionResolvable, WebhookMessageCreateOptions } from "discord.js";
 import type { SlashCommand } from "./commands/core/SlashCommand";
 import type { CommandHandler } from "./handlers/CommandHandler";
 import type { EventHandler } from "./handlers/EventHandler";
 import type { TranslationHandler } from "./handlers/TranslationHandler";
 import { displayCustom, displayInfo, displaySuccess, pink } from "@src/utils/logger";
+
 import {
   ActivityType,
   AllowedMentionsTypes,
@@ -13,6 +14,7 @@ import {
   Events,
   GatewayIntentBits,
   PermissionsBitField,
+  WebhookClient,
 } from "discord.js";
 
 /**
@@ -259,5 +261,29 @@ export class Tickly extends Client {
     return permissions.length === 0
       ? []
       : new PermissionsBitField(permissions).toArray();
+  }
+
+  /**
+   * Sends a Discord webhook message using the bot's username and avatar.
+   * Handles WebhookClient instantiation and cleanup to prevent memory leaks.
+   *
+   * @param webhookUrl the full webhook URL
+   * @param options the message options (embeds, content, etc.)
+   * @throws {Error} if the webhook request fails
+   */
+  public async sendWebhookMessage(
+    webhookUrl: string,
+    options: WebhookMessageCreateOptions,
+  ): Promise<void> {
+    const webhookClient = new WebhookClient({ url: webhookUrl });
+    try {
+      await webhookClient.send({
+        ...options,
+        username: this.user?.username,
+        avatarURL: this.user?.displayAvatarURL(),
+      });
+    } finally {
+      webhookClient.destroy();
+    }
   }
 }

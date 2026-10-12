@@ -446,4 +446,73 @@ describe("Tickly", () => {
       });
     });
   });
+
+  describe("sendWebhookMessage", () => {
+    let sendMock: jest.Mock;
+    let destroyMock: jest.Mock;
+    let WebhookClientMock: jest.Mock;
+
+    beforeEach(() => {
+      sendMock = jest.fn().mockResolvedValue(undefined);
+      destroyMock = jest.fn();
+      WebhookClientMock = jest.fn().mockImplementation(() => ({
+        send: sendMock,
+        destroy: destroyMock,
+      }));
+
+      jest.spyOn(
+        jest.requireActual("discord.js") as {
+          WebhookClient: typeof WebhookClientMock;
+        },
+        "WebhookClient",
+      );
+      // eslint-disable-next-line ts/no-require-imports
+      const discordJs = require("discord.js");
+      discordJs.WebhookClient = WebhookClientMock;
+
+      mockedBot.user = {
+        username: "Tickly",
+        displayAvatarURL: jest.fn()
+          .mockReturnValue("https://example.com/avatar.png"),
+      } as unknown as Tickly["user"];
+    });
+
+    it("should send message with bot username and avatar", async () => {
+      // Act
+      await mockedBot.sendWebhookMessage("https://discord.com/api/webhooks/123/abc", {
+        content: "Test",
+      });
+
+      // Assert
+      expect(sendMock).toHaveBeenCalledWith({
+        content: "Test",
+        username: "Tickly",
+        avatarURL: "https://example.com/avatar.png",
+      });
+    });
+
+    it("should destroy the webhook client after sending", async () => {
+      // Act
+      await mockedBot.sendWebhookMessage("https://discord.com/api/webhooks/123/abc", {
+        content: "Test",
+      });
+
+      // Assert
+      expect(destroyMock).toHaveBeenCalled();
+    });
+
+    it("should destroy the webhook client even if send fails", async () => {
+      // Arrange
+      sendMock.mockRejectedValue(new Error("fail"));
+
+      // Act & Assert
+      await expect(
+        mockedBot.sendWebhookMessage(
+          "https://discord.com/api/webhooks/123/abc",
+          { content: "Test" },
+        ),
+      ).rejects.toThrow("fail");
+      expect(destroyMock).toHaveBeenCalled();
+    });
+  });
 });
