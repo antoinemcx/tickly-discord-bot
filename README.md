@@ -2,6 +2,9 @@
 
 ## 📋 [Overview](https://antoinemcx.fr/projects/tickly)
 
+**Tickly** is a Todoist integration that lets you manage your tasks without leaving Discord.  
+This project is not created by or affiliated with Todoist.
+
 The bot is available in several languages: **English**, **French**, **German**, **Polish**, and **Spanish**.  
 It is in early development so feel free to join the [discord server](https://antoinemcx.fr/discord) to follow the development progress.
 

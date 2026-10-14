@@ -1,9 +1,11 @@
 # Polityka prywatności
 
-**Ostatnia aktualizacja: 28 września 2026**
+**Ostatnia aktualizacja: 14 października 2026**
 
 Tickly („bot”, „my”, „nas”) to bot Discord, który łączy Twoje konto Discord z serwisem Todoist.
+
 Niniejszy dokument wyjaśnia, jakie dane zbieramy, w jakim celu to robimy oraz jak długo je przechowujemy.
+Tickly nie jest tworzony przez Todoist ani z nim powiązany.
 
 ## 1. Jakie dane zbieramy
 
@@ -24,7 +26,7 @@ Gdy korzystasz z bota Tickly, w naszej bazie danych zapisujemy następujące inf
 Twoje dane są wykorzystywane wyłącznie w celu zapewnienia prawidłowego działania bota Tickly:
 - Twoje ID użytkownika Discord łączy sesję Todoist z Twoim kontem Discord.
 - Twój token dostępu służy wyłącznie do komunikacji z API Todoist w Twoim imieniu.
-- Żadne dane nie są sprzedawane, udostępniane podmiotom trzecim w celach komercyjnych ani wykorzystywane do wyświetlania reklam.
+- Żadne dane nie są sprzedawane ani udostępniane podmiotom trzecim bez Twojej zgody.
 
 ## 3. Przechowywanie danych
 
