@@ -8,6 +8,7 @@ import { DrizzleDatabase } from "@database/DrizzleDatabase";
 import { runMigrations } from "@database/migrate";
 import { RepositoryFactory } from "@database/repositories/RepositoryFactory";
 import { TranslationLoader } from "@services/apiBuilder/TranslationLoader";
+import { RedisService } from "@services/cache/RedisService";
 import { OAuthApiService } from "@services/oauth/OAuthApiService";
 import { OAuthPageRenderer } from "@services/oauth/OAuthPageRenderer";
 import { CallbackRoute } from "@services/todoist/oauth/CallbackRoute";
@@ -18,6 +19,7 @@ import {
   displayError,
   displayInfo,
   displaySuccess,
+  displayWarning,
 } from "./utils/logger";
 import "dotenv/config";
 
@@ -61,6 +63,23 @@ import "dotenv/config";
 
   const repositories = new RepositoryFactory(database);
 
+  /* Initialize Redis caching, or disable if unavailable */
+  let redisService: RedisService | undefined;
+  if (process.env.REDIS_HOST) {
+    const redisPort = process.env.REDIS_PORT
+      ? Number.parseInt(process.env.REDIS_PORT)
+      : 6379;
+    redisService = new RedisService(
+      process.env.REDIS_HOST,
+      redisPort,
+      32, // fallback for local development
+      process.env.REDIS_PASSWORD || undefined,
+    );
+    await redisService.initialize();
+  } else {
+    displayWarning("REDIS_HOST is not set. Redis caching is disabled.");
+  }
+
   /* Initialize Todoist utilities */
   const sessionManager = repositories.getUserSessionRepository();
   const userRepository = repositories.getUserRepository();
@@ -70,6 +89,7 @@ import "dotenv/config";
     sessionManager,
     userRepository,
     { permissions: ["data:read_write"] },
+    redisService,
   );
   const oauthApiService = new OAuthApiService(
     new CallbackRoute(

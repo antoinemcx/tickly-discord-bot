@@ -38,6 +38,7 @@ src/
     ├── apiBuilder/                       # generic reusable HTTP building blocks:
     │   │                                 #   ApiRoute (abstract route), ApiService (abstract Express service),
     │   │                                 #   TranslationLoader (JSON locale loader)
+    ├── cache/                            # RedisService: optional Redis caching layer
     ├── oauth/                            # OAuth result page service: OAuthApiService (extends ApiService),
     │   │                                 #   OAuthPageRenderer (HTML page generator),
     │   │                                 #   languages/ (de, en-US, es-ES, fr, pl), assets/ (static files)
@@ -61,6 +62,7 @@ Tests mirror `src/` under `tests/` and are named `*.test.ts`.
 - All new user-visible text must be added to **every** locale folder under `src/bot/languages/`.
 - Both Guild and User Discord install contexts must be supported in every command.
 - Path aliases (`@database/*`, `@services/*`, `@src/*`) from `tsconfig.json` — prefer over deep relative imports.
+- Redis env vars (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`) belong in `.env` **only**, never in `config.json`. Leaving `REDIS_HOST` unset disables caching gracefully — the bot continues without Redis.
 
 ## Common commands
 

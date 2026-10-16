@@ -7,6 +7,7 @@ import type {
   Task,
   UpdateTaskArgs,
 } from "@doist/todoist-api-typescript";
+import type { RedisService } from "@services/cache/RedisService";
 import type { UserSessionManager } from "../../services/todoist/sessions/UserSessionManager";
 import {
   getAuthorizationUrl,
@@ -62,6 +63,7 @@ export class TodoistApiClient {
   private readonly oauthStateLifetimeMs: number;
   private readonly sessionManager: UserSessionManager;
   private readonly userRepository: UserRepository;
+  private readonly redisService?: RedisService;
 
   /**
    * Creates a reusable application-level Todoist client.
@@ -73,6 +75,7 @@ export class TodoistApiClient {
    * @param options the options for configuring the Todoist client, which
    *   includes Todoist permissions of the client and the lifetime
    *   of the OAuth state values (valid sessions don't expire)
+   * @param redisService optional Redis caching layer
    */
   public constructor(
     clientId: string,
@@ -80,6 +83,7 @@ export class TodoistApiClient {
     sessionManager: UserSessionManager,
     userRepository: UserRepository,
     options?: TodoistClientOptions,
+    redisService?: RedisService,
   ) {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
@@ -89,6 +93,7 @@ export class TodoistApiClient {
       ?? TodoistApiClient.DEFAULT_OAUTH_STATE_LIFETIME_MS;
     this.sessionManager = sessionManager;
     this.userRepository = userRepository;
+    this.redisService = redisService;
   }
 
   /**
@@ -113,6 +118,7 @@ export class TodoistApiClient {
 
   /**
    * Clears the stored session for a specific user.
+   * Also removes the cached access token from Redis if available.
    *
    * @params userId ID of the user whose session should be deleted
    * @returns a promise resolving when the session is cleared
@@ -120,6 +126,7 @@ export class TodoistApiClient {
    */
   public async clearUserSession(userId: string): Promise<void> {
     await this.sessionManager.deleteSession(userId);
+    await this.redisService?.delete(`tickly:access_token:${userId}`);
   }
 
   /**
@@ -236,24 +243,32 @@ export class TodoistApiClient {
   }
 
   /**
-   * Retrieves a user's access token from the session manager.
+   * Retrieves a user's access token, checking Redis cache first.
+   * On a cache hit the DB session is still touched to keep it alive.
+   * On a cache miss the token is fetched from DB and stored in Redis.
+   *
    * @params userId ID of the user to retrieve the access token for
    * @returns the access token for the given user, or undefined if none exists.
    */
   private async getUserAccessToken(userId: string): Promise<string | undefined> {
-    // TODO fetch access token from Redis cache first
+    /* Try cache first */
+    if (this.redisService?.isAvailable()) {
+      const cachedToken = await this.redisService.get<string>(
+        `tickly:access_token:${userId}`,
+      );
+      if (cachedToken !== null) {
+        await this.touchUserSession(userId);
+        return cachedToken;
+      }
+    }
+
+    /* Fall back to DB value */
     const session = await this.getSessionByUserId(userId);
     const token = session?.accessToken;
 
     if (token && token.length > 0) {
-      try {
-        await this.sessionManager.touchSession(userId);
-      } catch (error) {
-        displayDetailedError(
-          `Failed to update last_used_at for user session '${userId}'.`,
-          error,
-        );
-      }
+      await this.redisService?.set(`tickly:access_token:${userId}`, token, 1200);
+      await this.touchUserSession(userId);
       return token;
     }
     return undefined;
@@ -299,7 +314,7 @@ export class TodoistApiClient {
       return await client.addTask(args);
     } catch (error) {
       if (args.parentId) {
-        throw TodoistApiClient.mapApiError(error, args.parentId);
+        throw this.mapApiError(error, userId, args.parentId);
       }
       throw error;
     }
@@ -404,7 +419,7 @@ export class TodoistApiClient {
     try {
       return await client.closeTask(taskId);
     } catch (error) {
-      throw TodoistApiClient.mapApiError(error, taskId);
+      throw this.mapApiError(error, userId, taskId);
     }
   }
 
@@ -423,7 +438,7 @@ export class TodoistApiClient {
     try {
       return await client.deleteTask(taskId);
     } catch (error) {
-      throw TodoistApiClient.mapApiError(error, taskId);
+      throw this.mapApiError(error, userId, taskId);
     }
   }
 
@@ -442,7 +457,7 @@ export class TodoistApiClient {
     try {
       return await client.getTask(taskId);
     } catch (error) {
-      throw TodoistApiClient.mapApiError(error, taskId);
+      throw this.mapApiError(error, userId, taskId);
     }
   }
 
@@ -467,7 +482,7 @@ export class TodoistApiClient {
     try {
       return await client.updateTask(taskId, args);
     } catch (error) {
-      throw TodoistApiClient.mapApiError(error, taskId);
+      throw this.mapApiError(error, userId, taskId);
     }
   }
 
@@ -497,14 +512,44 @@ export class TodoistApiClient {
   }
 
   /**
+   * Attempts to update the last_used_at timestamp for a user session.
+   * Failures do not interrupt the caller.
+   * @param userId ID of the user whose session should be touched
+   */
+  private async touchUserSession(userId: string): Promise<void> {
+    try {
+      await this.sessionManager.touchSession(userId);
+    } catch (error) {
+      displayDetailedError(
+        `Failed to update last_used_at for user session '${userId}'.`,
+        error,
+      );
+    }
+  }
+
+  /**
    * Maps known Todoist API errors to domain-specific error types.
+   * - HTTP 401 : OAuthError (token is invalid or revoked; the cached
+   *   token is also cleared from Redis)
    * - HTTP 404 : TaskNotFoundError
+   *
+   * 403 Forbidden is intentionally NOT mapped: it may indicate a workspace
+   * project permission issue rather than an invalid token, so the original
+   * TodoistRequestError is re-thrown unchanged.
    *
    * Re-throws the original error if it doesn't match any known pattern.
    */
-  private static mapApiError(error: unknown, taskId: string): Error {
-    if (error instanceof TodoistRequestError && error.httpStatusCode === 404) {
-      return new TaskNotFoundError(taskId);
+  private mapApiError(error: unknown, userId: string, taskId: string): Error {
+    if (error instanceof TodoistRequestError) {
+      if (error.httpStatusCode === 401) {
+        void this.redisService?.delete(`tickly:access_token:${userId}`);
+        return new OAuthError(
+          `Todoist access token for user ${userId} is no longer valid.`,
+        );
+      }
+      if (error.httpStatusCode === 404) {
+        return new TaskNotFoundError(taskId);
+      }
     }
     return error instanceof Error ? error : new Error(String(error));
   }

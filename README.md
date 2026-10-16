@@ -31,7 +31,7 @@ After it is installed, you can interact with the bot by using:
 
 ## 🏗️ Architecture
 The project is structured in different services that communicate with the Discord and Todoist APIs.  
-Redis is mainly used for caching and storing user sessions, while MariaDB is used for persistent storage.
+Redis is used as a caching layer to reduce database round-trips, while MariaDB is used for persistent storage.
 
 The project architecure is as follows:  
 [![Architecture](./docs/architecture.png)](./docs/architecture.png)
@@ -92,7 +92,7 @@ Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed cont
    </details>
 
 #### Without Docker
-1. **Prerequisites**: Node.js (v22+) and a running MariaDB instance.
+1. **Prerequisites**: Node.js (v22+), a running MariaDB instance, and optionally a Redis instance for caching (see [Configuration Reference](./docs/configuration.md#redis-cache)).
 
 2. Copy `.env.example` to `.env` and fill in the values (see [Encryption Key](./docs/configuration.md#encryption-key) for generating the `TOKEN_ENCRYPTION_KEY`).  
 `DB_HOST` will be `localhost` if the database is running locally.

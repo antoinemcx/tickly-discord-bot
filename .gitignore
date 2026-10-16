@@ -2,6 +2,7 @@ node_modules/
 build/
 coverage/
 .agents
+.kiro/specs
 *.tsbuildinfo
 
 config.json

@@ -6,6 +6,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       TZ: UTC
       DISCORD_CLIENT_TOKEN: ${DISCORD_CLIENT_TOKEN}
@@ -17,6 +19,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - ./config.json:/app/build/config.json:ro
     labels:
@@ -52,8 +57,21 @@ services:
     networks:
       - tickly-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    command: >
+      sh -c "redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+      $${REDIS_PASSWORD:+--requirepass $${REDIS_PASSWORD}}"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tickly-network
+
 volumes:
   mysql_data_tickly:
+  redis_data:
 
 networks:
   tickly-network:

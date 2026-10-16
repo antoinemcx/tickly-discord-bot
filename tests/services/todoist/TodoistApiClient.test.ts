@@ -3,13 +3,16 @@ import type {
   AuthTokenResponse,
   Task,
 } from "@doist/todoist-api-typescript";
+import type { RedisService } from "@services/cache/RedisService";
 import type { UserSessionManager } from "@services/todoist/sessions/UserSessionManager";
 import {
   getAuthToken,
   TodoistApi,
   TodoistRequestError,
 } from "@doist/todoist-api-typescript";
+import { OAuthError } from "@services/todoist/errors/OAuthError";
 import { PersistenceError } from "@services/todoist/errors/PersistenceError";
+import { TaskNotFoundError } from "@services/todoist/errors/TaskNotFoundError";
 import { UserSessionStatus } from "@services/todoist/sessions/UserSession";
 import { DueStringSelectionOptions, TodoistApiClient } from "@services/todoist/TodoistApiClient";
 
@@ -42,16 +45,39 @@ const mockUserRepository: UserRepository = {
   ensureUserExists: jest.fn().mockResolvedValue(undefined),
 } as unknown as UserRepository;
 
+const mockRedisService = {
+  isAvailable: jest.fn(),
+  get: jest.fn(),
+  set: jest.fn(),
+  delete: jest.fn(),
+};
+
 let todoistApiClientMock: TodoistApiClient;
+let todoistClientWithRedis: TodoistApiClient;
 
 beforeEach(() => {
   // Arrange
   jest.clearAllMocks();
+
+  // Reset default implementations for mockRedisService after clearAllMocks
+  mockRedisService.isAvailable.mockReturnValue(true);
+  mockRedisService.get.mockResolvedValue(null);
+  mockRedisService.set.mockResolvedValue(undefined);
+  mockRedisService.delete.mockResolvedValue(undefined);
+
   todoistApiClientMock = new TodoistApiClient(
     TEST_CLIENT_ID,
     TEST_CLIENT_SECRET,
     mockSessionManager,
     mockUserRepository,
+  );
+  todoistClientWithRedis = new TodoistApiClient(
+    TEST_CLIENT_ID,
+    TEST_CLIENT_SECRET,
+    mockSessionManager,
+    mockUserRepository,
+    undefined,
+    mockRedisService as unknown as RedisService,
   );
 });
 
@@ -151,6 +177,31 @@ describe("TodoistApiClient", () => {
       await expect(todoistApiClientMock.clearUserSession(TEST_USER_ID))
         .rejects
         .toThrow(error);
+    });
+
+    it("should delete the Redis cache key when redisService is available", async () => {
+      // Arrange
+      mockSessionManager.deleteSession = jest.fn().mockResolvedValue(undefined);
+
+      // Act
+      await todoistClientWithRedis.clearUserSession(TEST_USER_ID);
+
+      // Assert
+      expect(mockSessionManager.deleteSession).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(mockRedisService.delete).toHaveBeenCalledWith(
+        `tickly:access_token:${TEST_USER_ID}`,
+      );
+    });
+
+    it("should not call redisService.delete when no redisService is provided", async () => {
+      // Arrange
+      mockSessionManager.deleteSession = jest.fn().mockResolvedValue(undefined);
+
+      // Act & Assert
+      await expect(
+        todoistApiClientMock.clearUserSession(TEST_USER_ID),
+      ).resolves.toBeUndefined();
+      expect(mockRedisService.delete).not.toHaveBeenCalled();
     });
   });
 
@@ -502,6 +553,85 @@ describe("TodoistApiClient", () => {
     });
   });
 
+  describe("getUserApi — Redis caching", () => {
+    it("should return cached token from Redis on cache hit without calling sessionManager.getSession", async () => {
+      // Arrange
+      mockRedisService.get.mockResolvedValue(TEST_ACCESS_TOKEN);
+
+      // Act
+      const apiInstance = await todoistClientWithRedis.getUserApi(TEST_USER_ID);
+
+      // Assert
+      expect(mockRedisService.get).toHaveBeenCalledWith(
+        `tickly:access_token:${TEST_USER_ID}`,
+      );
+      expect(mockSessionManager.getSession).not.toHaveBeenCalled();
+      expect(apiInstance).toBeInstanceOf(TodoistApi);
+    });
+
+    it("should still touch the session on a Redis cache hit", async () => {
+      // Arrange
+      mockRedisService.get.mockResolvedValue(TEST_ACCESS_TOKEN);
+
+      // Act
+      await todoistClientWithRedis.getUserApi(TEST_USER_ID);
+
+      // Assert
+      expect(mockSessionManager.touchSession).toHaveBeenCalledWith(TEST_USER_ID);
+    });
+
+    it("should fetch token from DB and store it in Redis on cache miss", async () => {
+      // Arrange
+      mockRedisService.get.mockResolvedValue(null);
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+
+      // Act
+      await todoistClientWithRedis.getUserApi(TEST_USER_ID);
+
+      // Assert
+      expect(mockRedisService.set).toHaveBeenCalledWith(
+        `tickly:access_token:${TEST_USER_ID}`,
+        TEST_ACCESS_TOKEN,
+        1200,
+      );
+    });
+
+    it("should fall back to DB when Redis is unavailable", async () => {
+      // Arrange
+      mockRedisService.isAvailable.mockReturnValue(false);
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+
+      // Act
+      const apiInstance = await todoistClientWithRedis.getUserApi(TEST_USER_ID);
+
+      // Assert
+      expect(mockRedisService.get).not.toHaveBeenCalled();
+      expect(mockSessionManager.getSession).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(apiInstance).toBeInstanceOf(TodoistApi);
+    });
+
+    it("should work correctly when no redisService is provided", async () => {
+      // Arrange
+      mockSessionManager.getSession = jest.fn().mockResolvedValue({
+        userId: TEST_USER_ID,
+        accessToken: TEST_ACCESS_TOKEN,
+      });
+
+      // Act
+      const apiInstance = await todoistApiClientMock.getUserApi(TEST_USER_ID);
+
+      // Assert
+      expect(mockSessionManager.getSession).toHaveBeenCalledWith(TEST_USER_ID);
+      expect(apiInstance).toBeInstanceOf(TodoistApi);
+    });
+  });
+
   describe("addTask", () => {
     it("should add a task for the user", async () => {
       // Arrange
@@ -553,6 +683,34 @@ describe("TodoistApiClient", () => {
       expect(addTaskMock).toHaveBeenCalledWith(taskArgs);
       expect(result).toEqual(createdTask);
       expect(getUserApiSpy).not.toHaveBeenCalled();
+    });
+
+    it("should throw TaskNotFoundError when the parent task is not found (404)", async () => {
+      // Arrange
+      const taskArgs = { content: "Sub-task", parentId: "parent-999" };
+      const error = new TodoistRequestError("Not found", 404);
+      const addTaskMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({ addTask: addTaskMock });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.addTask(TEST_USER_ID, taskArgs))
+        .rejects
+        .toThrow(TaskNotFoundError);
+    });
+
+    it("should throw OAuthError and invalidate the Redis cache when the API returns 401", async () => {
+      // Arrange
+      const taskArgs = { content: "Sub-task", parentId: "parent-999" };
+      const error = new TodoistRequestError("Unauthorized", 401);
+      const addTaskMock = jest.fn().mockRejectedValue(error);
+      todoistClientWithRedis.getUserApi = jest.fn().mockResolvedValue({ addTask: addTaskMock });
+
+      // Act & Assert
+      await expect(todoistClientWithRedis.addTask(TEST_USER_ID, taskArgs))
+        .rejects
+        .toThrow(OAuthError);
+      expect(mockRedisService.delete)
+        .toHaveBeenCalledWith(`tickly:access_token:${TEST_USER_ID}`);
     });
   });
 
@@ -937,6 +1095,39 @@ describe("TodoistApiClient", () => {
         .rejects
         .toThrow(error);
     });
+
+    it("should throw TaskNotFoundError when the task is not found (404)", async () => {
+      // Arrange
+      const taskId = "task-123";
+      const error = new TodoistRequestError("Not found", 404);
+      const closeTaskMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        closeTask: closeTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.closeTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(TaskNotFoundError);
+    });
+
+    it("should throw OAuthError and invalidate the Redis cache when the API returns 401", async () => {
+      // Arrange
+      const taskId = "task-123";
+      const error = new TodoistRequestError("Unauthorized", 401);
+      const closeTaskMock = jest.fn().mockRejectedValue(error);
+      todoistClientWithRedis.getUserApi = jest.fn().mockResolvedValue({
+        closeTask: closeTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistClientWithRedis.closeTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(OAuthError);
+      expect(mockRedisService.delete)
+        .toHaveBeenCalledWith(`tickly:access_token:${TEST_USER_ID}`);
+    });
+
   });
 
   describe("deleteTask", () => {
@@ -982,6 +1173,39 @@ describe("TodoistApiClient", () => {
         .rejects
         .toThrow(error);
     });
+
+    it("should throw TaskNotFoundError when the task is not found (404)", async () => {
+      // Arrange
+      const taskId = "task-456";
+      const error = new TodoistRequestError("Not found", 404);
+      const deleteTaskMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        deleteTask: deleteTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.deleteTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(TaskNotFoundError);
+    });
+
+    it("should throw OAuthError and invalidate the Redis cache when the API returns 401", async () => {
+      // Arrange
+      const taskId = "task-456";
+      const error = new TodoistRequestError("Unauthorized", 401);
+      const deleteTaskMock = jest.fn().mockRejectedValue(error);
+      todoistClientWithRedis.getUserApi = jest.fn().mockResolvedValue({
+        deleteTask: deleteTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistClientWithRedis.deleteTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(OAuthError);
+      expect(mockRedisService.delete)
+        .toHaveBeenCalledWith(`tickly:access_token:${TEST_USER_ID}`);
+    });
+
   });
 
   describe("getTask", () => {
@@ -1014,7 +1238,8 @@ describe("TodoistApiClient", () => {
       const getUserApiSpy = jest.spyOn(todoistApiClientMock, "getUserApi");
 
       // Act
-      const result = await todoistApiClientMock.getTask(TEST_USER_ID, taskId, providedApi);
+      const result
+        = await todoistApiClientMock.getTask(TEST_USER_ID, taskId, providedApi);
 
       // Assert
       expect(getTaskMock).toHaveBeenCalledWith(taskId);
@@ -1032,6 +1257,38 @@ describe("TodoistApiClient", () => {
         .rejects
         .toThrow(/No Todoist access token found for user/);
     });
+
+    it("should throw TaskNotFoundError when the task is not found (404)", async () => {
+      // Arrange
+      const taskId = "task-789";
+      const error = new TodoistRequestError("Not found", 404);
+      const getTaskMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        getTask: getTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.getTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(TaskNotFoundError);
+    });
+
+    it("should throw OAuthError and invalidate the Redis cache when the API returns 401", async () => {
+      // Arrange
+      const taskId = "task-789";
+      const error = new TodoistRequestError("Unauthorized", 401);
+      const getTaskMock = jest.fn().mockRejectedValue(error);
+      todoistClientWithRedis.getUserApi = jest.fn().mockResolvedValue({
+        getTask: getTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistClientWithRedis.getTask(TEST_USER_ID, taskId))
+        .rejects
+        .toThrow(OAuthError);
+      expect(mockRedisService.delete)
+        .toHaveBeenCalledWith(`tickly:access_token:${TEST_USER_ID}`);
+    });
   });
 
   describe("updateTask", () => {
@@ -1046,7 +1303,8 @@ describe("TodoistApiClient", () => {
       });
 
       // Act
-      const result = await todoistApiClientMock.updateTask(TEST_USER_ID, taskId, updateArgs);
+      const result
+        = await todoistApiClientMock.updateTask(TEST_USER_ID, taskId, updateArgs);
 
       // Assert
       expect(todoistApiClientMock.getUserApi).toHaveBeenCalledWith(TEST_USER_ID);
@@ -1089,6 +1347,40 @@ describe("TodoistApiClient", () => {
       await expect(todoistApiClientMock.updateTask(TEST_USER_ID, taskId, updateArgs))
         .rejects
         .toThrow(/No Todoist access token found for user/);
+    });
+
+    it("should throw TaskNotFoundError when the task is not found (404)", async () => {
+      // Arrange
+      const taskId = "task-999";
+      const updateArgs = { content: "Updated task" };
+      const error = new TodoistRequestError("Not found", 404);
+      const updateTaskMock = jest.fn().mockRejectedValue(error);
+      todoistApiClientMock.getUserApi = jest.fn().mockResolvedValue({
+        updateTask: updateTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistApiClientMock.updateTask(TEST_USER_ID, taskId, updateArgs))
+        .rejects
+        .toThrow(TaskNotFoundError);
+    });
+
+    it("should throw OAuthError and invalidate the Redis cache when the API returns 401", async () => {
+      // Arrange
+      const taskId = "task-999";
+      const updateArgs = { content: "Updated task" };
+      const error = new TodoistRequestError("Unauthorized", 401);
+      const updateTaskMock = jest.fn().mockRejectedValue(error);
+      todoistClientWithRedis.getUserApi = jest.fn().mockResolvedValue({
+        updateTask: updateTaskMock,
+      });
+
+      // Act & Assert
+      await expect(todoistClientWithRedis.updateTask(TEST_USER_ID, taskId, updateArgs))
+        .rejects
+        .toThrow(OAuthError);
+      expect(mockRedisService.delete)
+        .toHaveBeenCalledWith(`tickly:access_token:${TEST_USER_ID}`);
     });
   });
 });
