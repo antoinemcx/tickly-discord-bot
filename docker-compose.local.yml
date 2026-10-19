@@ -3,6 +3,8 @@ services:
     build: .
     container_name: tickly-bot
     restart: unless-stopped
+    # Run the node server inside Docker only when the "full" profile is active.
+    profiles: [full]
     depends_on:
       db:
         condition: service_healthy
@@ -39,6 +41,8 @@ services:
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
     volumes:
       - mysql_data_tickly:/var/lib/mysql
     healthcheck:

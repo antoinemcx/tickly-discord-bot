@@ -21,7 +21,7 @@ Redis is used as an optional caching layer. The following environment variables 
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `REDIS_HOST` | No | *(unset)* | Hostname of the Redis server. Set to `redis` in Docker setups or `locahost` for local development. Leave unset to disable caching. |
+| `REDIS_HOST` | No | *(unset)* | Hostname of the Redis server. Use `redis` when the node server runs inside Docker, or `localhost` otherwise. Leave unset to disable caching. |
 | `REDIS_PORT` | No | `6379` | Port of the Redis server. |
 | `REDIS_PASSWORD` | No | *(none)* | Password for Redis authentication. Leave empty if your Redis instance has no password. |
 

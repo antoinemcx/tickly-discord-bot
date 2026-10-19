@@ -24,17 +24,10 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - ./config.json:/app/build/config.json:ro
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=traefik-proxy
-      - traefik.http.services.tickly-website.loadbalancer.server.port=3999
-      - traefik.http.routers.tickly-website-https.tls=true
-      - traefik.http.routers.tickly-website-https.tls.certresolver=cloudflare
-      - traefik.http.routers.tickly-website-https.entrypoints=websecure
-      - traefik.http.routers.tickly-website-https.rule=Host(`tickly.antoinemcx.fr`)
+    ports:
+      - "${OAUTH_SERVICE_PORT:-3999}:3999"
     networks:
       - tickly-network
-      - traefik-proxy
 
   db:
     image: mariadb:11
@@ -75,5 +68,3 @@ volumes:
 
 networks:
   tickly-network:
-  traefik-proxy:
-    external: true

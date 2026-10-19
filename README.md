@@ -58,41 +58,50 @@ Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed cont
 ### Start the app
 #### With Docker (recommended)
 1. Copy `.env.example` to a new `.env` file and fill in all required values (see [Encryption Key](./docs/configuration.md#encryption-key) for generating the `TOKEN_ENCRYPTION_KEY`).  
-`DB_HOST` must be set to `tickly-db` to work with the Docker setup.
+The service hostnames (`DB_HOST`, `REDIS_HOST`) are already wired to the containers in the compose files, so you don't need to set them for the Docker setup.
 
 2. Copy `config.example.json` to a `config.json` file and replace with your own values (see [Configuration Reference](./docs/configuration.md)).
 
-3. Build and start all services
+3. Build and start all services:
+   ```sh
+   docker compose up -d --build
+   ```
+
+   This starts:
+   - **tickly-bot**: the Discord bot and OAuth web service (OAuth callback published on port `3999`, or your configured `OAUTH_SERVICE_PORT`)
+   - **tickly-db**: a MariaDB instance with persistent storage (migrations are run automatically)
+   - **redis**: a Redis cache instance
+
+   The OAuth callback service is reachable directly on the published port.  
+   Put it behind your own TLS termination (reverse proxy, tunnel, etc.) before exposing it publicly.
+
    <details>
-     <summary>With <a href="https://traefik.io/">Traefik</a> reverse proxy</summary>
+     <summary>Behind a <a href="https://traefik.io/">Traefik</a> reverse proxy</summary>
+
+     The shipped `docker-compose.yml` stays proxy-agnostic: it publishes the OAuth port directly and leaves routing to the server owner.
      
-     ```sh
-     docker compose up -d --build
-     ```
-      
-     This starts:
-     - **tickly-bot**: the Discord bot and OAuth web service (exposed via [Traefik](https://traefik.io/) reverse proxy)
-     - **tickly-db**: a MariaDB instance with persistent storage (migrations are run automatically)
+     To serve it through [Traefik](https://traefik.io/) instead, extend the `tickly` service with your own setup:
+     - attach it to your external Traefik network (and declare that network in the `networks` section),
+     - add the Traefik `labels` that enable it and route your public hostname to container port `3999`,
+     - handle TLS termination on Traefik's side (for example with a certificate resolver).
 
-     ‎   
-     > ⚠️ For the OAuth callback service, [Traefik](https://traefik.io/) handles TLS termination with a Cloudflare certificate resolver.  
-     > Make sure the external `traefik-proxy` Docker network and your Traefik instance are already running before starting Tickly.
-   </details>
-
-   <details>
-     <summary>Without reverse proxy</summary>
-        
-     ```sh
-     docker compose -f docker-compose.local.yml up -d --build
-     ```
-      
-     This starts:
-     - **tickly-bot**: the Discord bot and OAuth web service (on port `3999` or your configured port)
-     - **tickly-db**: a MariaDB instance with persistent storage (migrations are run automatically)
+     Once Traefik handles ingress, you can drop the `ports` mapping from the `tickly` service so the OAuth port is no longer published directly on the host.
    </details>
 
 #### Without Docker
 1. **Prerequisites**: Node.js (v22+), a running MariaDB instance, and optionally a Redis instance for caching (see [Configuration Reference](./docs/configuration.md#redis-cache)).
+
+   > [!TIP]
+   > If you don't want to install MariaDB or Redis locally, you can run just the backing services in Docker while keeping the node server on your host, using the `docker-compose.local.yml` file:
+   > ```sh
+   > # Database + Redis (everything except the node server)
+   > docker compose -f docker-compose.local.yml up -d
+   >
+   > # Or only one of them
+   > docker compose -f docker-compose.local.yml up -d db
+   > docker compose -f docker-compose.local.yml up -d redis
+   > ```
+   > Both are published on the host (`localhost:3306` for MariaDB, `localhost:6379` for Redis), so set `DB_HOST=localhost` and `REDIS_HOST=localhost` in your `.env`.
 
 2. Copy `.env.example` to `.env` and fill in the values (see [Encryption Key](./docs/configuration.md#encryption-key) for generating the `TOKEN_ENCRYPTION_KEY`).  
 `DB_HOST` will be `localhost` if the database is running locally.
@@ -109,6 +118,13 @@ Refer to the [CONTRIBUTING.md](./.github/CONTRIBUTING.md) file for detailed cont
    ```sh
    npm run db:migrate
    ```
+
+   > [!TIP]
+   > This requires the database to be running.  
+   > If you don't run MariaDB locally, start it in Docker first:
+   > ```sh
+   > docker compose -f docker-compose.local.yml up -d db
+   > ```
 
 6. Start the bot:
    ```sh
