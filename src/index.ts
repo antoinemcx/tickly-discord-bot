@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { CommandHandler } from "@bot/handlers/CommandHandler";
 import { EventHandler } from "@bot/handlers/EventHandler";
 import { TranslationHandler } from "@bot/handlers/TranslationHandler";
+import { NotificationService } from "@bot/services/NotificationService";
 import { SessionPruneTask } from "@bot/tasks/SessionPruneTask";
 import { Tickly } from "@bot/Tickly";
 import { DrizzleDatabase } from "@database/DrizzleDatabase";
@@ -91,13 +92,28 @@ void (async () => {
     { permissions: ["data:read_write"] },
     redisService,
   );
-  const oauthApiService = new OAuthApiService(
-    new CallbackRoute(
-      todoistClient,
-      new OAuthPageRenderer(config.oauth.colors),
-      new TranslationLoader(join(__dirname, "services", "oauth", "languages")),
-    ),
+
+  /* Bot initialization */
+  const commandHandler = new CommandHandler(todoistClient, repositories);
+  const eventHandler = new EventHandler(todoistClient, repositories);
+  const translationHandler = new TranslationHandler();
+  displayInfo("Initializing the bot...\n");
+  const bot = new Tickly(
+    process.env.DISCORD_CLIENT_TOKEN,
+    config,
+    todoistClient,
+    commandHandler,
+    eventHandler,
+    translationHandler,
   );
+
+  /* Initialize OAuth callback service */
+  const callbackRoute = new CallbackRoute(
+    todoistClient,
+    new OAuthPageRenderer(config.oauth.colors),
+    new TranslationLoader(join(__dirname, "services", "oauth", "languages")),
+  );
+  const oauthApiService = new OAuthApiService(callbackRoute);
 
   displayInfo("Starting OAuth callback service...");
   const oAuthServicePort = process.env.OAUTH_SERVICE_PORT
@@ -112,22 +128,12 @@ void (async () => {
     process.exit(1);
   }
 
-  /* Initialize and start the bot */
-  const commandHandler = new CommandHandler(todoistClient, repositories);
-  const eventHandler = new EventHandler(todoistClient, repositories);
-
-  const translationHandler = new TranslationHandler();
-  displayInfo("Initializing the bot...\n");
-  const bot = new Tickly(
-    process.env.DISCORD_CLIENT_TOKEN,
-    config,
-    todoistClient,
-    commandHandler,
-    eventHandler,
-    translationHandler,
-  );
-
+  /* Start and inject the bot */
   await bot.start();
+
+  const botNotificationService
+    = new NotificationService(bot, translationHandler, repositories);
+  callbackRoute.setNotificationService(botNotificationService);
 
   /* Start background tasks */
   if (config.enableDailyPrune) {

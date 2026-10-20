@@ -1,0 +1,6 @@
+{
+  "login": {
+    "success": "{{v}} Your Todoist account is now linked. You can use all Tickly commands.",
+    "session_retention_hint": "> For privacy, your session is kept for **{{days}} days** by default. Change this with {{settings}}."
+  }
+}

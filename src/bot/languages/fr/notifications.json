@@ -1,0 +1,6 @@
+{
+  "login": {
+    "success": "{{v}} Ton compte Todoist est maintenant lié. Tu peux utiliser toutes les commandes Tickly.",
+    "session_retention_hint": "> Pour des raisons de confidentialité, ta session est conservée **{{days}} jours** par défaut. Modifie ça avec {{settings}}."
+  }
+}

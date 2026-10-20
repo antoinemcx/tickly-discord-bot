@@ -8,6 +8,11 @@ jest.mock("node:fs", () => ({
   readdirSync: jest.fn(),
 }));
 
+const englishNotifications = {
+  login: {
+    success: "{{v}} Your Todoist account is now linked.",
+  },
+};
 const englishCommon = {
   no: "No",
   interactionHandling: {
@@ -41,7 +46,7 @@ function createHandler(
   handler.setClient({
     getConfig: jest.fn().mockReturnValue({
       defaultLocale,
-      emotes: { x: "❌", priorities: { 1: "🔴", 2: "🟠", 3: "🔵", 4: "" } },
+      emotes: { v: "✅", x: "❌", priorities: { 1: "🔴", 2: "🟠", 3: "🔵", 4: "" } },
     }),
   } as unknown as Tickly);
   return handler;
@@ -58,7 +63,7 @@ beforeEach(() => {
       return [Locale.EnglishUS, Locale.French]; // mock language directories
     }
     if (parts.includes(Locale.EnglishUS) || parts.includes(Locale.French)) {
-      return ["common.json", "commands.json"]; // mock translation files
+      return ["common.json", "commands.json", "notifications.json"]; // mock translation files
     }
     return [];
   });
@@ -77,6 +82,10 @@ beforeEach(() => {
       return JSON.stringify({});
     } else if (isFrench && parts.has("commands.json")) {
       return JSON.stringify(frenchCommands);
+    } else if (isEnglish && parts.has("notifications.json")) {
+      return JSON.stringify(englishNotifications);
+    } else if (isFrench && parts.has("notifications.json")) {
+      return JSON.stringify({});
     }
 
     throw new Error(`Unexpected translation file path: ${path}`);
@@ -357,6 +366,73 @@ describe("TranslationHandler", () => {
 
       // Assert
       expect(result).toBe("Missing translation for missing");
+    });
+  });
+
+  describe("translateNotification", () => {
+    it("should translate a notification entry", async () => {
+      // Arrange
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.translateNotification(Locale.EnglishUS, "login.success");
+
+      // Assert
+      expect(result).toBe("✅ Your Todoist account is now linked.");
+    });
+
+    it("should return a fallback message when the key is missing", async () => {
+      // Arrange
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.translateNotification(
+        Locale.EnglishUS,
+        "missing.key",
+      );
+
+      // Assert
+      expect(result).toBe("Missing translation for missing.key");
+    });
+
+    it("should return a fallback message when the locale has no notifications file", async () => {
+      // Arrange
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.translateNotification(
+        Locale.French,
+        "login.success",
+      );
+
+      // Assert
+      expect(result).toBe("Missing translation for login.success");
+    });
+
+    it("should replace parameters in the translated string", async () => {
+      // Arrange
+      (readFileSync as jest.Mock).mockImplementation((path: string) => {
+        const parts = new Set(path.split(/[\\/]/));
+        if (parts.has(Locale.EnglishUS) && parts.has("notifications.json")) {
+          return JSON.stringify({ reminder: { message: "Reminder: {{task}}" } });
+        }
+        return JSON.stringify({});
+      });
+      const handler = createHandler();
+      await handler.setup();
+
+      // Act
+      const result = handler.translateNotification(
+        Locale.EnglishUS,
+        "reminder.message",
+        { task: "Buy groceries" },
+      );
+
+      // Assert
+      expect(result).toBe("Reminder: Buy groceries");
     });
   });
 

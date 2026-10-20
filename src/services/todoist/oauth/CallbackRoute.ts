@@ -1,18 +1,32 @@
+import type { NotificationService } from "@bot/services/NotificationService";
 import type { TranslationLoader } from "@services/apiBuilder/TranslationLoader";
 import type { OAuthPageRenderer } from "@services/oauth/OAuthPageRenderer";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
+import type { Locale } from "discord.js";
 import type { Request, Response } from "express";
 import { ApiRoute } from "@services/apiBuilder/ApiRoute";
 import { AuthenticationErrors } from "./AuthenticationErrors";
 
 /** OAuth Callback endpoint for Todoist. */
 export class CallbackRoute extends ApiRoute {
+  /** Optional notifier injected once the bot is ready */
+  private notificationService?: NotificationService;
+
   public constructor(
     private readonly todoistApiClient: TodoistApiClient,
     private readonly renderer: OAuthPageRenderer,
     private readonly loader: TranslationLoader,
   ) {
     super("/oauth/callback", "get");
+  }
+
+  /**
+   * Injects the notification service to enable DM notification
+   * for successful login.
+   * @param service the notification service to use for DMs
+   */
+  public setNotificationService(service: NotificationService): void {
+    this.notificationService = service;
   }
 
   /**
@@ -64,7 +78,9 @@ export class CallbackRoute extends ApiRoute {
       return;
     }
 
-    // TODO in the future : notify the discord app to DM the user (for both success and failure cases)
+    this.notificationService
+      ?.notifyLoginSuccess(session.userId, locale as Locale)
+      .catch(() => {});
 
     res.status(200).type("html").send(this.renderer.renderSuccess(locale, this.loader));
   }

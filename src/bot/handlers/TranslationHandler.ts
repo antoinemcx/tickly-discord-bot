@@ -153,6 +153,26 @@ export class TranslationHandler extends Handler {
   }
 
   /**
+   * Translates a text from the <language>/notifications.json file.
+   * @param language language code
+   * @param translationKey identifier in the translation file
+   * @param parameters optional parameters for placeholders
+   * @returns translated text or a fallback if translation is missing
+   */
+  public translateNotification(
+    language: Locale,
+    translationKey: string,
+    parameters: Record<string, string> = {},
+  ): string {
+    const translated: string = this.getNestedProperty(
+      this.translations.get(language)?.get("notifications"),
+      translationKey,
+    ) || TranslationHandler.MISSING_TRANSLATION_MESSAGE + translationKey;
+
+    return this.replaceParameters(translated, parameters);
+  }
+
+  /**
    * Translates a text from the <language>/commands.json file.
    * @param language language code
    * @param command name of the command the text is originated

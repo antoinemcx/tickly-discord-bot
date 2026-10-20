@@ -1,0 +1,6 @@
+{
+  "login": {
+    "success": "{{v}} Twoje konto Todoist jest teraz połączone. Możesz używać wszystkich poleceń Tickly.",
+    "session_retention_hint": "> Ze względu na prywatność Twoja sesja jest przechowywana domyślnie przez **{{days}} dni**. Zmień to za pomocą {{settings}}."
+  }
+}
