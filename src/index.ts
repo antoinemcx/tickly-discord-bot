@@ -23,7 +23,7 @@ import {
 } from "./utils/logger";
 import "dotenv/config";
 
-(async () => {
+void (async () => {
   if (!process.env.TODOIST_CLIENT_ID || !process.env.TODOIST_CLIENT_SECRET) {
     displayError("Todoist environment variables must be set.");
     process.exit(1);
@@ -48,8 +48,8 @@ import "dotenv/config";
 
   let database: DrizzleDatabase;
   try {
-    /* Always migrate the database in production */
-    if (process.env.NODE_ENV === "production") {
+    /* Run DB migrations unless explicitly disabled */
+    if (process.env.AUTO_MIGRATE !== "false") {
       await DrizzleDatabase.ensureDatabaseExists(dbConfig);
       await runMigrations(dbConfig);
     }

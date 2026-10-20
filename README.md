@@ -114,22 +114,13 @@ The service hostnames (`DB_HOST`, `REDIS_HOST`) are already wired to the contain
    npm run build
    ```
 
-5. Run database migrations on the first run:
-   ```sh
-   npm run db:migrate
-   ```
-
-   > [!TIP]
-   > This requires the database to be running.  
-   > If you don't run MariaDB locally, start it in Docker first:
-   > ```sh
-   > docker compose -f docker-compose.local.yml up -d db
-   > ```
-
-6. Start the bot:
+5. Start the bot:
    ```sh
    npm run start:nobuild
    ```
+
+   > [!NOTE]
+   > Database migrations run automatically at startup. To skip them, set `AUTO_MIGRATE=false` in your `.env` and run `npm run db:migrate` manually (see [Database migrations](./docs/configuration.md#database-migrations)).
 
 This starts the bot and the OAuth web service (default port `3999`) together.
 

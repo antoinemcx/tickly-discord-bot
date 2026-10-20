@@ -15,6 +15,20 @@ The `TOKEN_ENCRYPTION_KEY` environment variable (in `.env`) must be a 32-byte ke
 | Linux / macOS | `openssl rand -base64 32` |
 | Windows (PowerShell) | `[Convert]::ToBase64String([byte[]](1..32 \| ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))` |
 
+## Database migrations
+
+At startup, the project automatically runs any pending database migrations so the schema is always up to date.  
+This behaviour is controlled by a single environment variable (set in `.env`): `AUTO_MIGRATE`
+
+When `AUTO_MIGRATE` is unset or set to any value other than `false`, migrations run on every startup.  
+They are idempotent, so re-running them on an already up-to-date schema is harmless.
+
+Disabling automatic migrations is useful if you manage migrations separately (e.g. in a CI/CD step) or want to skip that step for local development.  
+You can still run migrations manually at any time:
+```sh
+npm run db:migrate
+```
+
 ## Redis cache
 
 Redis is used as an optional caching layer. The following environment variables control it (set in `.env`):
