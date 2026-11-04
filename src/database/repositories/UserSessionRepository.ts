@@ -230,6 +230,9 @@ export class UserSessionRepository extends BaseRepository implements UserSession
     }
 
     const rootMessage = error instanceof Error ? error.message : String(error);
-    return new PersistenceError(`${message} ${rootMessage}`);
+    const cause = error instanceof Error && error.cause instanceof Error
+      ? ` Cause: ${error.cause.message}`
+      : "";
+    return new PersistenceError(`${message} ${rootMessage}${cause}`);
   }
 }

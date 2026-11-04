@@ -205,7 +205,7 @@ export class TodoistApiClient {
     const updatedSession = new UserSession(
       userId,
       UserSessionStatus.Completed,
-      "",
+      null,
       accessToken,
       null,
     );

@@ -41,7 +41,7 @@ export const userSessionsTable = mysqlTable("user_sessions", {
     .notNull()
     .references(() => usersTable.id),
   status: userSessionStatus.notNull(),
-  oauthState: varchar("oauth_state", { length: 255 }).notNull().unique(),
+  oauthState: varchar("oauth_state", { length: 255 }).unique(), // null once OAuth is completed
   accessToken: text("access_token"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   expiresAt: timestamp("expires_at"),

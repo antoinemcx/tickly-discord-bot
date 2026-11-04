@@ -398,6 +398,38 @@ describe("UserSessionRepository", () => {
       // Assert
       await expect(result).rejects.toBeInstanceOf(PersistenceError);
     });
+
+    it("should include the driver error cause in the PersistenceError message", async () => {
+      // Arrange
+      const driverError = new Error("Duplicate entry '' for key 'user_sessions_oauth_state_unique'");
+      connectionMock.insert.mockReturnValue({
+        values: jest.fn().mockRejectedValue(new Error("Failed query: insert", { cause: driverError })),
+      });
+      const session = new UserSession("999", UserSessionStatus.Completed, null, "new-token", null);
+
+      // Act
+      const result = sessionManager.updateSession(session);
+
+      // Assert
+      await expect(result).rejects.toThrow(
+        "Failed to update session. Failed query: insert Cause: Duplicate entry '' for key 'user_sessions_oauth_state_unique'",
+      );
+    });
+
+    it("should persist a null oauthState for completed sessions", async () => {
+      // Arrange
+      const session = new UserSession("999", UserSessionStatus.Completed, null, "new-token", null);
+      const insertValues = connectionMock.insert().values as jest.Mock;
+      connectionMock.insert.mockReturnValue({ values: insertValues });
+
+      // Act
+      await sessionManager.updateSession(session);
+
+      // Assert
+      expect(insertValues).toHaveBeenCalledWith(
+        expect.objectContaining({ oauthState: null }),
+      );
+    });
   });
 
   describe("deleteSession", () => {
