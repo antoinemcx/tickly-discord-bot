@@ -6,6 +6,7 @@
   },
   "error": {
     "title": "Conexión fallida",
+    "code": "Código de error",
     "button": "Volver a Discord",
     "reasons": {
       "invalid_callback_query": "Algo salió mal. Por favor, intenta conectarte de nuevo desde Discord.",

@@ -50,7 +50,7 @@ describe("CallbackRoute", () => {
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.type).toHaveBeenCalledWith("html");
-      expect(mockRenderer.renderError).toHaveBeenCalledWith("en-US", "some error", mockLoader);
+      expect(mockRenderer.renderError).toHaveBeenCalledWith("en-US", "some error", mockLoader, undefined);
       expect(res.send).toHaveBeenCalledWith(mockErrorHtml);
     });
 
@@ -68,6 +68,7 @@ describe("CallbackRoute", () => {
         "en-US",
         AuthenticationErrors.INVALID_CALLBACK_QUERY,
         mockLoader,
+        undefined,
       );
     });
 
@@ -85,6 +86,7 @@ describe("CallbackRoute", () => {
         "en-US",
         AuthenticationErrors.INVALID_CALLBACK_QUERY,
         mockLoader,
+        undefined,
       );
     });
 
@@ -103,6 +105,7 @@ describe("CallbackRoute", () => {
         "en-US",
         AuthenticationErrors.INVALID_OAUTH_STATE,
         mockLoader,
+        expect.any(String),
       );
     });
 
@@ -125,6 +128,7 @@ describe("CallbackRoute", () => {
         "en-US",
         AuthenticationErrors.EXPIRED_OAUTH_STATE,
         mockLoader,
+        undefined,
       );
       expect(mockTodoistApiClient.clearUserSession).toHaveBeenCalled();
     });
@@ -146,7 +150,29 @@ describe("CallbackRoute", () => {
         "en-US",
         AuthenticationErrors.TOKEN_EXCHANGE_FAILED,
         mockLoader,
+        expect.any(String),
       );
+    });
+
+    it("should pass an error code to the error page if token persistence fails", async () => {
+      // Arrange
+      const res = makeRes();
+      mockTodoistApiClient.getSessionByOAuthState = jest.fn().mockResolvedValue({ userId: "user123" });
+      mockTodoistApiClient.exchangeOAuthCodeForAccessToken = jest.fn().mockResolvedValue("access_token_abc");
+      mockTodoistApiClient.registerUserAccessToken = jest.fn().mockRejectedValue(new Error("Persistence failed"));
+
+      // Act
+      await route.handle(validReq, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(mockRenderer.renderError).toHaveBeenCalledWith(
+        "en-US",
+        AuthenticationErrors.TOKEN_EXCHANGE_FAILED,
+        mockLoader,
+        expect.any(String),
+      );
+      expect(res.send).toHaveBeenCalledWith(mockErrorHtml);
     });
 
     it("should render the success page if everything is valid", async () => {
@@ -202,6 +228,7 @@ describe("CallbackRoute", () => {
         "fr",
         AuthenticationErrors.INVALID_OAUTH_STATE,
         mockLoader,
+        expect.any(String),
       );
     });
   });
