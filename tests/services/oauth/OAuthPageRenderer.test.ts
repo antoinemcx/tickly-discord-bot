@@ -77,6 +77,42 @@ describe("OAuthPageRenderer", () => {
   });
 
   describe("renderError", () => {
+    it("should display the diagnostic code with a localized label", () => {
+      // Arrange
+      (mockLoader.translate as jest.Mock).mockImplementation((locale: string, key: string) =>
+        `[${locale}:${key}]`);
+
+      // Act
+      const html = renderer.renderError("fr", "invalid_oauth_state", mockLoader, "ab123456");
+
+      // Assert
+      expect(html).toContain("<p class=\"error-code\">[fr:error.code]: ab123456</p>");
+    });
+
+    it("should omit the diagnostic code when none is provided", () => {
+      // Arrange
+      const reason = "expired_oauth_state";
+
+      // Act
+      const html = renderer.renderError("en-US", reason, mockLoader);
+
+      // Assert
+      expect(html).not.toContain("<p class=\"error-code\">");
+      expect(mockLoader.translate).not.toHaveBeenCalledWith("en-US", "error.code");
+    });
+
+    it("should escape HTML entities in the diagnostic code and its label", () => {
+      // Arrange
+      (mockLoader.translate as jest.Mock).mockReturnValue("<label>");
+
+      // Act
+      const html = renderer.renderError("en-US", "invalid_oauth_state", mockLoader, "<img src=\"x\">&");
+
+      // Assert
+      expect(html).toContain("&lt;label&gt;: &lt;img src=&quot;x&quot;&gt;&amp;");
+      expect(html).not.toContain("<img src=\"x\">");
+    });
+
     it("should return a complete HTML document", () => {
       // Act
       const html = renderer.renderError("en-US", "expired_oauth_state", mockLoader);

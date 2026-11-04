@@ -3,6 +3,7 @@ import type { OAuthPageRenderer } from "@services/oauth/OAuthPageRenderer";
 import type { TodoistApiClient } from "@services/todoist/TodoistApiClient";
 import type { Request, Response } from "express";
 import { ApiRoute } from "@services/apiBuilder/ApiRoute";
+import { displayDetailedError, generateErrorCode } from "@src/utils/logger";
 import { AuthenticationErrors } from "./AuthenticationErrors";
 
 /** OAuth Callback endpoint for Todoist. */
@@ -45,7 +46,9 @@ export class CallbackRoute extends ApiRoute {
     const csrfState = this.extractCsrf(state);
     const session = await this.todoistApiClient.getSessionByOAuthState(csrfState);
     if (!session) {
-      this.sendErrorPage(res, locale, AuthenticationErrors.INVALID_OAUTH_STATE);
+      const errorCode = generateErrorCode();
+      displayDetailedError("Invalid OAuth state in OAuth callback", null, errorCode);
+      this.sendErrorPage(res, locale, AuthenticationErrors.INVALID_OAUTH_STATE, errorCode);
       return;
     } else if (session.expiresAt && session.expiresAt.getTime() <= Date.now()) {
       this.todoistApiClient.clearUserSession(session.userId).catch(() => {});
@@ -59,8 +62,10 @@ export class CallbackRoute extends ApiRoute {
         session.userId,
         await this.todoistApiClient.exchangeOAuthCodeForAccessToken(code),
       );
-    } catch {
-      this.sendErrorPage(res, locale, AuthenticationErrors.TOKEN_EXCHANGE_FAILED);
+    } catch (error) {
+      const errorCode = generateErrorCode();
+      displayDetailedError("Access token exchange failed in OAuth callback", error, errorCode);
+      this.sendErrorPage(res, locale, AuthenticationErrors.TOKEN_EXCHANGE_FAILED, errorCode);
       return;
     }
 
@@ -81,9 +86,9 @@ export class CallbackRoute extends ApiRoute {
     return pipeIndex !== -1 ? state.slice(0, pipeIndex) : state;
   }
 
-  private sendErrorPage(res: Response, locale: string, reason: string) {
+  private sendErrorPage(res: Response, locale: string, reason: string, errorCode?: string): void {
     res.status(400).type("html").send(
-      this.renderer.renderError(locale, reason, this.loader),
+      this.renderer.renderError(locale, reason, this.loader, errorCode),
     );
   }
 }

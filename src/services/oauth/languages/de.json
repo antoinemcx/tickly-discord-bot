@@ -6,6 +6,7 @@
   },
   "error": {
     "title": "Verbindung fehlgeschlagen",
+    "code": "Fehlercode",
     "button": "Zurück zu Discord",
     "reasons": {
       "invalid_callback_query": "Etwas ist schiefgelaufen. Bitte versuche die Verbindung erneut von Discord aus.",

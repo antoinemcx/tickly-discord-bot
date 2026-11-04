@@ -6,6 +6,7 @@
   },
   "error": {
     "title": "Połączenie nie powiodło się",
+    "code": "Kod błędu",
     "button": "Powrót do Discorda",
     "reasons": {
       "invalid_callback_query": "Coś poszło nie tak. Spróbuj połączyć konta ponownie z poziomu Discorda.",

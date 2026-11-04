@@ -6,6 +6,7 @@
   },
   "error": {
     "title": "Connexion échouée",
+    "code": "Code d'erreur",
     "button": "Retourner sur Discord",
     "reasons": {
       "invalid_callback_query": "Une erreur est survenue. Veuillez réessayer depuis Discord.",
