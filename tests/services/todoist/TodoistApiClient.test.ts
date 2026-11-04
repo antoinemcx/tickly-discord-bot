@@ -352,6 +352,7 @@ describe("TodoistApiClient", () => {
         expect.objectContaining({
           userId: TEST_USER_ID,
           status: UserSessionStatus.Completed,
+          oauthState: null,
           accessToken: TEST_ACCESS_TOKEN,
         }),
       );
@@ -380,6 +381,7 @@ describe("TodoistApiClient", () => {
         expect.objectContaining({
           userId: TEST_USER_ID,
           status: UserSessionStatus.Completed,
+          oauthState: null,
           accessToken: TEST_ACCESS_TOKEN,
         }),
       );

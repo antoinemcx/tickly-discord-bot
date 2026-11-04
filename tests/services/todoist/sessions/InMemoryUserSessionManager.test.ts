@@ -53,6 +53,21 @@ describe("InMemoryUserSessionManager", () => {
       expect(retrievedSession).toEqual(sessionMock);
     });
 
+    it("should not match a completed session with a null OAuth state when given an empty state", async () => {
+      // Arrange
+      await sessionManager.createSession({
+        ...sessionMock,
+        oauthState: null,
+        status: UserSessionStatus.Completed,
+      });
+
+      // Act
+      const retrievedSession = await sessionManager.getSessionByOAuthState("");
+
+      // Assert
+      expect(retrievedSession).toBeUndefined();
+    });
+
     it("should return undefined for non-existing OAuth state", async () => {
       // Act
       const retrievedSession
